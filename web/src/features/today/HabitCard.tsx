@@ -79,7 +79,7 @@ export function HabitCard({ habit, cell, streak, now, onOpen }: HabitCardProps) 
           <p className="mt-0.5 truncate text-[13px] text-muted">{meta(habit)}</p>
         </div>
         {streak !== undefined && (
-          <span className="flex flex-none items-center gap-1 text-[15px] font-bold text-fg">
+          <span className="flex flex-none items-center gap-1 font-display text-[15px] font-bold text-fg">
             <Flame size={18} className={streak > 0 ? 'text-urgent' : 'text-dim'} aria-hidden="true" />
             <span className="sr-only">Current streak </span>
             {streak}

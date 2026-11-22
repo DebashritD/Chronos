@@ -12,7 +12,7 @@ export function ProgressRing({ done, total }: { done: number; total: number }) {
         )}
       </svg>
       <span className="absolute inset-0 flex flex-col items-center justify-center" aria-hidden="true">
-        <span className="text-[22px] leading-none font-extrabold text-fg">{done}/{total}</span>
+        <span className="font-display text-[22px] leading-none font-extrabold text-fg">{done}/{total}</span>
         <span className="mt-1 text-[10px] font-semibold tracking-wider text-muted">DONE</span>
       </span>
     </div>
