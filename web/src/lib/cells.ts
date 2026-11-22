@@ -1,4 +1,4 @@
-import type { CellState, Color, Frequency, HabitTexts } from '../api/types'
+import type { CellState, Color, Frequency } from '../api/types'
 
 export const STATE_LABEL: Record<CellState, string> = {
   GREEN: 'Target hit',
@@ -43,11 +43,4 @@ export function frequencyLabel(frequency: Frequency, intervalDays?: number | nul
     case 'EVERY_N_DAYS':
       return `Every ${intervalDays} days`
   }
-}
-
-/** "Daily · 1 page → 20 pages" */
-export function habitSummary(
-  habit: Pick<HabitTexts, 'minText' | 'targetText'> & { frequency: Frequency; intervalDays?: number | null },
-): string {
-  return `${frequencyLabel(habit.frequency, habit.intervalDays)} · ${habit.minText} → ${habit.targetText}`
 }
