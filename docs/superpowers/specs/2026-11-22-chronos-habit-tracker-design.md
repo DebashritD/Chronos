@@ -16,7 +16,8 @@ Reference project: `../Dionysus` (same stack, deployment and testing setup; not 
   - `habit` — habits, pauses, check-ins
   - `habit.domain` — pure period computation, cell states, streaks, scores (no Spring)
   - `stats` — week/month views, streaks
-- `web/` — Vite + React 19 + TypeScript, TanStack Query, react-router, Tailwind 4. `npm run dev` proxies `/api` to `:8080`.
+- `web/` — Vite + React 19 + TypeScript, TanStack Query, react-router, Tailwind 4, `lucide-react` icons, Inter
+  (`@fontsource/inter`, self-hosted). `npm run dev` proxies `/api` to `:8080`.
 - Root `Dockerfile` builds the web app into the API's static resources and runs one jar (same origin, so the session
   cookie just works). `render.yaml` deploys one Docker web service (Render free plan) with health check `/api/public/health`;
   the database is Neon free Postgres (a database of its own, not shared with Dionysus).
@@ -63,6 +64,10 @@ A check-in for `period_start` may be set or cleared only if:
 - the period is not paused and the habit is not `ARCHIVED`.
 
 Otherwise the API returns 422.
+
+The web app's countdown ("time left to mark", see Web) counts down to the end of the current period. When it runs
+out the period has ended and shows as unmarked (GREY) if nothing was set; it can still be marked or changed for 7 more
+days under the rules above. The countdown is a nudge, not a lock.
 
 ### Streaks (per habit)
 
@@ -115,8 +120,12 @@ cookie, obtained via `GET /api/auth/csrf`).
 ### Stats (`/api/stats`, authenticated)
 
 - `GET /week?start=YYYY-MM-DD` (Monday; defaults to the current week) →
-  `{start, today, habits:[{id, name, minText, targetText, frequency, cells:[{date, periodStart, state, editable, note}]}], distribution}`.
-  Weekly habits return one cell spanning the week.
+  `{start, today, habits:[{id, name, minText, targetText, frequency, intervalDays, cells:[{date, periodStart, state, editable, note, closesAt}]}], distribution}`.
+  Weekly habits return one cell spanning the week. Non-due days of `DAILY`/`EVERY_N_DAYS` habits are `NOT_DUE` cells
+  with `periodStart`, `note` and `closesAt` all `null` and `editable: false`.
+  `closesAt` is an ISO-8601 UTC instant (e.g. `"2026-11-18T18:30:00Z"`): 00:00 in the user's timezone on the day after
+  the period's last day (`periodEnd + 1 day`), i.e. when the period stops being current. It is set whenever `periodStart`
+  is set (including paused and past periods) and `null` otherwise.
 - `GET /month?month=YYYY-MM` (defaults to current) →
   `{month, overview:[{date, score}], habits:[{id, name, frequency, cells:[{date, state}]}], distribution}`.
   Per-habit cells: `DAILY`/`EVERY_N_DAYS` show the state on due days and `NOT_DUE` otherwise; `WEEKLY` shows the
@@ -127,26 +136,81 @@ Stats include `ACTIVE` and `PAUSED` habits; archived habits are excluded.
 
 ## Web
 
-- `/login`, `/signup` (timezone from `Intl.DateTimeFormat().resolvedOptions().timeZone`).
-- `/` **Week** — week grid (habits × Mon–Sun, today's cell outlined) with prev/next week navigation, then the week
-  distribution bar and streak list below it. Tapping an editable cell opens a picker (bottom sheet on mobile)
-  showing the habit's target/min text as GREEN / YELLOW / RED choices, an optional note, and Clear / Cancel / Save.
-- `/month` — combined daily score heatmap (calendar layout), per-habit calendar heatmaps, month distribution;
-  prev/next month navigation.
-- `/habits` — list with create/edit form, pause/resume, archive/unarchive; archived section collapsed.
-- `/settings` — timezone and password.
-- Unauthenticated users are redirected to `/login`. Charts are hand-built with CSS grid / SVG (no chart library).
+UI v2 ("native app" feel, dark only). Mockups: `docs/superpowers/specs/2026-11-22-chronos-ui-mockups.html`.
 
-Colors: GREEN, YELLOW, RED as named; GREY neutral grey; PENDING outlined; PAUSED hatched; NOT_DUE blank.
+### Shell and navigation
+
+- Mobile (< 768 px): content plus a bottom tab bar with icons: **Today** (`/`), **Progress** (`/progress`),
+  **Habits** (`/habits`), **Account** (`/settings`).
+- Desktop: a left sidebar with the logo tile + "Chronos", the same four items, and a user chip at the bottom
+  (avatar initial, username, timezone). No top bar and no header "Log out" (logout lives on Account).
+- `/login`, `/signup`: logo tile, headline "Never two reds in a row.", short tagline, the form, and a link to the other
+  page. Sign-up takes the timezone from `Intl.DateTimeFormat().resolvedOptions().timeZone`.
+- Unauthenticated users are redirected to `/login`. `/month` and the old Week home no longer exist (never shipped);
+  the month view is `/progress?view=month`.
+
+### Today (`/`)
+
+- Eyebrow date ("Wednesday, 18 Nov", from the week response's `today`), title "Today".
+- Hero card: progress ring "N/M DONE" and a short encouragement line. M = habits whose current period is open and
+  editable today (not paused, due); N = those of them already marked.
+- One card per such habit: name, min/target text (every-N-days: "Every 3 days · …", weekly: "This week · …"),
+  a flame with the current streak (grey at 0), a countdown chip, and three one-tap buttons **Target** (GREEN),
+  **Minimum** (YELLOW), **Missed** (RED). The selected one is filled (`aria-pressed`). Tapping a button saves the
+  check-in immediately (`PUT`, keeping any existing note); tapping the already-selected one does nothing. Tapping the
+  habit name opens the picker sheet (GREEN / YELLOW / RED, "Note (optional)", Clear / Cancel / Save); clearing is only
+  possible there. Daily habits also show a 7-segment strip of this week's cells.
+- Data: the current `GET /api/stats/week` and `GET /api/stats/streaks`. A habit's today-cell is the cell whose `date`
+  is `today` (weekly habits: their single cell). Habits whose today-cell is not editable (paused, not due) are left
+  out, so an every-N-days habit appears on its due day (the period's first day). After a mark, the stats queries refetch.
+- Countdown chip (clock icon), from `closesAt − now`, refreshed every minute:
+  daily "14h left today", every-N-days "1d 14h left in this period", weekly "4d 14h left this week"
+  (days are dropped when 0). Under 3 hours: "2h 40m left" in the urgent orange style; under 1 hour: "40m left".
+  Once the period is marked the chip is green (still showing the time). Hidden once `closesAt` has passed.
+- Desktop: the cards sit in a 2-column grid beside a "This week" grid card and the Streaks card.
+- No habits: a link to create the first one.
+
+### Progress (`/progress`)
+
+- Segmented control **Week | Month** (`?view=month` selects Month; Week is the default).
+- Week: prev/next week (`?start=YYYY-MM-DD`) and "This week". Grid of habits × Mon–Sun with rounded squircle cells;
+  today's day header is an accent circle and today's cell has an accent ring; weekly habits span all 7 columns;
+  every-N-days rows note "every N days", paused rows "paused". Tapping an editable cell opens the picker sheet. Below:
+  a "This week" card with a donut of the distribution and a legend with counts (Green, Yellow, Red, Unmarked), and
+  a Streaks card (current with flame, best).
+- Month: prev/next month (`?month=YYYY-MM`) and "This month". "Daily score" calendar heatmap (Monday first, day
+  numbers, today ringed, future/no-score days neutral) with a five-step red → green legend; a "By habit" card with a
+  compact per-habit heatmap; the month distribution donut.
+
+### Habits (`/habits`)
+
+- List rows: name and a summary "Daily · 5 → 20 pages" (min → target), actions Edit, Pause/Resume, Archive;
+  paused rows dimmed with a "Paused" pill; archived habits in a collapsed "Archived" section with Unarchive.
+- Create via "New habit" (a floating + button on mobile); the form has name, minimum, target, frequency,
+  interval (every-N-days only) and optional start date. Edit changes texts only.
+
+### Account (`/settings`)
+
+- Username, timezone (with "Use this device") and password change, and **Log out**.
+
+### Visual system
+
+- Dark only, Inter. Colours (CSS custom properties via Tailwind `@theme`): background `#0a0a0f`, card `#15151d`,
+  raised card `#1c1c26`, hairline `rgba(255,255,255,.06)`, text `#f4f4f7`, secondary `#8e8e9a`, dim `#5a5a66`,
+  accent `#7c8cff`, GREEN `#30d158`, YELLOW `#ffd60a`, RED `#ff453a`, GREY/unmarked `#2c2c36`, urgent `#ff9f0a`.
+  Score scale (red → green): `#ff453a`, `#ff8a3d`, `#ffd60a`, `#7ed957`, `#30d158`.
+- Cards 22 px radius, cells 10 px. PENDING cells outlined, PAUSED hatched, NOT_DUE blank.
+- Icons from `lucide-react`. Transitions are disabled under `prefers-reduced-motion: reduce`.
+- Charts (ring, donut, heatmaps) are hand-built with CSS grid / SVG (no chart library).
 
 ## Testing
 
 - **Unit:** period generation, cell states, editing window, streaks, score and distribution (pure functions in `habit.domain`).
 - **Integration:** Testcontainers Postgres, one test class per controller (auth incl. rate limit and CSRF, habits
   incl. ownership, check-ins incl. window rules, stats).
-- **Web:** Vitest + Testing Library for the grid, picker, heatmaps and forms.
-- **E2E:** one Playwright flow: sign up → create habit → mark today GREEN → see it on week and month pages.
+- **Web:** Vitest + Testing Library for the Today cards, countdown formatter, grid, picker, heatmaps and forms.
+- **E2E:** one Playwright flow: sign up → create habit → tap "Target" on Today → see it on Progress week and month.
 
 ## Out of scope
 
-Monthly frequency, numeric targets, reminders/notifications, social features, OAuth, data export.
+Monthly frequency, numeric targets, reminders/notifications, light theme, social features, OAuth, data export.

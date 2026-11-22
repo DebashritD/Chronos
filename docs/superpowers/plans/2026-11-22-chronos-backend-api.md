@@ -3461,7 +3461,8 @@ git commit -m "feat(api): add check-ins limited to the 7-day edit window" \
 **Interfaces:**
 - Consumes: `HabitService#list(long, HabitStatus)` (null status → ACTIVE + PAUSED), `HabitTimelines#load`, `CheckInRepository#notesBetween` (Tasks 5–6); `HabitTimeline`, `CellState`, `Distribution` (Task 4); `UserService#today` (Task 2).
 - Produces (JSON shapes the web plan relies on):
-  - `GET /api/stats/week?start=YYYY-MM-DD` → `{start, habits:[{id, name, minText, targetText, frequency, cells:[{date, periodStart, state, editable, note}]}], distribution:{green, yellow, red, grey, total}}`. `start` defaults to this week's Monday; a non-Monday → 400 `VALIDATION`. DAILY/EVERY_N_DAYS habits have 7 cells (non-due days: `state: NOT_DUE`, `periodStart: null`, `editable: false`); WEEKLY habits have 1 cell dated Monday.
+  - `GET /api/stats/week?start=YYYY-MM-DD` → `{start, today, habits:[{id, name, minText, targetText, frequency, intervalDays, cells:[{date, periodStart, state, editable, note, closesAt}]}], distribution:{green, yellow, red, grey, total}}`. `start` defaults to this week's Monday; a non-Monday → 400 `VALIDATION`. DAILY/EVERY_N_DAYS habits have 7 cells (non-due days: `state: NOT_DUE`, `periodStart: null`, `editable: false`, `closesAt: null`); WEEKLY habits have 1 cell dated Monday. `intervalDays` is set for EVERY_N_DAYS habits and `null` otherwise (the web app shows "Every 3 days").
+  - `closesAt` (ISO-8601 UTC instant, e.g. `"2026-11-18T18:30:00Z"`) is midnight in the user's timezone at the start of the day after the period's last day (`periodEnd(periodStart) + 1 day`), i.e. when the period stops being current and an unmarked cell turns GREY. It is set whenever `periodStart` is set (including PAUSED and past periods) and `null` when `periodStart` is `null` (NOT_DUE). It drives the web app's "time left" countdown; it is not an edit lock (the 7-day editing window still applies).
   - `GET /api/stats/month?month=YYYY-MM` → `{month, overview:[{date, score}], habits:[{id, name, frequency, cells:[{date, state}]}], distribution}`. One overview entry and one cell per day of the month; `score` is 0–2 or `null`.
   - `GET /api/stats/streaks` → `[{habitId, name, current, best}]`.
   - Archived habits are excluded everywhere; habits are ordered by id.
@@ -3517,25 +3518,32 @@ class StatsIntegrationTest extends IntegrationTest {
 
                 .andExpect(jsonPath("$.habits[0].id").value(daily))
                 .andExpect(jsonPath("$.habits[0].minText").value("min"))
+                .andExpect(jsonPath("$.habits[0].intervalDays").value(nullValue()))
                 .andExpect(jsonPath("$.habits[0].cells", hasSize(7)))
                 .andExpect(jsonPath("$.habits[0].cells[0].date").value("2026-11-16"))
                 .andExpect(jsonPath("$.habits[0].cells[0].periodStart").value("2026-11-16"))
                 .andExpect(jsonPath("$.habits[0].cells[0].state").value("GREEN"))
                 .andExpect(jsonPath("$.habits[0].cells[0].editable").value(true))
                 .andExpect(jsonPath("$.habits[0].cells[0].note").value("great"))
+                .andExpect(jsonPath("$.habits[0].cells[0].closesAt").value("2026-11-16T18:30:00Z"))
                 .andExpect(jsonPath("$.habits[0].cells[1].state").value("GREY"))
                 .andExpect(jsonPath("$.habits[0].cells[2].state").value("PENDING"))
                 .andExpect(jsonPath("$.habits[0].cells[2].editable").value(true))
+                .andExpect(jsonPath("$.habits[0].cells[2].closesAt").value("2026-11-18T18:30:00Z"))
                 .andExpect(jsonPath("$.habits[0].cells[3].state").value("PENDING"))
                 .andExpect(jsonPath("$.habits[0].cells[3].editable").value(false))
 
                 .andExpect(jsonPath("$.habits[1].id").value(everyThree))
+                .andExpect(jsonPath("$.habits[1].intervalDays").value(3))
                 .andExpect(jsonPath("$.habits[1].cells", hasSize(7)))
                 .andExpect(jsonPath("$.habits[1].cells[0].state").value("NOT_DUE"))
                 .andExpect(jsonPath("$.habits[1].cells[0].periodStart").value(nullValue()))
                 .andExpect(jsonPath("$.habits[1].cells[0].editable").value(false))
+                .andExpect(jsonPath("$.habits[1].cells[0].closesAt").value(nullValue()))
                 .andExpect(jsonPath("$.habits[1].cells[1].periodStart").value("2026-11-17"))
                 .andExpect(jsonPath("$.habits[1].cells[1].state").value("GREY"))
+                // period 17–19 Nov closes at midnight 20 Nov IST
+                .andExpect(jsonPath("$.habits[1].cells[1].closesAt").value("2026-11-19T18:30:00Z"))
                 .andExpect(jsonPath("$.habits[1].cells[4].state").value("PENDING"))
 
                 .andExpect(jsonPath("$.habits[2].id").value(weekly))
@@ -3543,6 +3551,7 @@ class StatsIntegrationTest extends IntegrationTest {
                 .andExpect(jsonPath("$.habits[2].cells[0].date").value("2026-11-16"))
                 .andExpect(jsonPath("$.habits[2].cells[0].state").value("YELLOW"))
                 .andExpect(jsonPath("$.habits[2].cells[0].editable").value(true))
+                .andExpect(jsonPath("$.habits[2].cells[0].closesAt").value("2026-11-22T18:30:00Z"))
 
                 .andExpect(jsonPath("$.distribution.green").value(1))
                 .andExpect(jsonPath("$.distribution.yellow").value(1))
@@ -3558,6 +3567,7 @@ class StatsIntegrationTest extends IntegrationTest {
         mvc.perform(get("/api/stats/week").param("start", "2026-11-09").with(as(bob)))
                 .andExpect(jsonPath("$.habits[0].cells[0].state").value("NOT_DUE"))
                 .andExpect(jsonPath("$.habits[0].cells[0].periodStart").value(nullValue()))
+                .andExpect(jsonPath("$.habits[0].cells[0].closesAt").value(nullValue()))
                 .andExpect(jsonPath("$.distribution.total").value(0));
     }
 
@@ -3654,16 +3664,19 @@ import com.chronos.habit.domain.CellState;
 import com.chronos.habit.domain.Distribution;
 import com.chronos.habit.domain.Frequency;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 
 public record WeekResponse(LocalDate start, LocalDate today, List<Habit> habits, Distribution distribution) {
 
     public record Habit(long id, String name, String minText, String targetText, Frequency frequency,
-                        List<Cell> cells) {
+                        Integer intervalDays, List<Cell> cells) {
     }
 
-    public record Cell(LocalDate date, LocalDate periodStart, CellState state, boolean editable, String note) {
+    /** {@code closesAt}: midnight (user's zone) after the period's last day; null when {@code periodStart} is null. */
+    public record Cell(LocalDate date, LocalDate periodStart, CellState state, boolean editable, String note,
+                       Instant closesAt) {
     }
 }
 ```
@@ -3692,6 +3705,8 @@ public record MonthResponse(YearMonth month, List<Day> overview, List<Habit> hab
     }
 }
 ```
+
+> Jackson 3 (Spring Boot 4) writes `Instant` as an ISO-8601 string (`"2026-11-18T18:30:00Z"`) by default. If `closesAt` comes out as a number, set `spring.jackson.serialization.write-dates-as-timestamps=false`.
 
 > Jackson serializes `YearMonth` as `"2026-11"` by default in Spring Boot 4 (Jackson 3, java.time built in). If it comes out as an array, change the component to `String month` and pass `month.toString()`.
 
@@ -3723,8 +3738,10 @@ import com.chronos.habit.domain.HabitTimeline;
 import org.springframework.stereotype.Service;
 
 import java.time.DayOfWeek;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.YearMonth;
+import java.time.ZoneId;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
@@ -3756,6 +3773,7 @@ public class StatsService {
             throw new ApiException(ErrorCode.VALIDATION, "start: must be a Monday");
         }
         LocalDate end = start.plusDays(6);
+        ZoneId zone = ZoneId.of(userService.get(userId).timezone());
         List<Habit> habits = habitService.list(userId, null);
         Map<Long, HabitTimeline> byId = timelines.load(habits, today);
         var notes = checkIns.notesBetween(byId.keySet(), start, end);
@@ -3771,11 +3789,11 @@ public class StatsService {
             List<WeekResponse.Cell> cells = days.stream()
                     .map(day -> timeline.dueOn(day)
                             .map(p -> new WeekResponse.Cell(day, p, timeline.stateOf(p), timeline.isEditable(p),
-                                    habitNotes.get(p)))
-                            .orElseGet(() -> new WeekResponse.Cell(day, null, CellState.NOT_DUE, false, null)))
+                                    habitNotes.get(p), closesAt(timeline, p, zone)))
+                            .orElseGet(() -> new WeekResponse.Cell(day, null, CellState.NOT_DUE, false, null, null)))
                     .toList();
             rows.add(new WeekResponse.Habit(habit.id(), habit.name(), habit.minText(), habit.targetText(),
-                    habit.frequency(), cells));
+                    habit.frequency(), habit.intervalDays(), cells));
             distribution = distribution.plus(timeline.distribution(start, end));
         }
         return new WeekResponse(start, today, rows, distribution);
@@ -3817,6 +3835,11 @@ public class StatsService {
                     return new StreakResponse(h.id(), h.name(), streak.current(), streak.best());
                 })
                 .toList();
+    }
+
+    /** Midnight in the user's zone after the period's last day, i.e. when the period stops being current. */
+    private static Instant closesAt(HabitTimeline timeline, LocalDate periodStart, ZoneId zone) {
+        return timeline.schedule().periodEnd(periodStart).plusDays(1).atStartOfDay(zone).toInstant();
     }
 
     /** WEEKLY habits show their week's state on every day; others show the state on due days only. */

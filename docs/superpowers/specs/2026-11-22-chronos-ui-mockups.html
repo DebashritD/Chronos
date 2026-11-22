@@ -1,183 +1,237 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><title>Chronos — UI mockups</title>
+<html lang="en"><head><meta charset="utf-8"><title>Chronos — UI v2 (native, dark)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#0b0d17;--surface:#151a2e;--muted:#9aa0b8;--accent:#8b9cff;--g:#22c55e;--y:#eab308;--r:#ef4444;--grey:#4b5163}
-*{box-sizing:border-box}body{margin:0;background:#05060c;color:var(--muted);font-family:system-ui,sans-serif;padding:24px}
-h2.label{color:#fff;font-size:14px;font-weight:600;margin:32px 0 8px;letter-spacing:.04em;text-transform:uppercase}
-.row{display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start}
-.frame{background:var(--bg);border:1px solid #23283d;border-radius:12px;overflow:hidden;position:relative}
-.desk{width:880px;min-height:560px}.phone{width:375px;height:720px}
-header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #1c2133}
-.brand{color:var(--accent);font-weight:600;font-size:20px;letter-spacing:.03em}
-.user{font-size:13px;display:flex;gap:12px}
-nav.top{display:flex;gap:24px;padding:8px 16px;border-bottom:1px solid #1c2133;font-size:14px}
-nav a{color:var(--muted);text-decoration:none}nav a.on{color:var(--accent);font-weight:600}
-nav.bottom{position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:space-around;padding:14px 0 22px;background:rgba(21,26,46,.95);border-top:1px solid #1c2133;font-size:13px}
-main{padding:16px 20px}
-h1{color:var(--accent);font-size:20px;margin:0}
-.bar{display:flex;align-items:center;gap:12px;margin-bottom:14px}
-.btn{border:1px solid rgba(154,160,184,.3);border-radius:6px;padding:4px 10px;font-size:12px;color:var(--muted);background:none}
-.primary{background:var(--accent);color:var(--bg);border:none;border-radius:6px;padding:8px 12px;font-weight:600;font-size:13px}
-table{border-collapse:separate;border-spacing:6px;width:100%}
-th{font-size:11px;font-weight:500;text-align:center}th.h{text-align:left;font-size:14px;color:#cfd3e6;font-weight:500;width:110px}
-th small{display:block;font-size:10px;opacity:.7}
-.c{height:36px;border-radius:6px}
+:root{--bg:#0a0a0f;--card:#15151d;--card2:#1c1c26;--line:rgba(255,255,255,.06);--txt:#f4f4f7;--sub:#8e8e9a;--dim:#5a5a66;
+--g:#30d158;--y:#ffd60a;--r:#ff453a;--grey:#2c2c36;--acc:#7c8cff}
+*{box-sizing:border-box}
+body{margin:0;background:#000;color:var(--txt);font-family:Inter,system-ui,sans-serif;padding:32px;-webkit-font-smoothing:antialiased}
+.lbl{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--sub);margin:40px 0 12px}
+.row{display:flex;gap:32px;flex-wrap:wrap;align-items:flex-start}
+.phone{width:390px;height:844px;background:var(--bg);border-radius:48px;border:10px solid #1a1a1f;position:relative;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.status{height:44px;display:flex;justify-content:space-between;align-items:center;padding:0 28px;font-size:14px;font-weight:600}
+.scr{padding:8px 18px 110px;height:calc(100% - 44px);overflow:hidden}
+.eyebrow{font-size:13px;color:var(--sub);font-weight:500;text-transform:uppercase;letter-spacing:.06em}
+.big{font-size:34px;font-weight:800;letter-spacing:-.02em;margin:2px 0 0}
+.tabbar{position:absolute;left:0;right:0;bottom:0;height:88px;background:rgba(20,20,28,.78);backdrop-filter:blur(20px);border-top:1px solid var(--line);display:flex;justify-content:space-around;padding-top:10px}
+.tab{display:flex;flex-direction:column;align-items:center;gap:4px;font-size:10.5px;color:var(--dim);font-weight:500}
+.tab.on{color:var(--acc)}
+.tab svg{width:24px;height:24px}
+svg{stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.hero{display:flex;align-items:center;gap:18px;background:linear-gradient(135deg,#1d1f33,#15151d);border:1px solid var(--line);border-radius:24px;padding:18px;margin:18px 0}
+.ring{position:relative;width:84px;height:84px;flex:none}
+.ring .n{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:800;font-size:22px;font-variant-numeric:tabular-nums}
+.ring .n small{font-size:10px;color:var(--sub);font-weight:500}
+.hero h3{margin:0;font-size:17px}.hero p{margin:4px 0 0;color:var(--sub);font-size:13px;line-height:1.4}
+.hc{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:16px;margin-bottom:12px}
+.hc .top{display:flex;justify-content:space-between;align-items:flex-start}
+.hc .name{font-size:17px;font-weight:700}
+.hc .meta{font-size:12.5px;color:var(--sub);margin-top:3px}
+.flame{display:flex;align-items:center;gap:4px;font-size:13px;font-weight:700;color:#ff9f0a;font-variant-numeric:tabular-nums}
+.flame svg{width:16px;height:16px;fill:#ff9f0a;stroke:none}
+.flame.off{color:var(--dim)}.flame.off svg{fill:var(--dim)}
+.acts{display:flex;gap:8px;margin-top:14px}
+.ab{flex:1;height:44px;border-radius:14px;border:1px solid var(--line);background:var(--card2);display:flex;align-items:center;justify-content:center;gap:6px;font-size:13px;font-weight:600;color:var(--sub)}
+.ab i{width:10px;height:10px;border-radius:50%}
+.ab.G.on{background:var(--g);color:#05230f;border-color:transparent;box-shadow:0 6px 20px rgba(48,209,88,.35)}
+.ab.Y.on{background:var(--y);color:#2b2300;border-color:transparent;box-shadow:0 6px 20px rgba(255,214,10,.3)}
+.ab.R.on{background:var(--r);color:#2d0503;border-color:transparent;box-shadow:0 6px 20px rgba(255,69,58,.3)}
+.dots{display:flex;gap:5px;margin-top:12px}
+.dots b{width:100%;height:6px;border-radius:3px;background:var(--grey)}
 .G{background:var(--g)}.Y{background:var(--y)}.R{background:var(--r)}.GR{background:var(--grey)}
-.P{border:1.5px solid rgba(154,160,184,.6)}.ND{background:transparent}
-.PA{background:var(--surface) repeating-linear-gradient(45deg,rgba(154,160,184,.35) 0 2px,transparent 2px 6px)}
-.today{outline:2px solid var(--accent);outline-offset:2px}
-.locked{opacity:.55}
-.card{background:var(--surface);border-radius:10px;padding:14px;margin-top:14px}
-.card h3{margin:0 0 10px;font-size:13px;color:#cfd3e6;font-weight:600}
-.dist{display:flex;height:12px;border-radius:6px;overflow:hidden}
-.legend{display:flex;gap:14px;font-size:12px;margin-top:8px}.dot{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px}
-.streaks li{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;border-bottom:1px solid #1f2438}
-ul{list-style:none;margin:0;padding:0}
-.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
-.cal .d{aspect-ratio:1;border-radius:5px;font-size:10px;padding:3px;color:#0b0d17;font-weight:600}
-.cal .wd{font-size:10px;text-align:center}
-.cal .o{border:1.5px solid rgba(154,160,184,.4);color:var(--muted)}
-.mini{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}.mini div{aspect-ratio:1;border-radius:3px}
-.overlay{position:absolute;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center}
-.sheet{background:var(--surface);width:100%;border-radius:16px 16px 0 0;padding:18px}
-.sheet h3{color:#fff;margin:0 0 2px;font-size:16px}.sheet p.sub{margin:0 0 14px;font-size:12px}
-.pick{display:flex;align-items:center;gap:12px;width:100%;padding:12px;border-radius:10px;margin-bottom:8px;border:1px solid #2a3050;background:var(--bg);color:#e6e8f2;font-size:14px;text-align:left}
-.pick.sel{border-color:var(--g);box-shadow:0 0 0 1px var(--g)}
-.pick .sw{width:22px;height:22px;border-radius:6px;flex:none}.pick small{display:block;color:var(--muted);font-size:12px}
-textarea,input,select{width:100%;background:var(--bg);border:1px solid rgba(154,160,184,.3);border-radius:6px;color:var(--muted);padding:8px 10px;font:inherit;font-size:13px}
-label{font-size:12px;display:block;margin:10px 0 4px}
-.habit{background:var(--surface);border-radius:10px;padding:12px;margin-bottom:10px}
-.habit .t{display:flex;justify-content:space-between}.habit b{color:var(--accent)}
-.habit p{margin:3px 0;font-size:13px}.acts{display:flex;gap:6px;margin-top:8px}
-.tag{font-size:10px;text-transform:uppercase;letter-spacing:.06em;background:#2a3050;padding:2px 6px;border-radius:4px}
-.center{display:flex;align-items:center;justify-content:center;height:100%}
-.login{background:var(--surface);border-radius:10px;padding:28px;width:300px}
-.note{font-size:12px;color:#7d84a3;max-width:880px;margin:4px 0 0}
+.dots b.G{background:var(--g)}.dots b.Y{background:var(--y)}.dots b.R{background:var(--r)}.dots b.T{background:transparent;border:1.5px solid var(--acc)}.dots b.F{background:transparent;border:1px dashed var(--dim)}
+.due{display:inline-flex;align-items:center;gap:5px;margin-top:8px;font-size:12px;font-weight:600;color:var(--sub);background:var(--card2);padding:4px 9px;border-radius:999px;font-variant-numeric:tabular-nums}.due svg{width:13px;height:13px}.due.soon{color:#ff9f0a;background:rgba(255,159,10,.12)}.due.done{color:var(--g);background:rgba(48,209,88,.1)}
+.pill{font-size:11px;font-weight:600;padding:3px 8px;border-radius:999px;background:var(--card2);color:var(--sub)}
+.muted{opacity:.55}
+.seg{display:flex;background:var(--card);border-radius:12px;padding:3px;margin:16px 0}
+.seg span{flex:1;text-align:center;padding:8px;font-size:13px;font-weight:600;color:var(--sub);border-radius:9px}
+.seg span.on{background:var(--card2);color:var(--txt);box-shadow:0 1px 4px rgba(0,0,0,.4)}
+.wk{display:grid;grid-template-columns:84px repeat(7,1fr);gap:7px;align-items:center}
+.wk .h{font-size:11px;color:var(--sub);text-align:center;font-weight:600}
+.wk .h b{display:block;font-size:15px;color:var(--txt);margin-top:2px}
+.wk .h.td b{background:var(--acc);color:#0a0a0f;border-radius:50%;width:26px;height:26px;line-height:26px;margin:2px auto 0}
+.wk .n{font-size:13.5px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wk .n small{display:block;font-size:10.5px;color:var(--sub);font-weight:500}
+.sq{aspect-ratio:1;border-radius:10px}
+.sq.P{border:1.5px solid #34343f}.sq.T{border:2px solid var(--acc);box-shadow:0 0 0 3px rgba(124,140,255,.15)}
+.sq.N{background:transparent}.sq.PA{background:repeating-linear-gradient(45deg,#26262f 0 3px,#1a1a22 3px 7px)}
+.sq.G{box-shadow:inset 0 -3px 0 rgba(0,0,0,.18)}.sq.Y{box-shadow:inset 0 -3px 0 rgba(0,0,0,.18)}.sq.R{box-shadow:inset 0 -3px 0 rgba(0,0,0,.18)}
+.wspan{grid-column:span 7;height:100%;min-height:34px;border-radius:10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:22px;padding:16px;margin-top:14px}
+.card h4{margin:0 0 12px;font-size:13px;color:var(--sub);font-weight:600;text-transform:uppercase;letter-spacing:.06em}
+.donut{display:flex;align-items:center;gap:18px}
+.leg div{display:flex;align-items:center;gap:8px;font-size:13px;margin:5px 0}.leg i{width:10px;height:10px;border-radius:3px}
+.leg b{margin-left:auto;font-variant-numeric:tabular-nums;padding-left:16px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.cal .wd{font-size:10.5px;color:var(--dim);text-align:center;font-weight:600}
+.cal .d{aspect-ratio:1;border-radius:9px;font-size:11px;font-weight:700;display:flex;align-items:flex-start;justify-content:flex-start;padding:5px;color:rgba(0,0,0,.55)}
+.cal .d.o{background:var(--card2);color:var(--dim)}.cal .d.e{background:transparent}
+.s4{background:#30d158}.s3{background:#7ed957}.s2{background:#ffd60a}.s1{background:#ff8a3d}.s0{background:#ff453a}
+.cal .d.td{outline:2px solid var(--acc);outline-offset:2px}
+.hm{display:grid;grid-template-columns:repeat(30,1fr);gap:3px;margin-top:8px}.hm i{aspect-ratio:1;border-radius:3px;background:var(--grey)}
+.scrim{position:absolute;inset:0;background:rgba(0,0,0,.55);backdrop-filter:blur(3px)}
+.sheet{position:absolute;left:0;right:0;bottom:0;background:#1a1a23;border-radius:28px 28px 0 0;padding:10px 20px 34px;border-top:1px solid var(--line)}
+.grab{width:40px;height:5px;border-radius:3px;background:#3a3a46;margin:0 auto 16px}
+.opt{display:flex;align-items:center;gap:14px;padding:14px;border-radius:16px;background:var(--card2);margin-bottom:10px;border:1.5px solid transparent}
+.opt .sw{width:34px;height:34px;border-radius:11px;flex:none;display:flex;align-items:center;justify-content:center}
+.opt .sw svg{width:18px;height:18px;stroke:#0a0a0f;stroke-width:3}
+.opt.sel{border-color:var(--g);background:rgba(48,209,88,.08)}
+.opt b{font-size:15px}.opt small{display:block;color:var(--sub);font-size:12.5px;margin-top:2px}
+.field{background:var(--card2);border-radius:14px;padding:13px 14px;font-size:14px;color:var(--dim);margin:6px 0 16px}
+.btns{display:flex;gap:10px}.b1{flex:1;height:50px;border-radius:15px;background:var(--acc);color:#0a0a0f;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center}
+.b2{height:50px;padding:0 18px;border-radius:15px;background:var(--card2);color:var(--r);font-weight:600;font-size:15px;display:flex;align-items:center}
+.list .it{display:flex;align-items:center;gap:12px;padding:14px 0;border-bottom:1px solid var(--line)}
+.ic{width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:19px;flex:none}
+.it .t{flex:1}.it .t b{font-size:15.5px}.it .t small{display:block;color:var(--sub);font-size:12.5px;margin-top:2px}
+.chev{color:var(--dim)}
+.fab{position:absolute;right:20px;bottom:104px;width:58px;height:58px;border-radius:20px;background:var(--acc);display:flex;align-items:center;justify-content:center;box-shadow:0 10px 30px rgba(124,140,255,.45)}
+.fab svg{stroke:#0a0a0f;stroke-width:2.6;width:26px;height:26px}
+/* desktop */
+.desk{width:1180px;height:760px;background:var(--bg);border-radius:16px;border:1px solid #222;display:flex;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,.6)}
+.side{width:230px;background:#0e0e14;border-right:1px solid var(--line);padding:22px 14px;display:flex;flex-direction:column}
+.logo{display:flex;align-items:center;gap:10px;font-weight:800;font-size:18px;padding:0 8px 22px}
+.logo i{width:30px;height:30px;border-radius:9px;background:conic-gradient(var(--g) 0 33%,var(--y) 0 66%,var(--r) 0);display:block}
+.nv{display:flex;align-items:center;gap:12px;padding:10px 12px;border-radius:11px;font-size:14px;font-weight:600;color:var(--sub);margin-bottom:2px}
+.nv svg{width:19px;height:19px}.nv.on{background:var(--card2);color:var(--txt)}.nv.on svg{color:var(--acc)}
+.me{margin-top:auto;display:flex;align-items:center;gap:10px;padding:10px;border-radius:12px;background:var(--card)}
+.av{width:32px;height:32px;border-radius:50%;background:linear-gradient(135deg,#7c8cff,#bf5af2);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px}
+.dmain{flex:1;padding:28px 32px;overflow:hidden;display:grid;grid-template-columns:1fr 400px;gap:24px}
+.note{color:var(--sub);font-size:13px;max-width:1180px;line-height:1.5}
 </style></head><body>
-<h1 style="color:#fff">Chronos: UI mockups</h1>
-<p class="note">Static mockups with sample data. Today is Wed 18 Nov. Cells: green = target hit, yellow = minimum done, red = did nothing, grey = not marked (missed), outlined = not marked yet, hatched = paused, blank = not due.</p>
+<h1 style="font-size:28px;margin:0">Chronos: UI v2 (native app feel, dark)</h1>
+<p class="note"><b>Tweak:</b> each Today card shows how long is left to mark it, counted to midnight in your timezone at the end of the current period. Daily habits show hours (e.g. "14h left"); every-N-days and weekly habits show days and hours (e.g. "1d 14h left"). The chip turns green once marked, and orange in the last 3 hours (see "Stretch" on desktop). Sample data, with today as Wed 18 Nov. The home screen becomes <b>Today</b>: one tap marks each habit Green, Yellow or Red. Tap the habit name to open the sheet with a note. Week and Month move to a <b>Progress</b> tab. Colours use the iOS system palette, the font is Inter, and the cards are rounded with soft depth.</p>
 
-<h2 class="label">1 · Week view (desktop): home page "/"</h2>
-<div class="frame desk">
-<header><span class="brand">Chronos</span><span class="user"><span>bob</span><span>Log out</span></span></header>
-<nav class="top"><a class="on">Week</a><a>Month</a><a>Habits</a><a>Settings</a></nav>
-<main>
-<div class="bar"><button class="btn">◀</button><h1>16 – 22 Nov 2026</h1><button class="btn">▶</button><button class="btn">This week</button></div>
-<table>
-<tr><th></th><th>Mon<small>16</small></th><th>Tue<small>17</small></th><th>Wed<small>18</small></th><th>Thu<small>19</small></th><th>Fri<small>20</small></th><th>Sat<small>21</small></th><th>Sun<small>22</small></th></tr>
-<tr><th class="h">Read</th><td><div class="c G"></div></td><td><div class="c R"></div></td><td><div class="c P today"></div></td><td><div class="c P locked"></div></td><td><div class="c P locked"></div></td><td><div class="c P locked"></div></td><td><div class="c P locked"></div></td></tr>
-<tr><th class="h">Run<small style="font-size:10px;opacity:.7;display:block">every 3 days</small></th><td><div class="c Y"></div></td><td><div class="c ND"></div></td><td><div class="c ND"></div></td><td><div class="c P locked"></div></td><td><div class="c ND"></div></td><td><div class="c ND"></div></td><td><div class="c P locked"></div></td></tr>
-<tr><th class="h">Meditate</th><td><div class="c PA"></div></td><td><div class="c PA"></div></td><td><div class="c PA"></div></td><td><div class="c PA"></div></td><td><div class="c PA"></div></td><td><div class="c PA"></div></td><td><div class="c PA"></div></td></tr>
-<tr><th class="h">Piano<small style="font-size:10px;opacity:.7;display:block">weekly</small></th><td colspan="7"><div class="c P today"></div></td></tr>
-</table>
-<div class="two">
-<div class="card"><h3>This week</h3>
-<div class="dist"><div class="G" style="width:33%"></div><div class="Y" style="width:33%"></div><div class="R" style="width:34%"></div></div>
-<div class="legend"><span><i class="dot G"></i>Green 1 (33%)</span><span><i class="dot Y"></i>Yellow 1 (33%)</span><span><i class="dot R"></i>Red 1 (33%)</span><span><i class="dot GR"></i>Grey 0</span></div></div>
-<div class="card"><h3>Streaks</h3><ul class="streaks">
-<li><span>Read</span><span>0 now · best 9</span></li><li><span>Run</span><span>4 now · best 6</span></li><li><span>Piano</span><span>7 now · best 7</span></li></ul></div>
-</div>
-</main></div>
-
-<h2 class="label">2 · Mobile: week + cell picker (tap an editable cell)</h2>
+<div class="lbl">1 · Mobile</div>
 <div class="row">
-<div class="frame phone">
-<header><span class="brand">Chronos</span><span class="user"><span>bob</span><span>Log out</span></span></header>
-<main style="padding:12px">
-<div class="bar"><button class="btn">◀</button><h1 style="font-size:16px">16 – 22 Nov 2026</h1><button class="btn">▶</button></div>
-<table style="border-spacing:3px"><tr><th></th><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th><th>S</th></tr>
-<tr><th class="h" style="font-size:12px;width:64px">Read</th><td><div class="c G" style="height:30px"></div></td><td><div class="c R" style="height:30px"></div></td><td><div class="c P today" style="height:30px"></div></td><td><div class="c P locked" style="height:30px"></div></td><td><div class="c P locked" style="height:30px"></div></td><td><div class="c P locked" style="height:30px"></div></td><td><div class="c P locked" style="height:30px"></div></td></tr>
-<tr><th class="h" style="font-size:12px">Run</th><td><div class="c Y" style="height:30px"></div></td><td></td><td></td><td><div class="c P locked" style="height:30px"></div></td><td></td><td></td><td><div class="c P locked" style="height:30px"></div></td></tr>
-<tr><th class="h" style="font-size:12px">Piano</th><td colspan="7"><div class="c P today" style="height:30px"></div></td></tr></table>
-<div class="card"><h3>This week</h3><div class="dist"><div class="G" style="width:33%"></div><div class="Y" style="width:33%"></div><div class="R" style="width:34%"></div></div></div>
-</main>
-<nav class="bottom"><a class="on">Week</a><a>Month</a><a>Habits</a><a>Settings</a></nav>
+
+<!-- TODAY -->
+<div class="phone"><div class="status"><span>9:41</span><span>●●● ▮</span></div><div class="scr">
+<div class="eyebrow">Wednesday, 18 Nov</div><div class="big">Today</div>
+<div class="hero"><div class="ring"><svg viewBox="0 0 84 84" width="84" height="84"><circle cx="42" cy="42" r="35" stroke="#26262f" stroke-width="9"/><circle cx="42" cy="42" r="35" stroke="url(#gr)" stroke-width="9" stroke-dasharray="110 220" transform="rotate(-90 42 42)"/><defs><linearGradient id="gr"><stop offset="0" stop-color="#30d158"/><stop offset="1" stop-color="#7ed957"/></linearGradient></defs></svg><div class="n">2/4<small>DONE</small></div></div>
+<div><h3>Keep the chain green</h3><p>2 habits left today. Even the minimum keeps it off red.</p></div></div>
+
+<div class="hc"><div class="top"><div><div class="name">Read</div><div class="meta">Min 5 pages · Target 20 pages</div><div class="due done"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>14h left today</div></div><div class="flame"><svg viewBox="0 0 24 24"><path d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-5 3-6 0 2 1 3 2 3 0-3-1-6 1-9z"/></svg>12</div></div>
+<div class="acts"><div class="ab G on"><i style="background:#05230f"></i>Target</div><div class="ab Y"><i class="Y"></i>Minimum</div><div class="ab R"><i class="R"></i>Missed</div></div>
+<div class="dots"><b class="G"></b><b class="G"></b><b class="Y"></b><b class="G"></b><b class="G"></b><b class="R"></b><b class="G"></b></div></div>
+
+<div class="hc"><div class="top"><div><div class="name">Run</div><div class="meta">Every 3 days · Min 1 km · Target 5 km</div><div class="due "><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>1d 14h left in this period</div></div><div class="flame"><svg viewBox="0 0 24 24"><path d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-5 3-6 0 2 1 3 2 3 0-3-1-6 1-9z"/></svg>4</div></div>
+<div class="acts"><div class="ab G"><i class="G"></i>Target</div><div class="ab Y on"><i style="background:#2b2300"></i>Minimum</div><div class="ab R"><i class="R"></i>Missed</div></div></div>
+
+<div class="hc"><div class="top"><div><div class="name">Piano</div><div class="meta">This week · Min 1 session · Target 3</div><div class="due "><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>4d 14h left this week</div></div><div class="flame off"><svg viewBox="0 0 24 24"><path d="M12 2c1 4 6 6 6 12a6 6 0 0 1-12 0c0-3 2-5 3-6 0 2 1 3 2 3 0-3-1-6 1-9z"/></svg>0</div></div>
+<div class="acts"><div class="ab G"><i class="G"></i>Target</div><div class="ab Y"><i class="Y"></i>Minimum</div><div class="ab R"><i class="R"></i>Missed</div></div></div>
+</div>
+<div class="tabbar"><div class="tab on"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>Today</div><div class="tab"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>Progress</div><div class="tab"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Habits</div><div class="tab"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>Account</div></div>
 </div>
 
-<div class="frame phone">
-<header><span class="brand">Chronos</span><span class="user"><span>bob</span></span></header>
-<div class="overlay"><div class="sheet">
-<h3>Read</h3><p class="sub">Wed 18 Nov · Not marked yet</p>
-<button class="pick sel"><span class="sw G"></span><span>Green<small>Target: 20 pages</small></span></button>
-<button class="pick"><span class="sw Y"></span><span>Yellow<small>Minimum: 1 page</small></span></button>
-<button class="pick"><span class="sw R"></span><span>Red<small>Did nothing</small></span></button>
-<label>Note (optional)</label><textarea rows="2" placeholder="e.g. finished chapter 4"></textarea>
-<div style="display:flex;justify-content:space-between;margin-top:12px"><button class="btn">Clear</button><span style="display:flex;gap:8px"><button class="btn">Cancel</button><button class="primary">Save</button></span></div>
-</div></div></div>
-
-<div class="frame phone"><div class="center">
-<div class="login"><h1 style="text-align:center;margin-bottom:18px">Log in</h1>
-<label>Username</label><input value="bob"><label>Password</label><input type="password" value="password">
-<button class="primary" style="width:100%;margin-top:16px">Log in</button>
-<p style="text-align:center;font-size:12px;margin-top:14px">New here? <span style="color:var(--accent)">Create an account</span></p></div></div></div>
+<!-- PROGRESS: WEEK -->
+<div class="phone"><div class="status"><span>9:41</span><span>●●● ▮</span></div><div class="scr">
+<div class="big">Progress</div>
+<div class="seg"><span class="on">Week</span><span>Month</span></div>
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><span class="pill">‹</span><b style="font-size:16px">16 – 22 Nov</b><span class="pill">›</span></div>
+<div class="wk">
+<div></div><div class="h">M<b>16</b></div><div class="h">T<b>17</b></div><div class="h td">W<b>18</b></div><div class="h">T<b>19</b></div><div class="h">F<b>20</b></div><div class="h">S<b>21</b></div><div class="h">S<b>22</b></div>
+<div class="n">Read</div><div class="sq G"></div><div class="sq R"></div><div class="sq G T"></div><div class="sq P muted"></div><div class="sq P muted"></div><div class="sq P muted"></div><div class="sq P muted"></div>
+<div class="n">Run<small>every 3 days</small></div><div class="sq Y"></div><div class="sq N"></div><div class="sq N"></div><div class="sq P muted"></div><div class="sq N"></div><div class="sq N"></div><div class="sq P muted"></div>
+<div class="n" style="opacity:.6">Meditate<small>paused</small></div><div class="sq PA"></div><div class="sq PA"></div><div class="sq PA"></div><div class="sq PA"></div><div class="sq PA"></div><div class="sq PA"></div><div class="sq PA"></div>
+<div class="n">Piano<small>weekly</small></div><div class="wspan sq P T" style="aspect-ratio:auto"></div>
+</div>
+<div class="card"><h4>This week</h4><div class="donut"><svg width="96" height="96" viewBox="0 0 42 42"><circle cx="21" cy="21" r="15.9" stroke="#26262f" stroke-width="6"/><circle cx="21" cy="21" r="15.9" stroke="#30d158" stroke-width="6" stroke-dasharray="50 50" transform="rotate(-90 21 21)"/><circle cx="21" cy="21" r="15.9" stroke="#ffd60a" stroke-width="6" stroke-dasharray="25 75" stroke-dashoffset="-50" transform="rotate(-90 21 21)"/><circle cx="21" cy="21" r="15.9" stroke="#ff453a" stroke-width="6" stroke-dasharray="25 75" stroke-dashoffset="-75" transform="rotate(-90 21 21)"/></svg>
+<div class="leg" style="flex:1"><div><i class="G"></i>Green<b>2</b></div><div><i class="Y"></i>Yellow<b>1</b></div><div><i class="R"></i>Red<b>1</b></div><div><i class="GR"></i>Unmarked<b>0</b></div></div></div></div>
+<div class="card"><h4>Streaks</h4>
+<div class="leg"><div>Read<b class="flame" style="color:#ff9f0a">🔥 12 · best 21</b></div><div>Run<b class="flame" style="color:#ff9f0a">🔥 4 · best 6</b></div><div>Piano<b class="flame off">0 · best 7</b></div></div></div>
+</div>
+<div class="tabbar"><div class="tab"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>Today</div><div class="tab on"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>Progress</div><div class="tab"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Habits</div><div class="tab"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>Account</div></div>
 </div>
 
-<h2 class="label">3 · Month view: "/month"</h2>
-<div class="frame desk" id="month">
-<header><span class="brand">Chronos</span><span class="user"><span>bob</span><span>Log out</span></span></header>
-<nav class="top"><a>Week</a><a class="on">Month</a><a>Habits</a><a>Settings</a></nav>
-<main>
-<div class="bar"><button class="btn">◀</button><h1>November 2026</h1><button class="btn">▶</button></div>
-<div class="two">
-<div class="card"><h3>All habits: daily score</h3><div class="cal" id="overview"></div>
-<div class="legend"><span><i class="dot R"></i>&lt; 0.5</span><span><i class="dot Y"></i>&lt; 1.25</span><span><i class="dot G"></i>≥ 1.25</span><span><i class="dot P"></i>no data</span></div></div>
-<div class="card"><h3>November distribution</h3>
-<div class="dist"><div class="G" style="width:48%"></div><div class="Y" style="width:27%"></div><div class="R" style="width:15%"></div><div class="GR" style="width:10%"></div></div>
-<div class="legend"><span><i class="dot G"></i>19 (48%)</span><span><i class="dot Y"></i>11 (27%)</span><span><i class="dot R"></i>6 (15%)</span><span><i class="dot GR"></i>4 (10%)</span></div>
-<h3 style="margin-top:18px">Per habit</h3>
-<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px" id="minis"></div></div>
-</div></main></div>
-
-<h2 class="label">4 · Habits: "/habits"</h2>
-<div class="row">
-<div class="frame desk" style="width:520px">
-<header><span class="brand">Chronos</span><span class="user"><span>bob</span><span>Log out</span></span></header>
-<nav class="top"><a>Week</a><a>Month</a><a class="on">Habits</a><a>Settings</a></nav>
-<main>
-<div class="bar" style="justify-content:space-between"><h1>Habits</h1><button class="primary">New habit</button></div>
-<div class="habit"><div class="t"><b>Read</b><span style="font-size:12px">Daily</span></div><p>Minimum: 1 page</p><p>Target: 20 pages</p><div class="acts"><button class="btn">Edit</button><button class="btn">Pause</button><button class="btn">Archive</button></div></div>
-<div class="habit"><div class="t"><b>Run</b><span style="font-size:12px">Every 3 days</span></div><p>Minimum: 1 km</p><p>Target: 5 km</p><div class="acts"><button class="btn">Edit</button><button class="btn">Pause</button><button class="btn">Archive</button></div></div>
-<div class="habit"><div class="t"><b>Meditate</b><span style="font-size:12px">Daily</span></div><span class="tag">Paused</span><p>Minimum: 2 min</p><p>Target: 15 min</p><div class="acts"><button class="btn">Edit</button><button class="btn">Resume</button><button class="btn">Archive</button></div></div>
-<p style="font-size:13px">▸ Archived (1)</p>
-</main></div>
-
-<div class="frame desk" style="width:420px">
-<header><span class="brand">Chronos</span><span class="user"><span>bob</span></span></header>
-<main><h1 style="margin-bottom:10px">New habit</h1>
-<div class="card" style="margin:0">
-<label>Name</label><input value="Run">
-<label>Bare minimum (YELLOW)</label><input value="1 km">
-<label>Target (GREEN)</label><input value="5 km">
-<label>Frequency</label><select><option>Every N days</option></select>
-<label>Every how many days?</label><input value="3">
-<label>Start date (optional, defaults to today)</label><input placeholder="dd/mm/yyyy">
-<div style="display:flex;gap:8px;margin-top:14px"><button class="primary">Create habit</button><button class="btn">Cancel</button></div>
-</div></main></div>
-
-<div class="frame desk" style="width:420px">
-<header><span class="brand">Chronos</span><span class="user"><span>bob</span></span></header>
-<nav class="top"><a>Week</a><a>Month</a><a>Habits</a><a class="on">Settings</a></nav>
-<main><h1 style="margin-bottom:10px">Settings</h1>
-<div class="card" style="margin:0"><h3>Account</h3><p style="font-size:13px;margin:0">Username: <b style="color:#cfd3e6">bob</b></p></div>
-<div class="card"><h3>Timezone</h3><input value="Asia/Kolkata"><div style="display:flex;gap:8px;margin-top:10px"><button class="btn">Use this device</button><button class="primary">Save</button></div></div>
-<div class="card"><h3>Change password</h3><label>Current password</label><input type="password"><label>New password</label><input type="password"><button class="primary" style="margin-top:12px">Change password</button></div>
-</main></div>
+<!-- PROGRESS: MONTH -->
+<div class="phone"><div class="status"><span>9:41</span><span>●●● ▮</span></div><div class="scr">
+<div class="big">Progress</div>
+<div class="seg"><span>Week</span><span class="on">Month</span></div>
+<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px"><span class="pill">‹</span><b style="font-size:16px">November 2026</b><span class="pill">›</span></div>
+<div class="card" style="margin-top:0"><h4>Daily score</h4><div class="cal">
+<div class="wd">M</div><div class="wd">T</div><div class="wd">W</div><div class="wd">T</div><div class="wd">F</div><div class="wd">S</div><div class="wd">S</div>
+<div class="d e"></div><div class="d e"></div><div class="d e"></div><div class="d e"></div><div class="d e"></div><div class="d e"></div><div class="d s4">1</div>
+<div class="d s3">2</div><div class="d s4">3</div><div class="d s2">4</div><div class="d s4">5</div><div class="d s1">6</div><div class="d s3">7</div><div class="d s4">8</div>
+<div class="d s4">9</div><div class="d s4">10</div><div class="d s3">11</div><div class="d s0">12</div><div class="d s2">13</div><div class="d s4">14</div><div class="d s3">15</div>
+<div class="d s3">16</div><div class="d s1">17</div><div class="d s4 td">18</div><div class="d o">19</div><div class="d o">20</div><div class="d o">21</div><div class="d o">22</div>
+<div class="d o">23</div><div class="d o">24</div><div class="d o">25</div><div class="d o">26</div><div class="d o">27</div><div class="d o">28</div><div class="d o">29</div>
+<div class="d o">30</div></div>
+<div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px;font-size:11px;color:var(--sub)"><span>Red</span><span style="display:flex;gap:4px"><i class="s0" style="width:14px;height:14px;border-radius:4px"></i><i class="s1" style="width:14px;height:14px;border-radius:4px"></i><i class="s2" style="width:14px;height:14px;border-radius:4px"></i><i class="s3" style="width:14px;height:14px;border-radius:4px"></i><i class="s4" style="width:14px;height:14px;border-radius:4px"></i></span><span>Green</span></div></div>
+<div class="card"><h4>By habit</h4>
+<div style="font-size:14px;font-weight:600">Read <span style="color:var(--sub);font-weight:500;font-size:12px">· 78% green</span></div>
+<div class="hm" id="h1"></div>
+<div style="font-size:14px;font-weight:600;margin-top:14px">Run <span style="color:var(--sub);font-weight:500;font-size:12px">· 6 of 6 periods marked</span></div>
+<div class="hm" id="h2"></div></div>
+</div>
+<div class="tabbar"><div class="tab"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>Today</div><div class="tab on"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>Progress</div><div class="tab"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Habits</div><div class="tab"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>Account</div></div>
+</div>
 </div>
 
+<div class="row" style="margin-top:32px">
+<!-- SHEET -->
+<div class="phone"><div class="status"><span>9:41</span><span>●●● ▮</span></div><div class="scr" style="opacity:.5">
+<div class="eyebrow">Wednesday, 18 Nov</div><div class="big">Today</div></div>
+<div class="scrim"></div>
+<div class="sheet"><div class="grab"></div>
+<div class="eyebrow" style="font-size:12px">Wed 18 Nov</div><div style="font-size:22px;font-weight:800;margin:2px 0 16px">Read</div>
+<div class="opt sel"><div class="sw G"><svg viewBox="0 0 24 24"><path d="M5 12l5 5 9-10"/></svg></div><div><b>Target hit</b><small>20 pages</small></div></div>
+<div class="opt"><div class="sw Y"></div><div><b>Minimum done</b><small>5 pages</small></div></div>
+<div class="opt"><div class="sw R"></div><div><b>Missed</b><small>Didn't do it</small></div></div>
+<div class="field">Add a note… (optional)</div>
+<div class="btns"><div class="b2">Clear</div><div class="b1">Save</div></div>
+</div></div>
+
+<!-- HABITS -->
+<div class="phone"><div class="status"><span>9:41</span><span>●●● ▮</span></div><div class="scr">
+<div class="big">Habits</div>
+<div class="list" style="margin-top:14px">
+<div class="it"><div class="ic" style="background:rgba(124,140,255,.15)">📖</div><div class="t"><b>Read</b><small>Daily · 5 → 20 pages</small></div><span class="chev">›</span></div>
+<div class="it"><div class="ic" style="background:rgba(48,209,88,.15)">🏃</div><div class="t"><b>Run</b><small>Every 3 days · 1 → 5 km</small></div><span class="chev">›</span></div>
+<div class="it"><div class="ic" style="background:rgba(255,214,10,.15)">🎹</div><div class="t"><b>Piano</b><small>Weekly · 1 → 3 sessions</small></div><span class="chev">›</span></div>
+<div class="it" style="opacity:.55"><div class="ic" style="background:#26262f">🧘</div><div class="t"><b>Meditate</b><small>Paused since 10 Nov</small></div><span class="pill">Resume</span></div>
+</div>
+<div class="eyebrow" style="margin-top:26px;font-size:11px">Archived</div>
+<div class="list"><div class="it" style="opacity:.45"><div class="ic" style="background:#26262f">✍️</div><div class="t"><b>Journal</b><small>Archived 2 Oct</small></div><span class="chev">›</span></div></div>
+</div>
+<div class="fab"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></div>
+<div class="tabbar"><div class="tab"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>Today</div><div class="tab"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>Progress</div><div class="tab on"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Habits</div><div class="tab"><svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M4 21c1-4 4-6 8-6s7 2 8 6"/></svg>Account</div></div>
+</div>
+
+<!-- LOGIN -->
+<div class="phone"><div class="status"><span>9:41</span><span>●●● ▮</span></div><div class="scr" style="display:flex;flex-direction:column;justify-content:center;padding-bottom:40px">
+<div style="width:72px;height:72px;border-radius:22px;background:conic-gradient(var(--g) 0 33%,var(--y) 0 66%,var(--r) 0);margin-bottom:22px;box-shadow:0 12px 40px rgba(48,209,88,.25)"></div>
+<div class="big">Never two reds<br>in a row.</div>
+<p style="color:var(--sub);font-size:15px;line-height:1.5;margin:10px 0 28px">Mark each habit green, yellow or red. Keep the chain alive.</p>
+<div class="field" style="margin:0 0 10px">Username</div><div class="field" style="margin:0 0 18px">Password</div>
+<div class="b1">Log in</div>
+<p style="text-align:center;color:var(--sub);font-size:14px;margin-top:18px">New here? <span style="color:var(--acc);font-weight:600">Create an account</span></p>
+</div></div>
+</div>
+
+<div class="lbl">2 · Desktop (sidebar; Today and Week side by side)</div>
+<div class="desk">
+<div class="side"><div class="logo"><i></i>Chronos</div>
+<div class="nv on"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M8 12l3 3 5-6"/></svg>Today</div>
+<div class="nv"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg>Progress</div>
+<div class="nv"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h10"/></svg>Habits</div>
+<div class="me"><div class="av">B</div><div style="font-size:13px"><b>bob</b><div style="color:var(--sub);font-size:11.5px">Asia/Kolkata</div></div></div></div>
+<div class="dmain">
+<div><div class="eyebrow">Wednesday, 18 Nov</div><div class="big">Today</div>
+<div class="hero"><div class="ring"><svg viewBox="0 0 84 84" width="84" height="84"><circle cx="42" cy="42" r="35" stroke="#26262f" stroke-width="9"/><circle cx="42" cy="42" r="35" stroke="#30d158" stroke-width="9" stroke-dasharray="110 220" transform="rotate(-90 42 42)"/></svg><div class="n">2/4<small>DONE</small></div></div><div><h3>Keep the chain green</h3><p>2 habits left today.</p></div></div>
+<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+<div class="hc" style="margin:0"><div class="top"><div><div class="name">Read</div><div class="meta">5 → 20 pages</div><div class="due done"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>14h left</div></div><div class="flame">🔥 12</div></div><div class="acts"><div class="ab G on">Target</div><div class="ab Y">Min</div><div class="ab R">Missed</div></div></div>
+<div class="hc" style="margin:0"><div class="top"><div><div class="name">Run</div><div class="meta">1 → 5 km</div><div class="due "><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>1d 14h left</div></div><div class="flame">🔥 4</div></div><div class="acts"><div class="ab G">Target</div><div class="ab Y on">Min</div><div class="ab R">Missed</div></div></div>
+<div class="hc" style="margin:0"><div class="top"><div><div class="name">Piano</div><div class="meta">This week · 1 → 3</div><div class="due "><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>4d 14h left</div></div><div class="flame off">0</div></div><div class="acts"><div class="ab G">Target</div><div class="ab Y">Min</div><div class="ab R">Missed</div></div></div>
+<div class="hc" style="margin:0"><div class="top"><div><div class="name">Stretch</div><div class="meta">2 → 10 min</div><div class="due soon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>2h 40m left</div></div><div class="flame">🔥 3</div></div><div class="acts"><div class="ab G">Target</div><div class="ab Y">Min</div><div class="ab R">Missed</div></div></div>
+</div></div>
+<div><div class="card" style="margin-top:38px"><h4>This week</h4><div class="wk" style="grid-template-columns:70px repeat(7,1fr);gap:6px">
+<div></div><div class="h">M<b>16</b></div><div class="h">T<b>17</b></div><div class="h td">W<b>18</b></div><div class="h">T<b>19</b></div><div class="h">F<b>20</b></div><div class="h">S<b>21</b></div><div class="h">S<b>22</b></div>
+<div class="n">Read</div><div class="sq G"></div><div class="sq R"></div><div class="sq G T"></div><div class="sq P muted"></div><div class="sq P muted"></div><div class="sq P muted"></div><div class="sq P muted"></div>
+<div class="n">Run</div><div class="sq Y"></div><div class="sq N"></div><div class="sq Y T"></div><div class="sq N"></div><div class="sq N"></div><div class="sq P muted"></div><div class="sq N"></div>
+<div class="n">Piano</div><div class="wspan sq P T" style="aspect-ratio:auto"></div></div></div>
+<div class="card"><h4>Streaks</h4><div class="leg"><div>Read<b style="color:#ff9f0a">🔥 12 · best 21</b></div><div>Run<b style="color:#ff9f0a">🔥 4 · best 6</b></div><div>Piano<b style="color:var(--dim)">0 · best 7</b></div></div></div></div>
+</div></div>
 <script>
-const ov=document.getElementById('overview');
-['M','T','W','T','F','S','S'].forEach(d=>ov.insertAdjacentHTML('beforeend',`<div class="wd">${d}</div>`));
-for(let i=0;i<6;i++)ov.insertAdjacentHTML('beforeend','<div></div>');
-const scores=[1.5,2,1,0.3,1.7,1.3,2,0.7,1.5,1.9,0,1.2,2,1.6,1,2,0.4,null];
-for(let d=1;d<=30;d++){const s=d<=18?scores[d-1]:null;
- const cls=s==null?'o':s<0.5?'R':s<1.25?'Y':'G';
- ov.insertAdjacentHTML('beforeend',`<div class="d ${cls}" title="${s==null?'no score':'score '+s}">${d}</div>`);}
-const pal={Read:'GGYRGGGRYGGRGYGGRP',Run:'Y..G..R..G..Y..G..',Piano:'GGGGGGGYYYYYYYGGGG'};
-const mn=document.getElementById('minis');
-for(const [n,p] of Object.entries(pal)){let h='<div class="mini">';for(let i=0;i<6;i++)h+='<div></div>';
- for(let d=1;d<=30;d++){const ch=d<=18?p[d-1]:(n==='Run'&&d%3!==0?'.':'P');
-  const c={G:'G',Y:'Y',R:'R','.':'ND',P:'P'}[ch];h+=`<div class="${c}"></div>`;}
- mn.insertAdjacentHTML('beforeend',`<div><div style="font-size:12px;color:#cfd3e6;margin-bottom:4px">${n}</div>${h}</div></div>`);}
+const c=['s4','s4','s3','s2','s4','s0','s4','s3','GR'];for(const id of['h1','h2']){const e=document.getElementById(id);for(let i=0;i<30;i++){const x=document.createElement('i');if(i<18)x.className=c[(i*7+id.length*3)%c.length];e.appendChild(x)}}
 </script>
 </body></html>
