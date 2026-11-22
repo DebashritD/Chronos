@@ -65,13 +65,13 @@ export function MonthPanel() {
         <div className="flex flex-col gap-4">
           <DistributionDonut title="Distribution" distribution={data.distribution} />
           {data.habits.length > 0 && (
-            <div className={`${card} grid grid-cols-2 gap-4 sm:grid-cols-3`}>
+            <div className={`${card} grid grid-cols-1 gap-5 sm:grid-cols-2`}>
               {data.habits.map((habit) => {
                 const share = greenShare(habit)
                 return (
                   <section key={habit.id} aria-label={habit.name}>
-                    <div className="mb-1.5 flex items-baseline justify-between gap-1">
-                      <h3 className="truncate text-[13px] font-semibold text-fg">{habit.name}</h3>
+                    <div className="mb-2 flex items-baseline justify-between gap-3">
+                      <h3 className="min-w-0 text-[15px] leading-snug font-bold break-words text-fg">{habit.name}</h3>
                       <span className="flex-none text-[11px] text-muted">{share === null ? '–' : `${share}% green`}</span>
                     </div>
                     <CalendarGrid compact days={habit.cells.map(({ date, state }) => ({

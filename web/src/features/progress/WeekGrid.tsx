@@ -1,13 +1,8 @@
 import type { WeekCell, WeekHabit } from '../../api/types'
-import { cellClass, STATE_LABEL } from '../../lib/cells'
 import { addDays, dayOfMonth, WEEKDAYS } from '../../lib/dates'
-import { coversToday, periodLabel } from '../checkin/period'
-
-function subtitle(habit: WeekHabit): string | null {
-  if (habit.frequency === 'WEEKLY') return 'weekly'
-  if (habit.frequency === 'EVERY_N_DAYS') return `every ${habit.intervalDays} days`
-  return null
-}
+import { coversToday } from '../checkin/period'
+import { WeekCellButton } from './WeekCellButton'
+import { subtitle } from './weekLayout'
 
 interface WeekGridProps {
   start: string
@@ -46,20 +41,11 @@ export function WeekGrid({ start, today, habits, onPick }: WeekGridProps) {
               {subtitle(habit) && <span className="block truncate text-[11px] font-normal text-dim">{subtitle(habit)}</span>}
             </th>
             {habit.cells.map((cell) => {
-              const isToday = coversToday(habit, cell, today)
               const weekly = habit.frequency === 'WEEKLY'
               return (
                 <td key={cell.date} colSpan={weekly ? 7 : undefined}>
-                  <button
-                    type="button"
-                    aria-label={`${habit.name}, ${periodLabel(habit, cell)}, ${STATE_LABEL[cell.state]}`}
-                    aria-current={isToday ? 'date' : undefined}
-                    disabled={!cell.editable}
-                    onClick={() => onPick(habit, cell)}
-                    className={`block w-full rounded-cell ${weekly ? 'h-[34px]' : 'aspect-square'} ${cellClass(cell.state)} ${
-                      isToday ? 'ring-2 ring-accent ring-offset-2 ring-offset-card' : ''
-                    } ${cell.editable ? 'cursor-pointer transition-transform active:scale-95' : cell.state === 'NOT_DUE' ? '' : 'opacity-50'}`}
-                  />
+                  <WeekCellButton habit={habit} cell={cell} isToday={coversToday(habit, cell, today)} onPick={onPick}
+                    shape={weekly ? 'h-[34px]' : 'aspect-square'} />
                 </td>
               )
             })}

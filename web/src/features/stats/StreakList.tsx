@@ -12,7 +12,7 @@ export function StreakList() {
       <ul className="divide-y divide-line">
         {data?.map((streak) => (
           <li key={streak.habitId} aria-label={streak.name} className="flex items-center gap-2 py-2.5 text-sm">
-            <span className="min-w-0 flex-1 truncate font-medium text-fg">{streak.name}</span>
+            <span className="min-w-0 flex-1 font-medium break-words text-fg">{streak.name}</span>
             {streak.current > 0 && <Flame size={16} className="text-urgent" aria-hidden="true" />}
             <span className="text-muted">
               <b className="font-semibold text-fg">{streak.current}</b> · best {streak.best}

@@ -4,12 +4,12 @@ import { Link, useSearchParams } from 'react-router'
 import type { WeekCell, WeekHabit } from '../../api/types'
 import { addDays, formatWeekRange } from '../../lib/dates'
 import { EmptyState } from '../../app/EmptyState'
-import { card, emptyAction, pillButton } from '../../lib/ui'
+import { emptyAction, pillButton } from '../../lib/ui'
 import { CellPicker } from '../checkin/CellPicker'
-import { useWeek } from '../stats/api'
+import { useStreaks, useWeek } from '../stats/api'
 import { DistributionDonut } from '../stats/DistributionDonut'
 import { StreakList } from '../stats/StreakList'
-import { WeekGrid } from './WeekGrid'
+import { WeekTiles } from './WeekTiles'
 
 const iconButton = 'flex h-9 w-9 flex-none items-center justify-center rounded-full bg-card text-fg'
 
@@ -17,6 +17,7 @@ export function WeekPanel() {
   const [searchParams, setSearchParams] = useSearchParams()
   const start = searchParams.get('start') ?? undefined
   const { data, isPending, isError } = useWeek(start)
+  const streaks = useStreaks()
   const [picked, setPicked] = useState<{ habit: WeekHabit; cell: WeekCell } | null>(null)
 
   if (isPending) return <p className="text-muted">Loading…</p>
@@ -46,10 +47,9 @@ export function WeekPanel() {
           Mark your habits each day and this week fills up with green, yellow and red.
         </EmptyState>
       ) : (
-        <div className={`${card} px-2 md:px-4`}>
-          <WeekGrid start={data.start} today={data.today} habits={data.habits}
-            onPick={(habit, cell) => setPicked({ habit, cell })} />
-        </div>
+        <WeekTiles start={data.start} today={data.today} habits={data.habits}
+          streakOf={(habitId) => streaks.data?.find((streak) => streak.habitId === habitId)?.current}
+          onPick={(habit, cell) => setPicked({ habit, cell })} />
       )}
       <div className="mt-4 grid gap-4 md:grid-cols-2">
         <DistributionDonut title={start ? 'Distribution' : 'This week'} distribution={data.distribution} />

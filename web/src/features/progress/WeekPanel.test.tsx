@@ -54,7 +54,8 @@ describe('WeekPanel', () => {
     expect(screen.getByRole('button', { name: 'Read, Tue 17 Nov, Missed' })).toBeEnabled()
     expect(screen.getByRole('button', { name: 'Read, Thu 19 Nov, Not marked yet' })).toBeDisabled()
     expect(screen.getByRole('button', { name: 'Piano, week of Mon 16 Nov, Not marked yet' })).toBeEnabled()
-    expect(screen.getByRole('button', { name: /^Piano/ }).closest('td')).toHaveAttribute('colspan', '7')
+    expect(screen.getByRole('heading', { level: 3, name: 'Read' }).closest('li')).toContainElement(
+      screen.getByRole('button', { name: 'Read, Mon 16 Nov, Target hit' }))
     const distribution = screen.getByRole('region', { name: 'This week' })
     expect(within(distribution).getByRole('listitem', { name: 'Green 1' })).toBeInTheDocument()
     expect(within(distribution).getByRole('listitem', { name: 'Red 1' })).toBeInTheDocument()
