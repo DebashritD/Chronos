@@ -1,4 +1,4 @@
-import { Check, Clock, Flame, NotebookPen } from 'lucide-react'
+import { Clock, Flame, NotebookPen } from 'lucide-react'
 import { useId, useState } from 'react'
 import { messageFor } from '../../api/errors'
 import type { Color, WeekCell, WeekHabit } from '../../api/types'
@@ -95,7 +95,6 @@ export function HabitCard({ habit, cell, streak, now, onOpen }: HabitCardProps) 
               className={`flex items-center justify-center gap-1.5 rounded-[14px] border py-3 text-[14px] font-semibold transition-transform active:scale-[0.97] disabled:opacity-60 ${
                 pressed ? selected : 'border-line bg-surface text-fg'
               }`}>
-              {pressed && <Check size={16} strokeWidth={3} aria-hidden="true" />}
               {label}
             </button>
           )
