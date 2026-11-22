@@ -39,10 +39,14 @@ type Habit = { id: number; name: string; minText: string; targetText: string;
   status: 'ACTIVE' | 'PAUSED' | 'ARCHIVED' }
 // GET /api/stats/week?start=
 type WeekView = { start: string; today: string; distribution: Distribution; habits: { id: number; name: string; minText: string;
-  targetText: string; frequency: Frequency; intervalDays: number | null; cells: { date: string; periodStart: string | null;
+  targetText: string; frequency: Frequency; intervalDays: number | null;
+  current: { periodStart: string; state: CellState; editable: boolean; note: string | null; closesAt: string } | null;
+  cells: { date: string; periodStart: string | null;
   state: CellState; editable: boolean; note: string | null; closesAt: string | null }[] }[] }
 // closesAt: UTC instant ("2026-11-18T18:30:00Z") when the cell's period ends (start of the day after its last day,
 // in the user's timezone); null for NOT_DUE cells. Drives the Today countdown.
+// current: the period containing today (whatever week was requested; it may have started before `start`), null before
+// the habit's first period. The Today page is built from it.
 // GET /api/stats/month?month=
 type MonthView = { month: string; distribution: Distribution; overview: { date: string; score: number | null }[];
   habits: { id: number; name: string; frequency: Frequency; cells: { date: string; state: CellState }[] }[] }
@@ -68,7 +72,7 @@ Errors are `application/problem+json` with `code` ∈ `VALIDATION`, `BAD_CREDENT
   - `api.get<T>(path, params?)`, `api.post<T>(path, body?)`, `api.put<T>(path, body)`, `api.del(path)`, `clearCsrf()` (copied client)
   - `ApiError { status; code; detail }`, `messageFor(error: unknown): string`
   - `createQueryClient(queryDefaults?)`, `setQueryErrorHandler(handler | null)`
-  - Types in `src/api/types.ts`: `Me`, `Frequency`, `HabitStatus`, `Habit`, `NewHabit`, `HabitTexts`, `Color`, `CellState`, `Distribution`, `WeekView`, `WeekHabit`, `WeekCell`, `MonthView`, `MonthHabit`, `Streak`
+  - Types in `src/api/types.ts`: `Me`, `Frequency`, `HabitStatus`, `Habit`, `NewHabit`, `HabitTexts`, `Color`, `CellState`, `Distribution`, `WeekView`, `WeekHabit`, `WeekCell`, `CurrentPeriod`, `MonthView`, `MonthHabit`, `Streak`
   - `src/index.css` theme tokens (see Global Constraints) plus the `.cell-paused` and `.logo-tile` classes
   - `src/lib/dates.ts`: `addDays(iso, n)`, `addMonths(ym, n)`, `weekdayIndex(iso)` (Mon = 0), `dayOfMonth(iso)`, `formatDay(iso)` (`"Wed 18 Nov"`), `formatLongDay(iso)` (`"Wednesday, 18 Nov"`), `formatWeekRange(start)` (`"16 – 22 Nov 2026"`), `formatMonth(ym)` (`"November 2026"`), `WEEKDAYS` (`['Mon', …, 'Sun']`)
   - `src/lib/cells.ts`: `cellClass(state)`, `STATE_LABEL: Record<CellState, string>`, `isColor(state)`, `frequencyLabel(frequency, intervalDays?)`, `habitSummary(habit)` (`"Daily · 1 page → 20 pages"`)
@@ -513,10 +517,21 @@ export interface WeekCell {
   closesAt: string | null
 }
 
+/** The period containing the user's today, independent of the requested week. */
+export interface CurrentPeriod {
+  periodStart: string
+  state: CellState
+  editable: boolean
+  note: string | null
+  closesAt: string
+}
+
 export interface WeekHabit extends HabitTexts {
   id: number
   frequency: Frequency
   intervalDays: number | null
+  /** null when today is before the habit's first period */
+  current: CurrentPeriod | null
   cells: WeekCell[]
 }
 
@@ -1864,8 +1879,10 @@ const week: WeekView = {
   distribution: { green: 1, yellow: 0, red: 1, grey: 0, total: 2 },
   habits: [
     { id: 1, name: 'Read', minText: '1 page', targetText: '20 pages', frequency: 'DAILY', intervalDays: null,
+      current: { periodStart: '2026-11-18', state: 'PENDING', editable: true, note: null, closesAt: '2026-11-18T18:30:00Z' },
       cells: daily(['GREEN', 'RED', 'PENDING', 'PENDING', 'PENDING', 'PENDING', 'PENDING']) },
     { id: 2, name: 'Piano', minText: '5 min', targetText: '30 min', frequency: 'WEEKLY', intervalDays: null,
+      current: { periodStart: '2026-11-16', state: 'PENDING', editable: true, note: null, closesAt: '2026-11-22T18:30:00Z' },
       cells: [{ date: '2026-11-16', periodStart: '2026-11-16', state: 'PENDING', editable: true, note: null,
         closesAt: '2026-11-22T18:30:00Z' }] },
   ],
@@ -2457,12 +2474,12 @@ Matches the "Today" frames of the mockups (phone and desktop). The home route `/
 - Test: `web/src/lib/timeLeft.test.ts`, `web/src/lib/useNow.test.ts`, `web/src/features/today/TodayPage.test.tsx`
 
 **Interfaces:**
-- Consumes: `useWeek`, `useStreaks`, `useSaveCheckIn`, `CellPicker`, `WeekGrid`, `StreakList` (Task 4); `WeekView`, `WeekHabit`, `WeekCell`, `Color`, `Frequency`, `Streak` (Task 1); `cellClass`, `isColor` (Task 1); `formatLongDay` (Task 1); `card`, `cardTitle`, `eyebrow`, `pageTitle` (Task 2); `messageFor` (Task 1).
+- Consumes: `useWeek`, `useStreaks`, `useSaveCheckIn`, `CellPicker`, `WeekGrid`, `StreakList` (Task 4); `WeekView`, `WeekHabit`, `WeekCell`, `CurrentPeriod`, `Color`, `Frequency`, `Streak` (Task 1); `cellClass`, `isColor` (Task 1); `formatLongDay` (Task 1); `card`, `cardTitle`, `eyebrow`, `pageTitle` (Task 2); `messageFor` (Task 1).
 - Produces:
   - `formatTimeLeft(closesAt: string, now: Date, frequency: Frequency): string | null` — `null` once `closesAt ≤ now`; `< 1h` → `"40m left"`; `< 3h` → `"2h 40m left"`; otherwise DAILY `"12h left today"`, EVERY_N_DAYS `"1d 12h left in this period"`, WEEKLY `"4d 12h left this week"` (days omitted when 0).
   - `isUrgent(closesAt: string, now: Date): boolean` — true when 0 < time left < 3h.
   - `useNow(intervalMs = 60_000): Date`
-  - `todayItems(week: WeekView): TodayItem[]` (`TodayItem = { habit: WeekHabit; cell: WeekCell }`)
+  - `todayItems(week: WeekView): TodayItem[]` (`TodayItem = { habit: WeekHabit; cell: WeekCell }`) — one item per habit whose `current` period is non-null, editable and not PAUSED, with `cell` = `current` dated at its `periodStart`. Every-N-days and weekly habits therefore show on every day of their period, including one that began last week; one-tap marks `PUT` to `current.periodStart`.
   - `TodayPage` at `/`: each habit is an `article` named after the habit with buttons `Target` / `Minimum` / `Missed` (`aria-pressed` on the selected one), a countdown chip carrying `data-tone="normal" | "urgent" | "done"`, and the hero ring `role="img"` named `"N of M done"`. The e2e test (Task 8) relies on these.
 
 - [ ] **Step 1: Write the failing tests**
@@ -2545,7 +2562,7 @@ describe('useNow', () => {
 ```tsx
 import { screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { Streak, WeekCell, WeekView } from '../../api/types'
+import type { CurrentPeriod, Streak, WeekCell, WeekView } from '../../api/types'
 import { jsonResponse, problemResponse, requests, stubApi, type ApiRequest } from '../../test/http'
 import { renderWithProviders } from '../../test/utils'
 import { TodayPage } from './TodayPage'
@@ -2566,24 +2583,45 @@ function daily(states: WeekCell['state'][], notes: (string | null)[] = []): Week
 
 const STRETCH_WEEK: WeekCell['state'][] = ['GREEN', 'RED', 'PENDING', 'PENDING', 'PENDING', 'PENDING', 'PENDING']
 
+/** `current` for a habit whose current period is the given week cell. */
+function currentOf(cell: WeekCell): CurrentPeriod {
+  return { periodStart: cell.periodStart ?? cell.date, state: cell.state, editable: cell.editable, note: cell.note,
+    closesAt: cell.closesAt ?? `${cell.date}T18:30:00Z` }
+}
+
+const readCells = daily(['GREEN', 'RED', 'GREEN', 'PENDING', 'PENDING', 'PENDING', 'PENDING'], [null, null, 'ch 3'])
+// Run: 3-day periods 17–19 and 20–22 Nov. Today (18th) is mid-period.
+const runCells = daily(['NOT_DUE', 'PENDING', 'NOT_DUE', 'NOT_DUE', 'PENDING', 'NOT_DUE', 'NOT_DUE']).map((cell) =>
+  cell.date === '2026-11-17' ? { ...cell, closesAt: '2026-11-19T18:30:00Z' }
+    : cell.date === '2026-11-20' ? { ...cell, editable: false, closesAt: '2026-11-22T18:30:00Z' } : cell)
+const pianoCell: WeekCell = { date: '2026-11-16', periodStart: '2026-11-16', state: 'PENDING', editable: true, note: null,
+  closesAt: '2026-11-22T18:30:00Z' }
+const meditateCells = daily(Array<WeekCell['state']>(7).fill('PAUSED'))
+const stretchCells = daily(STRETCH_WEEK)
+
 const week: WeekView = {
   start: '2026-11-16',
   today: '2026-11-18',
   distribution: { green: 2, yellow: 0, red: 1, grey: 0, total: 3 },
   habits: [
     { id: 1, name: 'Read', minText: '1 page', targetText: '20 pages', frequency: 'DAILY', intervalDays: null,
-      cells: daily(['GREEN', 'RED', 'GREEN', 'PENDING', 'PENDING', 'PENDING', 'PENDING'], [null, null, 'ch 3']) },
+      current: currentOf(readCells[2]), cells: readCells },
     { id: 2, name: 'Run', minText: '1 km', targetText: '5 km', frequency: 'EVERY_N_DAYS', intervalDays: 3,
-      cells: daily(['NOT_DUE', 'NOT_DUE', 'PENDING', 'NOT_DUE', 'NOT_DUE', 'PENDING', 'NOT_DUE']).map((cell) =>
-        cell.date === '2026-11-18' ? { ...cell, closesAt: '2026-11-20T18:30:00Z' }
-          : cell.date === '2026-11-21' ? { ...cell, closesAt: '2026-11-23T18:30:00Z' } : cell) },
+      current: currentOf(runCells[1]), cells: runCells },
     { id: 3, name: 'Piano', minText: '5 min', targetText: '30 min', frequency: 'WEEKLY', intervalDays: null,
-      cells: [{ date: '2026-11-16', periodStart: '2026-11-16', state: 'PENDING', editable: true, note: null,
-        closesAt: '2026-11-22T18:30:00Z' }] },
+      current: currentOf(pianoCell), cells: [pianoCell] },
     { id: 4, name: 'Meditate', minText: '1 min', targetText: '10 min', frequency: 'DAILY', intervalDays: null,
-      cells: daily(Array<WeekCell['state']>(7).fill('PAUSED')) },
+      current: currentOf(meditateCells[2]), cells: meditateCells },
     { id: 5, name: 'Stretch', minText: '1 pose', targetText: '15 min', frequency: 'DAILY', intervalDays: null,
-      cells: daily(STRETCH_WEEK) },
+      current: currentOf(stretchCells[2]), cells: stretchCells },
+    // Swim: one 7-day period 15–21 Nov that began last week, so no cell of this week starts it.
+    { id: 6, name: 'Swim', minText: '1 lap', targetText: '20 laps', frequency: 'EVERY_N_DAYS', intervalDays: 7,
+      current: { periodStart: '2026-11-15', state: 'PENDING', editable: true, note: null, closesAt: '2026-11-21T18:30:00Z' },
+      cells: daily(['NOT_DUE', 'NOT_DUE', 'NOT_DUE', 'NOT_DUE', 'NOT_DUE', 'NOT_DUE', 'PENDING']).map((cell) =>
+        cell.date === '2026-11-22' ? { ...cell, closesAt: '2026-11-28T18:30:00Z' } : cell) },
+    // Yoga starts on 20 Nov: no current period yet.
+    { id: 7, name: 'Yoga', minText: '1 pose', targetText: '20 min', frequency: 'DAILY', intervalDays: null,
+      current: null, cells: daily(['NOT_DUE', 'NOT_DUE', 'NOT_DUE', 'NOT_DUE', 'PENDING', 'PENDING', 'PENDING']) },
   ],
 }
 
@@ -2592,6 +2630,7 @@ const streaks: Streak[] = [
   { habitId: 2, name: 'Run', current: 0, best: 4 },
   { habitId: 3, name: 'Piano', current: 2, best: 2 },
   { habitId: 5, name: 'Stretch', current: 1, best: 3 },
+  { habitId: 6, name: 'Swim', current: 3, best: 3 },
 ]
 
 function api(overrides: (r: ApiRequest) => Response | undefined = () => undefined, data: WeekView = week) {
@@ -2624,10 +2663,10 @@ describe('TodayPage', () => {
 
     expect(await screen.findByRole('heading', { level: 1, name: 'Today' })).toBeInTheDocument()
     expect(screen.getByText('Wednesday, 18 Nov')).toBeInTheDocument()
-    expect(screen.getByRole('img', { name: '1 of 4 done' })).toBeInTheDocument()
-    expect(screen.getByText('3 habits left today. Even the minimum keeps it off red.')).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: '1 of 5 done' })).toBeInTheDocument()
+    expect(screen.getByText('4 habits left today. Even the minimum keeps it off red.')).toBeInTheDocument()
     const names = screen.getAllByRole('article').map((article) => within(article).getByRole('heading').textContent)
-    expect(names).toEqual(['Read', 'Run', 'Piano', 'Stretch'])
+    expect(names).toEqual(['Read', 'Run', 'Piano', 'Stretch', 'Swim'])
 
     const read = screen.getByRole('article', { name: 'Read' })
     expect(within(read).getByRole('button', { name: 'Target' })).toHaveAttribute('aria-pressed', 'true')
@@ -2640,7 +2679,8 @@ describe('TodayPage', () => {
 
     const run = screen.getByRole('article', { name: 'Run' })
     expect(run).toHaveTextContent('Every 3 days · Min 1 km · Target 5 km')
-    expect(chip(run)).toHaveTextContent('2d 12h left in this period')
+    // Mid-period: the 17–19 Nov period still shows on the 18th.
+    expect(chip(run)).toHaveTextContent('1d 12h left in this period')
     expect(chip(run)).toHaveAttribute('data-tone', 'normal')
 
     const piano = screen.getByRole('article', { name: 'Piano' })
@@ -2648,6 +2688,10 @@ describe('TodayPage', () => {
     expect(chip(piano)).toHaveTextContent('4d 12h left this week')
 
     expect(chip(screen.getByRole('article', { name: 'Stretch' }))).toHaveTextContent('12h left today')
+
+    const swim = screen.getByRole('article', { name: 'Swim' })
+    expect(swim).toHaveTextContent('Every 7 days · Min 1 lap · Target 20 laps')
+    expect(chip(swim)).toHaveTextContent('3d 12h left in this period')
   })
 
   it('turns the countdown orange in the last three hours', async () => {
@@ -2688,19 +2732,20 @@ describe('TodayPage', () => {
     )
   })
 
-  it("marks a weekly habit's period", async () => {
+  it('marks the current period of multi-day habits, even one that began last week', async () => {
     const fetchMock = api((r) => (r.method === 'PUT' ? jsonResponse({ periodStart: '2026-11-16', color: 'YELLOW', note: null }) : undefined))
     const { user } = renderWithProviders(<TodayPage />)
 
-    const piano = await screen.findByRole('article', { name: 'Piano' })
-    await user.click(within(piano).getByRole('button', { name: 'Minimum' }))
+    await user.click(within(await screen.findByRole('article', { name: 'Piano' })).getByRole('button', { name: 'Minimum' }))
+    await user.click(within(screen.getByRole('article', { name: 'Run' })).getByRole('button', { name: 'Target' }))
+    await user.click(within(screen.getByRole('article', { name: 'Swim' })).getByRole('button', { name: 'Minimum' }))
 
     await waitFor(() =>
-      expect(requests(fetchMock).find((r) => r.method === 'PUT')).toEqual({
-        method: 'PUT',
-        url: '/api/habits/3/check-ins/2026-11-16',
-        body: { color: 'YELLOW', note: null },
-      }),
+      expect(requests(fetchMock).filter((r) => r.method === 'PUT')).toEqual([
+        { method: 'PUT', url: '/api/habits/3/check-ins/2026-11-16', body: { color: 'YELLOW', note: null } },
+        { method: 'PUT', url: '/api/habits/2/check-ins/2026-11-17', body: { color: 'GREEN', note: null } },
+        { method: 'PUT', url: '/api/habits/6/check-ins/2026-11-15', body: { color: 'YELLOW', note: null } },
+      ]),
     )
   })
 
@@ -2830,14 +2875,15 @@ export interface TodayItem {
 }
 
 /**
- * The period each habit can be marked for today: a weekly habit's single cell, otherwise the cell dated today.
- * Paused, not-due and non-editable cells are left out (every-N-days habits show on their due day only).
+ * Each habit's current period (the one containing today), as a cell dated at the period start so the card and the
+ * picker can treat it like a week cell. Multi-day periods show on every one of their days, even when they began
+ * before this week. Habits with no current period yet, paused or not editable are left out.
  */
 export function todayItems(week: WeekView): TodayItem[] {
   return week.habits.flatMap((habit) => {
-    const cell = habit.frequency === 'WEEKLY' ? habit.cells[0] : habit.cells.find((c) => c.date === week.today)
-    const markable = cell !== undefined && cell.editable && cell.state !== 'PAUSED' && cell.state !== 'NOT_DUE'
-    return markable ? [{ habit, cell }] : []
+    const current = habit.current
+    if (current === null || !current.editable || current.state === 'PAUSED') return []
+    return [{ habit, cell: { date: current.periodStart, ...current } }]
   })
 }
 ```

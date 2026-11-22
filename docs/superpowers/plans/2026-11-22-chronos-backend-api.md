@@ -3461,8 +3461,9 @@ git commit -m "feat(api): add check-ins limited to the 7-day edit window" \
 **Interfaces:**
 - Consumes: `HabitService#list(long, HabitStatus)` (null status → ACTIVE + PAUSED), `HabitTimelines#load`, `CheckInRepository#notesBetween` (Tasks 5–6); `HabitTimeline`, `CellState`, `Distribution` (Task 4); `UserService#today` (Task 2).
 - Produces (JSON shapes the web plan relies on):
-  - `GET /api/stats/week?start=YYYY-MM-DD` → `{start, today, habits:[{id, name, minText, targetText, frequency, intervalDays, cells:[{date, periodStart, state, editable, note, closesAt}]}], distribution:{green, yellow, red, grey, total}}`. `start` defaults to this week's Monday; a non-Monday → 400 `VALIDATION`. DAILY/EVERY_N_DAYS habits have 7 cells (non-due days: `state: NOT_DUE`, `periodStart: null`, `editable: false`, `closesAt: null`); WEEKLY habits have 1 cell dated Monday. `intervalDays` is set for EVERY_N_DAYS habits and `null` otherwise (the web app shows "Every 3 days").
+  - `GET /api/stats/week?start=YYYY-MM-DD` → `{start, today, habits:[{id, name, minText, targetText, frequency, intervalDays, current:{periodStart, state, editable, note, closesAt}|null, cells:[{date, periodStart, state, editable, note, closesAt}]}], distribution:{green, yellow, red, grey, total}}`. `start` defaults to this week's Monday; a non-Monday → 400 `VALIDATION`. DAILY/EVERY_N_DAYS habits have 7 cells (non-due days: `state: NOT_DUE`, `periodStart: null`, `editable: false`, `closesAt: null`); WEEKLY habits have 1 cell dated Monday. `intervalDays` is set for EVERY_N_DAYS habits and `null` otherwise (the web app shows "Every 3 days").
   - `closesAt` (ISO-8601 UTC instant, e.g. `"2026-11-18T18:30:00Z"`) is midnight in the user's timezone at the start of the day after the period's last day (`periodEnd(periodStart) + 1 day`), i.e. when the period stops being current and an unmarked cell turns GREY. It is set whenever `periodStart` is set (including PAUSED and past periods) and `null` when `periodStart` is `null` (NOT_DUE). It drives the web app's "time left" countdown; it is not an edit lock (the 7-day editing window still applies).
+  - `current` is the period containing the user's today (`schedule.periodContaining(today)`), whatever week was requested, so it is correct even when that period started before `start` (e.g. a 3-day period that began last Saturday). It is `null` only when today is before the habit's first period. Its `note` is that period's note. The web app's Today page is built from it.
   - `GET /api/stats/month?month=YYYY-MM` → `{month, overview:[{date, score}], habits:[{id, name, frequency, cells:[{date, state}]}], distribution}`. One overview entry and one cell per day of the month; `score` is 0–2 or `null`.
   - `GET /api/stats/streaks` → `[{habitId, name, current, best}]`.
   - Archived habits are excluded everywhere; habits are ordered by id.
@@ -3541,7 +3542,7 @@ class StatsIntegrationTest extends IntegrationTest {
                 .andExpect(jsonPath("$.habits[1].cells[0].editable").value(false))
                 .andExpect(jsonPath("$.habits[1].cells[0].closesAt").value(nullValue()))
                 .andExpect(jsonPath("$.habits[1].cells[1].periodStart").value("2026-11-17"))
-                .andExpect(jsonPath("$.habits[1].cells[1].state").value("GREY"))
+                .andExpect(jsonPath("$.habits[1].cells[1].state").value("PENDING"))   // 17–19 Nov contains today
                 // period 17–19 Nov closes at midnight 20 Nov IST
                 .andExpect(jsonPath("$.habits[1].cells[1].closesAt").value("2026-11-19T18:30:00Z"))
                 .andExpect(jsonPath("$.habits[1].cells[4].state").value("PENDING"))
@@ -3556,8 +3557,40 @@ class StatsIntegrationTest extends IntegrationTest {
                 .andExpect(jsonPath("$.distribution.green").value(1))
                 .andExpect(jsonPath("$.distribution.yellow").value(1))
                 .andExpect(jsonPath("$.distribution.red").value(0))
-                .andExpect(jsonPath("$.distribution.grey").value(2))
-                .andExpect(jsonPath("$.distribution.total").value(4));
+                .andExpect(jsonPath("$.distribution.grey").value(1))
+                .andExpect(jsonPath("$.distribution.total").value(3));
+    }
+
+    @Test
+    void weekCarriesTheCurrentPeriodOfEachHabit() throws Exception {
+        insertHabit(bob, "Read", "DAILY", null, nov(1));
+        long run = insertHabit(bob, "Run", "EVERY_N_DAYS", 3, nov(2));     // periods …, 17–19, 20–22
+        insertHabit(bob, "Swim", "EVERY_N_DAYS", 7, nov(1));              // period 15–21 began last week
+        insertHabit(bob, "Clean", "WEEKLY", null, nov(1));
+        insertHabit(bob, "Later", "DAILY", null, nov(20));
+        insertCheckIn(run, nov(17), "YELLOW");
+        jdbc.sql("UPDATE check_in SET note = 'slow' WHERE habit_id = :id").param("id", run).update();
+
+        // A past week is requested on purpose: `current` always describes today.
+        mvc.perform(get("/api/stats/week").param("start", "2026-11-09").with(as(bob)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.habits[0].current.periodStart").value("2026-11-18"))
+                .andExpect(jsonPath("$.habits[0].current.state").value("PENDING"))
+                .andExpect(jsonPath("$.habits[0].current.editable").value(true))
+                .andExpect(jsonPath("$.habits[0].current.closesAt").value("2026-11-18T18:30:00Z"))
+
+                .andExpect(jsonPath("$.habits[1].current.periodStart").value("2026-11-17"))
+                .andExpect(jsonPath("$.habits[1].current.state").value("YELLOW"))
+                .andExpect(jsonPath("$.habits[1].current.note").value("slow"))
+                .andExpect(jsonPath("$.habits[1].current.closesAt").value("2026-11-19T18:30:00Z"))
+
+                .andExpect(jsonPath("$.habits[2].current.periodStart").value("2026-11-15"))
+                .andExpect(jsonPath("$.habits[2].current.closesAt").value("2026-11-21T18:30:00Z"))
+
+                .andExpect(jsonPath("$.habits[3].current.periodStart").value("2026-11-16"))
+                .andExpect(jsonPath("$.habits[3].current.closesAt").value("2026-11-22T18:30:00Z"))
+
+                .andExpect(jsonPath("$.habits[4].current").value(nullValue()));
     }
 
     @Test
@@ -3671,7 +3704,11 @@ import java.util.List;
 public record WeekResponse(LocalDate start, LocalDate today, List<Habit> habits, Distribution distribution) {
 
     public record Habit(long id, String name, String minText, String targetText, Frequency frequency,
-                        Integer intervalDays, List<Cell> cells) {
+                        Integer intervalDays, Current current, List<Cell> cells) {
+    }
+
+    /** The period containing the user's today, independent of the requested week; null before the first period. */
+    public record Current(LocalDate periodStart, CellState state, boolean editable, String note, Instant closesAt) {
     }
 
     /** {@code closesAt}: midnight (user's zone) after the period's last day; null when {@code periodStart} is null. */
@@ -3745,6 +3782,7 @@ import java.time.ZoneId;
 import java.time.format.DateTimeParseException;
 import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -3776,7 +3814,13 @@ public class StatsService {
         ZoneId zone = ZoneId.of(userService.get(userId).timezone());
         List<Habit> habits = habitService.list(userId, null);
         Map<Long, HabitTimeline> byId = timelines.load(habits, today);
-        var notes = checkIns.notesBetween(byId.keySet(), start, end);
+        Map<Long, LocalDate> currentStarts = new HashMap<>();
+        byId.forEach((id, timeline) -> timeline.schedule().periodContaining(today)
+                .ifPresent(periodStart -> currentStarts.put(id, periodStart)));
+        // One notes query covering both the requested week and every current period.
+        LocalDate notesFrom = currentStarts.values().stream().reduce(start, (a, b) -> a.isBefore(b) ? a : b);
+        LocalDate notesTo = end.isAfter(today) ? end : today;
+        var notes = checkIns.notesBetween(byId.keySet(), notesFrom, notesTo);
 
         List<WeekResponse.Habit> rows = new ArrayList<>();
         Distribution distribution = Distribution.EMPTY;
@@ -3792,8 +3836,13 @@ public class StatsService {
                                     habitNotes.get(p), closesAt(timeline, p, zone)))
                             .orElseGet(() -> new WeekResponse.Cell(day, null, CellState.NOT_DUE, false, null, null)))
                     .toList();
+            LocalDate currentStart = currentStarts.get(habit.id());
+            WeekResponse.Current current = currentStart == null ? null
+                    : new WeekResponse.Current(currentStart, timeline.stateOf(currentStart),
+                            timeline.isEditable(currentStart), habitNotes.get(currentStart),
+                            closesAt(timeline, currentStart, zone));
             rows.add(new WeekResponse.Habit(habit.id(), habit.name(), habit.minText(), habit.targetText(),
-                    habit.frequency(), habit.intervalDays(), cells));
+                    habit.frequency(), habit.intervalDays(), current, cells));
             distribution = distribution.plus(timeline.distribution(start, end));
         }
         return new WeekResponse(start, today, rows, distribution);

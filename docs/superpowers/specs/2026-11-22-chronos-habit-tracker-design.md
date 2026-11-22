@@ -120,12 +120,15 @@ cookie, obtained via `GET /api/auth/csrf`).
 ### Stats (`/api/stats`, authenticated)
 
 - `GET /week?start=YYYY-MM-DD` (Monday; defaults to the current week) →
-  `{start, today, habits:[{id, name, minText, targetText, frequency, intervalDays, cells:[{date, periodStart, state, editable, note, closesAt}]}], distribution}`.
+  `{start, today, habits:[{id, name, minText, targetText, frequency, intervalDays, current, cells:[{date, periodStart, state, editable, note, closesAt}]}], distribution}`.
   Weekly habits return one cell spanning the week. Non-due days of `DAILY`/`EVERY_N_DAYS` habits are `NOT_DUE` cells
   with `periodStart`, `note` and `closesAt` all `null` and `editable: false`.
   `closesAt` is an ISO-8601 UTC instant (e.g. `"2026-11-18T18:30:00Z"`): 00:00 in the user's timezone on the day after
   the period's last day (`periodEnd + 1 day`), i.e. when the period stops being current. It is set whenever `periodStart`
   is set (including paused and past periods) and `null` otherwise.
+  `current` = `{periodStart, state, editable, note, closesAt}` for the period containing the user's today
+  (`periodContaining(today)`), present whatever week is requested, so it is right even when that period began before
+  `start`; `null` only when today is before the habit's first period.
 - `GET /month?month=YYYY-MM` (defaults to current) →
   `{month, overview:[{date, score}], habits:[{id, name, frequency, cells:[{date, state}]}], distribution}`.
   Per-habit cells: `DAILY`/`EVERY_N_DAYS` show the state on due days and `NOT_DUE` otherwise; `WEEKLY` shows the
@@ -152,17 +155,18 @@ UI v2 ("native app" feel, dark only). Mockups: `docs/superpowers/specs/2026-11-2
 ### Today (`/`)
 
 - Eyebrow date ("Wednesday, 18 Nov", from the week response's `today`), title "Today".
-- Hero card: progress ring "N/M DONE" and a short encouragement line. M = habits whose current period is open and
-  editable today (not paused, due); N = those of them already marked.
+- Hero card: progress ring "N/M DONE" and a short encouragement line. M = habits shown on Today (below); N = those
+  whose current period is already marked.
 - One card per such habit: name, min/target text (every-N-days: "Every 3 days · …", weekly: "This week · …"),
   a flame with the current streak (grey at 0), a countdown chip, and three one-tap buttons **Target** (GREEN),
   **Minimum** (YELLOW), **Missed** (RED). The selected one is filled (`aria-pressed`). Tapping a button saves the
   check-in immediately (`PUT`, keeping any existing note); tapping the already-selected one does nothing. Tapping the
   habit name opens the picker sheet (GREEN / YELLOW / RED, "Note (optional)", Clear / Cancel / Save); clearing is only
   possible there. Daily habits also show a 7-segment strip of this week's cells.
-- Data: the current `GET /api/stats/week` and `GET /api/stats/streaks`. A habit's today-cell is the cell whose `date`
-  is `today` (weekly habits: their single cell). Habits whose today-cell is not editable (paused, not due) are left
-  out, so an every-N-days habit appears on its due day (the period's first day). After a mark, the stats queries refetch.
+- Data: the current `GET /api/stats/week` and `GET /api/stats/streaks`. Each card is built from the habit's `current`
+  period, so every-N-days and weekly habits show on every day of their period (including a period that began last
+  week). A habit is shown when `current` is non-null, `editable` and not `PAUSED`; one-tap marks `PUT` to
+  `current.periodStart`. After a mark, the stats queries refetch.
 - Countdown chip (clock icon), from `closesAt − now`, refreshed every minute:
   daily "14h left today", every-N-days "1d 14h left in this period", weekly "4d 14h left this week"
   (days are dropped when 0). Under 3 hours: "2h 40m left" in the urgent orange style; under 1 hour: "40m left".
