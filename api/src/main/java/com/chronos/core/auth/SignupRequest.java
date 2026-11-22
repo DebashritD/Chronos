@@ -7,6 +7,6 @@ import jakarta.validation.constraints.Size;
 public record SignupRequest(
         @NotBlank @Pattern(regexp = "[a-zA-Z0-9_.-]{3,32}", message = "3-32 letters, digits, '_', '.' or '-'")
         String username,
-        @NotBlank @Size(min = 8, max = 128) String password,
+        @NotBlank @Size(min = 8, max = 128) @MaxUtf8Bytes(72) String password,
         @NotBlank String timezone) {
 }

@@ -96,7 +96,7 @@ export function AccountPage() {
         </div>
         <div className="mb-4">
           <label htmlFor="new-password" className={label}>New password</label>
-          <input id="new-password" type="password" autoComplete="new-password" required minLength={8} maxLength={128}
+          <input id="new-password" type="password" autoComplete="new-password" required minLength={8} maxLength={72}
             value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className={inputClass} />
         </div>
         <button type="submit" className={primaryButton}>Change password</button>

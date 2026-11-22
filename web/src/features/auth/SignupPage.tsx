@@ -36,7 +36,7 @@ export function SignupPage() {
         <span className="px-1 text-xs text-dim">3–32 letters, digits, “_”, “.” or “-”</span>
         <label htmlFor="password" className="sr-only">Password</label>
         <input id="password" type="password" autoComplete="new-password" placeholder="Password" value={password}
-          minLength={8} maxLength={128} onChange={(e) => setPassword(e.target.value)} className={inputClass} />
+          minLength={8} maxLength={72} onChange={(e) => setPassword(e.target.value)} className={inputClass} />
         <span className="px-1 text-xs text-dim">At least 8 characters</span>
         <p className="px-1 text-xs text-muted">Timezone: {browserTimezone()} (change it later in Account)</p>
         {error && <p role="alert" className="text-sm text-cell-red">{error}</p>}

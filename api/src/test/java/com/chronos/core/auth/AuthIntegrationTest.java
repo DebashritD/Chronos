@@ -69,6 +69,26 @@ class AuthIntegrationTest extends IntegrationTest {
     }
 
     @Test
+    void signupRejectsPasswordsOver72Bytes() throws Exception {
+        mvc.perform(signup("alice", "नमस्ते".repeat(5), ZONE))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION"));
+    }
+
+    @Test
+    void updateMeRejectsNewPasswordOver72Bytes() throws Exception {
+        var bob = createUser("bob");
+
+        mvc.perform(put("/api/auth/me").with(as(bob)).with(xsrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"currentPassword": "%s", "newPassword": "%s"}
+                                """.formatted(PASSWORD, "😀".repeat(19))))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION"));
+    }
+
+    @Test
     void signupWithoutCsrfTokenIsForbidden() throws Exception {
         mvc.perform(post("/api/auth/signup")
                         .contentType(MediaType.APPLICATION_JSON)
