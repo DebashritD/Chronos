@@ -713,7 +713,7 @@ public class SpaWebConfig implements WebMvcConfigurer {
         registry.addResourceHandler("/**")
                 .addResourceLocations(LOCATION)
                 .setCacheControl(CacheControl.noCache())
-                .resourceChain(true)
+                .resourceChain(false)
                 .addResolver(new SpaFallbackResolver());
     }
 
