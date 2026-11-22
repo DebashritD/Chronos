@@ -105,7 +105,6 @@ export function HabitsPage() {
         <dl className="mt-4 grid gap-2">
           <Rule swatch="bg-cell-green" term="Green" detail={habit.targetText} />
           <Rule swatch="bg-cell-yellow" term="Yellow" detail={habit.minText} />
-          <Rule swatch="bg-cell-red" term="Red" detail={`Less than ${habit.minText}`} />
         </dl>
       </li>
     )

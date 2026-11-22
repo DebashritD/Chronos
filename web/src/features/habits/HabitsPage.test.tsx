@@ -31,7 +31,6 @@ describe('HabitsPage', () => {
     expect(within(readRow).getByText('Daily · since Sun 1 Nov')).toBeInTheDocument()
     expect(within(readRow).getByText('Green').nextElementSibling).toHaveTextContent('20 pages')
     expect(within(readRow).getByText('Yellow').nextElementSibling).toHaveTextContent('1 page')
-    expect(within(readRow).getByText('Red').nextElementSibling).toHaveTextContent('Less than 1 page')
     const runRow = screen.getByRole('listitem', { name: 'Run' })
     expect(within(runRow).getByText('Every 3 days · since Mon 2 Nov')).toBeInTheDocument()
     expect(within(runRow).getByText('Paused')).toBeInTheDocument()
