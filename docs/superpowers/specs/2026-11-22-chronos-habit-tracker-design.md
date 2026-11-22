@@ -11,14 +11,15 @@ Reference project: `../Dionysus` (same stack, deployment and testing setup; not 
 ## Stack and layout
 
 - `api/` — Spring Boot 4.1 (Java 21), `spring-boot-starter-webmvc`, `-security`, `-jdbc`, `-flyway`,
-  `-session-jdbc`, `-validation`; Postgres 17 (`docker-compose.yml` for local). Package `com.chronos`:
+  `-session-jdbc`, `-validation`; Postgres 17 (`docker-compose.yml` for local, host port 5433). Package `com.chronos`:
   - `core` — `auth`, `user`, `config`, `error`, `web`
   - `habit` — habits, pauses, check-ins
-  - `stats` — period computation, week/month views, streaks
-  - each split into `controller`, `service`, `repository`, `model`, `dto` as needed.
+  - `habit.domain` — pure period computation, cell states, streaks, scores (no Spring)
+  - `stats` — week/month views, streaks
 - `web/` — Vite + React 19 + TypeScript, TanStack Query, react-router, Tailwind 4. `npm run dev` proxies `/api` to `:8080`.
 - Root `Dockerfile` builds the web app into the API's static resources and runs one jar (same origin, so the session
-  cookie just works). `render.yaml` deploys one Docker web service with health check `/api/public/health`.
+  cookie just works). `render.yaml` deploys one Docker web service (Render free plan) with health check `/api/public/health`;
+  the database is Neon free Postgres (a database of its own, not shared with Dionysus).
 - Environment: `DATABASE_URL`, `DATABASE_USER`, `DATABASE_PASSWORD`, `COOKIE_SECURE` (default `true`), `PORT` (default `8080`).
 
 ## Data model (Flyway `V1__init.sql`)
@@ -55,7 +56,8 @@ All dates are computed in the user's `timezone`; "today" = `LocalDate.now(userZo
 ### Editing window
 
 A check-in for `period_start` may be set or cleared only if:
-- `period_start` is a valid period start for the habit and is not before `start_date`;
+- `period_start` is a valid period start for the habit and is not before its first period start
+  (for `WEEKLY`, the Monday of the week containing `start_date`);
 - the period has started (`period_start ≤ today`);
 - the period's last day ≥ `today − 7 days`;
 - the period is not paused and the habit is not `ARCHIVED`.
@@ -79,7 +81,7 @@ period's color to every day the period covers. Result is 0–2 (null if no habit
 
 ### Distribution
 
-Over a week or month: counts and percentages of `GREEN`, `YELLOW`, `RED`, `GREY` periods whose `period_start`
+Over a week or month: counts (plus `total`; the UI derives percentages) of `GREEN`, `YELLOW`, `RED`, `GREY` periods whose `period_start`
 falls in the range (paused, pending and not-due excluded).
 
 ## API
@@ -106,7 +108,8 @@ cookie, obtained via `GET /api/auth/csrf`).
 - `POST` `{name, minText, targetText, frequency, intervalDays?, startDate?}` (`startDate` defaults to today, may not be in the future)
 - `PUT /{id}` `{name, minText, targetText}` — frequency/interval/start date are immutable
 - `POST /{id}/pause` (opens a pause from today), `POST /{id}/resume` (closes it yesterday, or deletes it if opened today)
-- `POST /{id}/archive`, `POST /{id}/unarchive`
+- `POST /{id}/archive` (opens a pause from today if none is open), `POST /{id}/unarchive` (closes it as in resume;
+  status becomes `ACTIVE`), so archived time shows as `PAUSED`
 - `PUT /{id}/check-ins/{periodStart}` `{color, note?}` → 200; `DELETE /{id}/check-ins/{periodStart}` → 204
 
 ### Stats (`/api/stats`, authenticated)
@@ -115,7 +118,9 @@ cookie, obtained via `GET /api/auth/csrf`).
   `{start, habits:[{id, name, minText, targetText, frequency, cells:[{date, periodStart, state, editable, note}]}], distribution}`.
   Weekly habits return one cell spanning the week.
 - `GET /month?month=YYYY-MM` (defaults to current) →
-  `{month, overview:[{date, score}], habits:[{id, name, cells:[{date, state}]}], distribution}`
+  `{month, overview:[{date, score}], habits:[{id, name, frequency, cells:[{date, state}]}], distribution}`.
+  Per-habit cells: `DAILY`/`EVERY_N_DAYS` show the state on due days and `NOT_DUE` otherwise; `WEEKLY` shows the
+  week's state on every day of that week.
 - `GET /streaks` → `[{habitId, name, current, best}]`
 
 Stats include `ACTIVE` and `PAUSED` habits; archived habits are excluded.
@@ -136,7 +141,7 @@ Colors: GREEN, YELLOW, RED as named; GREY neutral grey; PENDING outlined; PAUSED
 
 ## Testing
 
-- **Unit:** period generation, cell states, editing window, streaks, score and distribution (pure functions in `stats`).
+- **Unit:** period generation, cell states, editing window, streaks, score and distribution (pure functions in `habit.domain`).
 - **Integration:** Testcontainers Postgres, one test class per controller (auth incl. rate limit and CSRF, habits
   incl. ownership, check-ins incl. window rules, stats).
 - **Web:** Vitest + Testing Library for the grid, picker, heatmaps and forms.
