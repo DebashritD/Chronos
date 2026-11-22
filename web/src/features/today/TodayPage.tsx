@@ -53,7 +53,7 @@ export function TodayPage() {
   const streakOf = (habitId: number) => streaks.data?.find((streak) => streak.habitId === habitId)?.current
 
   return (
-    <div className="lg:grid lg:grid-cols-[1fr_400px] lg:gap-8">
+    <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-8">
       <div>
         <p className={eyebrow}>{formatLongDay(data.today)}</p>
         <h1 className={`${pageTitle} mb-5`}>Today</h1>
@@ -70,7 +70,7 @@ export function TodayPage() {
                 <p className="mt-1 text-[14px] leading-snug text-muted">{message}</p>
               </div>
             </section>
-            <div className="grid gap-3 xl:grid-cols-2">
+            <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
               {items.map((item) => (
                 <HabitCard key={item.habit.id} habit={item.habit} cell={item.cell} streak={streakOf(item.habit.id)}
                   now={now} onOpen={() => setPicked(item)} />

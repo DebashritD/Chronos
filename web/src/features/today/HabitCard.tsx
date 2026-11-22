@@ -60,7 +60,7 @@ export function HabitCard({ habit, cell, streak, now, onOpen }: HabitCardProps) 
     <article aria-labelledby={titleId} className={card}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h2 id={titleId} className="text-[18px] font-bold text-fg">
+          <h2 id={titleId} className="text-[18px] font-bold break-words text-fg">
             <button type="button" aria-haspopup="dialog" onClick={onOpen} className="text-left hover:underline">
               {habit.name}
             </button>
