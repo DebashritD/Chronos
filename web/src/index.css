@@ -1,0 +1,58 @@
+@import "tailwindcss";
+
+/* UI v2 design tokens (dark only). `surface` is the raised "card2" tone and `muted` the secondary text, so the
+   copied WakingNotice (bg-surface / text-muted) matches without changes. */
+@theme {
+  --color-bg: #0a0a0f;
+  --color-card: #15151d;
+  --color-surface: #1c1c26;
+  --color-line: rgb(255 255 255 / 0.06);
+  --color-fg: #f4f4f7;
+  --color-muted: #8e8e9a;
+  --color-dim: #5a5a66;
+  --color-accent: #7c8cff;
+  --color-urgent: #ff9f0a;
+  --color-outline: #34343f;
+  --color-cell-green: #30d158;
+  --color-cell-yellow: #ffd60a;
+  --color-cell-red: #ff453a;
+  --color-cell-grey: #2c2c36;
+  /* Month daily-score scale, red → green */
+  --color-score-0: #ff453a;
+  --color-score-1: #ff8a3d;
+  --color-score-2: #ffd60a;
+  --color-score-3: #7ed957;
+  --color-score-4: #30d158;
+  --radius-card: 22px;
+  --radius-cell: 10px;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
+}
+
+:root {
+  color-scheme: dark;
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-fg);
+  -webkit-font-smoothing: antialiased;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* PAUSED cells: diagonal hatching */
+.cell-paused {
+  background: repeating-linear-gradient(135deg, #26262f 0 4px, #1a1a22 4px 8px);
+}
+
+/* The app logo: a rounded tile with a red → yellow → green → accent sweep */
+.logo-tile {
+  background: conic-gradient(from 210deg, var(--color-cell-red), var(--color-cell-yellow), var(--color-cell-green), var(--color-accent), var(--color-cell-red));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
