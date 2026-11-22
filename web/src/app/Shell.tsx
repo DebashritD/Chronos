@@ -18,7 +18,7 @@ function sideClass({ isActive }: { isActive: boolean }): string {
 }
 
 function tabClass({ isActive }: { isActive: boolean }): string {
-  return `flex flex-1 flex-col items-center gap-1 pt-2 text-[11px] font-medium ${isActive ? 'text-accent' : 'text-dim'}`
+  return `flex flex-1 items-center justify-center ${isActive ? 'text-accent' : 'text-dim'}`
 }
 
 /** Desktop: fixed sidebar with a user chip. Mobile (< 768px): bottom tab bar. Logout lives on Account. */
@@ -62,8 +62,8 @@ export function Shell() {
           <NavLink key={to} to={to} end={end} className={tabClass}>
             {({ isActive }) => (
               <>
-                <Icon size={24} active={isActive} />
-                {label}
+                <Icon size={26} active={isActive} />
+                <span className="sr-only">{label}</span>
               </>
             )}
           </NavLink>
