@@ -49,3 +49,44 @@ export TESTCONTAINERS_DOCKER_SOCKET_OVERRIDE=/var/run/docker.sock
 
 Backend environment variables: `DATABASE_URL` (JDBC URL), `DATABASE_USER`, `DATABASE_PASSWORD`,
 `COOKIE_SECURE` (default `true`), `PORT` (default `8080`).
+
+## Frontend (`web/`)
+
+Vite + React 19 + TypeScript, TanStack Query, react-router, Tailwind CSS 4, lucide-react icons, Inter
+(self-hosted via @fontsource). Dark theme only. Requires Node 22+.
+
+```bash
+cd web
+npm install
+npm run dev        # http://localhost:5173, proxies /api to the backend on :8080 (set API_PORT to override)
+npm test           # Vitest unit/component tests
+npm run lint       # oxlint
+npm run build      # type-check + production build into web/dist
+npm run e2e        # Playwright (needs the backend running; signs up a fresh user each run)
+```
+
+Pages: **Today** (`/`, one-tap marking with a time-left countdown), **Progress** (`/progress`, Week grid + picker,
+distribution, streaks; `?view=month` for the Month heatmaps), **Habits** (`/habits`), **Account** (`/settings`).
+Phones get a bottom tab bar, wider screens a sidebar. Static mockups:
+`docs/superpowers/specs/2026-11-22-chronos-ui-mockups.html`.
+
+## Deployment (one Docker service)
+
+The root `Dockerfile` builds the web app, copies it into the API's `static/` folder and produces a single image.
+Spring Boot serves the site and the API from the same origin, so the session cookie needs no CORS: client routes such
+as `/progress` fall back to `index.html`, `/assets/*` is cached for a year, and `/api/**` is untouched.
+
+```bash
+docker build -t chronos .
+docker run --rm -p 8090:8080 -e DATABASE_URL=jdbc:postgresql://host.docker.internal:5433/chronos \
+  -e DATABASE_USER=chronos -e DATABASE_PASSWORD=chronos -e COOKIE_SECURE=false chronos   # http://localhost:8090
+```
+
+Hosting: Render (free web service, Docker runtime) + Neon (free Postgres; give Chronos its own project/database).
+
+1. In Neon, create a database and copy the **direct** (non-pooler) connection string; convert it to
+   `DATABASE_URL=jdbc:postgresql://<host>/<db>?sslmode=require`, `DATABASE_USER`, `DATABASE_PASSWORD`.
+2. In Render, **New → Blueprint** and pick this repo; `render.yaml` defines the service (Singapore, health check
+   `/api/public/health`) and prompts for the three variables above. Flyway creates the schema on first start.
+3. Every push to `main` redeploys. The free plan sleeps after 15 minutes idle; the first request then takes ~30–60 s
+   (the app shows a "waking up" notice).

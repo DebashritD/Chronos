@@ -1,0 +1,18 @@
+# Render Blueprint: one Docker web service serving the web app and the API.
+# Secrets use sync: false, so Render asks for them when the Blueprint is first applied.
+services:
+  - type: web
+    name: chronos
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/public/health
+    autoDeploy: true
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_USER
+        sync: false
+      - key: DATABASE_PASSWORD
+        sync: false
