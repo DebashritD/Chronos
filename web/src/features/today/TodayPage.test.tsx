@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from '@testing-library/react'
+import { act, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { CurrentPeriod, Streak, WeekCell, WeekView } from '../../api/types'
 import { jsonResponse, problemResponse, requests, stubApi, type ApiRequest } from '../../test/http'
@@ -149,6 +149,23 @@ describe('TodayPage', () => {
     renderWithProviders(<TodayPage />)
 
     expect(chip(await screen.findByRole('article', { name: 'Stretch' }))).toBeNull()
+  })
+
+  it('refetches the week once the earliest displayed period closes', async () => {
+    vi.useFakeTimers({ toFake: ['Date', 'setInterval', 'clearInterval'] })
+    vi.setSystemTime(new Date('2026-11-18T18:29:30Z'))
+    const fetchMock = api()
+    renderWithProviders(<TodayPage />)
+    await screen.findByRole('article', { name: 'Read' })
+    const weekRequests = () => requests(fetchMock).filter((r) => r.url.startsWith('/api/stats/week')).length
+    expect(weekRequests()).toBe(1)
+
+    await act(async () => { vi.advanceTimersByTime(60_000) })
+
+    await waitFor(() => expect(weekRequests()).toBe(2))
+    // The refetch returns the same closesAt; further ticks must not refetch again.
+    await act(async () => { vi.advanceTimersByTime(120_000) })
+    expect(weekRequests()).toBe(2)
   })
 
   it('marks with one tap, keeping the existing note', async () => {

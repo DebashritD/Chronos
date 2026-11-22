@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useQueryClient } from '@tanstack/react-query'
+import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router'
 import { isColor } from '../../lib/cells'
 import { formatLongDay } from '../../lib/dates'
@@ -24,6 +25,23 @@ export function TodayPage() {
   const streaks = useStreaks()
   const now = useNow()
   const [picked, setPicked] = useState<TodayItem | null>(null)
+  const queryClient = useQueryClient()
+  const invalidatedAt = useRef<number | null>(null)
+
+  const closesAt = week.data
+    ? todayItems(week.data).reduce<number | null>((earliest, { cell }) => {
+        const at = cell.closesAt ? Date.parse(cell.closesAt) : NaN
+        return Number.isNaN(at) || (earliest !== null && earliest <= at) ? earliest : at
+      }, null)
+    : null
+
+  // Once a displayed period has closed, refetch so cards move on to the new period instead of marking the old one.
+  useEffect(() => {
+    if (closesAt !== null && now.getTime() >= closesAt && invalidatedAt.current !== closesAt) {
+      invalidatedAt.current = closesAt
+      void queryClient.invalidateQueries({ queryKey: ['stats'] })
+    }
+  }, [closesAt, now, queryClient])
 
   if (week.isPending) return <p className="text-muted">Loading…</p>
   if (week.isError) return <p role="alert" className="text-cell-red">Couldn't load today.</p>
