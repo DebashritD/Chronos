@@ -9,6 +9,7 @@ import java.time.Instant;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
@@ -46,6 +47,16 @@ class LoginThrottleTest {
         clock.now = clock.now.plus(Duration.ofMinutes(15)).plusSeconds(1);
 
         assertThatCode(() -> throttle.check("ip:1.2.3.4")).doesNotThrowAnyException();
+    }
+
+    @Test
+    void staleKeysAreEvictedOnTheNextRecordedFailure() {
+        throttle.recordFailure("ip:1.1.1.1", "ip:2.2.2.2");
+        clock.now = clock.now.plus(Duration.ofMinutes(15)).plusSeconds(1);
+
+        throttle.recordFailure("ip:3.3.3.3");
+
+        assertThat(throttle.trackedKeys()).isEqualTo(1);
     }
 
     @Test

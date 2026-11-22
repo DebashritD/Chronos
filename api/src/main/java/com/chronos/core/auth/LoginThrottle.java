@@ -36,6 +36,7 @@ public class LoginThrottle {
 
     public synchronized void recordFailure(String... keys) {
         Instant now = clock.instant();
+        evictStale(now);
         for (String key : keys) {
             pruned(key);
             failures.computeIfAbsent(key, k -> new ArrayDeque<>()).addLast(now);
@@ -46,8 +47,18 @@ public class LoginThrottle {
         failures.remove(key);
     }
 
+    synchronized int trackedKeys() {
+        return failures.size();
+    }
+
     public synchronized void clear() {
         failures.clear();
+    }
+
+    /** Drops keys whose failures all fell out of the window so one-off attempts don't accumulate. */
+    private void evictStale(Instant now) {
+        Instant cutoff = now.minus(WINDOW);
+        failures.values().removeIf(deque -> deque.isEmpty() || !deque.peekLast().isAfter(cutoff));
     }
 
     private Deque<Instant> pruned(String key) {
