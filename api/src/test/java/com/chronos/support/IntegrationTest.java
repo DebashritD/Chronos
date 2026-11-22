@@ -89,4 +89,34 @@ public abstract class IntegrationTest {
     protected static RequestPostProcessor as(AppUserPrincipal principal) {
         return user(principal);
     }
+
+    protected long insertHabit(AppUserPrincipal owner, String name, String frequency, Integer intervalDays,
+                               LocalDate startDate) {
+        return jdbc.sql("""
+                        INSERT INTO habit (user_id, name, min_text, target_text, frequency, interval_days, start_date)
+                        VALUES (:userId, :name, 'min', 'target', :frequency, :intervalDays, :startDate)
+                        RETURNING id
+                        """)
+                .param("userId", owner.id())
+                .param("name", name)
+                .param("frequency", frequency)
+                .param("intervalDays", intervalDays)
+                .param("startDate", startDate)
+                .query(Long.class)
+                .single();
+    }
+
+    protected void insertPause(long habitId, LocalDate from, LocalDate to) {
+        jdbc.sql("INSERT INTO habit_pause (habit_id, from_date, to_date) VALUES (:habitId, :from, :to)")
+                .param("habitId", habitId).param("from", from).param("to", to).update();
+    }
+
+    protected void insertCheckIn(long habitId, LocalDate periodStart, String color) {
+        jdbc.sql("INSERT INTO check_in (habit_id, period_start, color) VALUES (:habitId, :periodStart, :color)")
+                .param("habitId", habitId).param("periodStart", periodStart).param("color", color).update();
+    }
+
+    protected void setStatus(long habitId, String status) {
+        jdbc.sql("UPDATE habit SET status = :status WHERE id = :id").param("id", habitId).param("status", status).update();
+    }
 }
