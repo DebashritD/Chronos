@@ -11,3 +11,6 @@ export const secondaryButton =
   'rounded-[14px] border border-line bg-surface px-4 py-3 text-[15px] font-medium text-fg disabled:opacity-50'
 export const pillButton =
   'rounded-full border border-line bg-surface px-3 py-1.5 text-[13px] font-medium text-fg disabled:opacity-50'
+
+/** The primary call to action inside an EmptyState. */
+export const emptyAction = 'inline-flex items-center gap-2 rounded-[14px] bg-accent px-5 py-3 text-[15px] font-semibold text-bg'

@@ -4,7 +4,8 @@ import { messageFor } from '../../api/errors'
 import type { Habit } from '../../api/types'
 import { frequencyLabel } from '../../lib/cells'
 import { formatDay } from '../../lib/dates'
-import { card, eyebrow, pageTitle } from '../../lib/ui'
+import { EmptyState } from '../../app/EmptyState'
+import { card, emptyAction, eyebrow, pageTitle } from '../../lib/ui'
 import { useCreateHabit, useHabitAction, useHabits, useUpdateHabit, type HabitAction } from './api'
 import { HabitForm } from './HabitForm'
 
@@ -130,7 +131,12 @@ export function HabitsPage() {
       )}
       {error && <p role="alert" className="mb-3 text-sm text-cell-red">{error}</p>}
       {current.isPending && <p className="text-muted">Loading…</p>}
-      {current.data?.length === 0 && !creating && <p className="text-muted">No habits yet. Create your first one.</p>}
+      {current.data?.length === 0 && !creating && (
+        <EmptyState title="No habits yet"
+          action={<button type="button" className={emptyAction} onClick={() => setCreating(true)}>Create your first habit</button>}>
+          Start small: a minimum you can do on your worst day, and a target for your best.
+        </EmptyState>
+      )}
       {current.data && current.data.length > 0 && <ul className={list}>{current.data.map(row)}</ul>}
       {archived.data && archived.data.length > 0 && (
         <details className="mt-8">

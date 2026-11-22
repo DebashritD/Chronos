@@ -3,7 +3,8 @@ import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router'
 import type { WeekCell, WeekHabit } from '../../api/types'
 import { addDays, formatWeekRange } from '../../lib/dates'
-import { card, pillButton } from '../../lib/ui'
+import { EmptyState } from '../../app/EmptyState'
+import { card, emptyAction, pillButton } from '../../lib/ui'
 import { CellPicker } from '../checkin/CellPicker'
 import { useWeek } from '../stats/api'
 import { DistributionDonut } from '../stats/DistributionDonut'
@@ -40,9 +41,10 @@ export function WeekPanel() {
         {start && <button type="button" className={pillButton} onClick={() => setSearchParams({})}>This week</button>}
       </div>
       {data.habits.length === 0 ? (
-        <p className={`${card} text-muted`}>
-          No habits yet. <Link to="/habits" className="font-semibold text-accent">Create your first habit</Link>
-        </p>
+        <EmptyState title="Your progress shows up here"
+          action={<Link to="/habits" className={emptyAction}>Create your first habit</Link>}>
+          Mark your habits each day and this week fills up with green, yellow and red.
+        </EmptyState>
       ) : (
         <div className={`${card} px-2 md:px-4`}>
           <WeekGrid start={data.start} today={data.today} habits={data.habits}

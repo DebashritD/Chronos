@@ -60,6 +60,16 @@ describe('HabitsPage', () => {
     })
   })
 
+  it('opens the form from the empty state', async () => {
+    api((r) => (r.method === 'GET' ? jsonResponse([]) : undefined))
+    const { user } = renderWithProviders(<HabitsPage />, { route: '/habits' })
+
+    await user.click(await screen.findByRole('button', { name: 'Create your first habit' }))
+
+    expect(screen.getByLabelText('Name')).toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'No habits yet' })).not.toBeInTheDocument()
+  })
+
   it('only asks for an interval for every-N-days habits', async () => {
     api()
     const { user } = renderWithProviders(<HabitsPage />, { route: '/habits' })

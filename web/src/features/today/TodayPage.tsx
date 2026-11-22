@@ -4,7 +4,8 @@ import { Link } from 'react-router'
 import { isColor } from '../../lib/cells'
 import { formatLongDay } from '../../lib/dates'
 import { useNow } from '../../lib/useNow'
-import { card, cardTitle, eyebrow, pageTitle } from '../../lib/ui'
+import { EmptyState } from '../../app/EmptyState'
+import { card, cardTitle, emptyAction, eyebrow, pageTitle } from '../../lib/ui'
 import { CellPicker } from '../checkin/CellPicker'
 import { WeekGrid } from '../progress/WeekGrid'
 import { useStreaks, useWeek } from '../stats/api'
@@ -58,9 +59,10 @@ export function TodayPage() {
         <p className={eyebrow}>{formatLongDay(data.today)}</p>
         <h1 className={`${pageTitle} mb-5`}>Today</h1>
         {data.habits.length === 0 ? (
-          <p className={`${card} text-muted`}>
-            No habits yet. <Link to="/habits" className="font-semibold text-accent">Create your first habit</Link>
-          </p>
+          <EmptyState title="Start your first chain"
+            action={<Link to="/habits" className={emptyAction}>Create your first habit</Link>}>
+            Add a habit with a minimum and a target. Even the minimum keeps the day off red.
+          </EmptyState>
         ) : (
           <>
             <section aria-label="Today's progress" className={`${card} mb-4 flex items-center gap-5`}>
