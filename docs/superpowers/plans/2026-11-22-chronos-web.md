@@ -1615,3 +1615,1229 @@ git commit -m "feat(web): add habits page with create, edit and lifecycle action
 ```
 
 ---
+
+### Task 4: Week view (grid, cell picker, distribution, streaks)
+
+Matches mockup 1 and 2 in `docs/superpowers/specs/2026-11-22-chronos-ui-mockups.html`.
+
+**Files:**
+- Create: `web/src/features/stats/{api.ts,DistributionBar.tsx,StreakList.tsx}`, `web/src/features/week/{WeekGrid,CellPicker,WeekPage}.tsx`
+- Modify: `web/src/app/router.tsx` (`/` → `WeekPage`; delete `Welcome`)
+- Test: `web/src/features/stats/DistributionBar.test.tsx`, `web/src/features/week/WeekPage.test.tsx`
+
+**Interfaces:**
+- Consumes: `api`, `messageFor`, `Color`, `Distribution`, `Streak`, `WeekView`, `WeekHabit`, `WeekCell`, `MonthView` (Task 1); `addDays`, `dayOfMonth`, `formatDay`, `formatWeekRange`, `WEEKDAYS` (Task 1); `cellClass`, `STATE_LABEL` (Task 1); `renderWithProviders`, test http helpers (Tasks 1–2).
+- Produces:
+  - `useWeek(start?: string)` (key `['stats', 'week', start ?? 'current']`), `useMonth(month?: string)` (key `['stats', 'month', month ?? 'current']`), `useStreaks()` (key `['stats', 'streaks']`)
+  - `useSaveCheckIn()` (variables `{ habitId: number; periodStart: string; color: Color; note: string | null }`), `useClearCheckIn()` (variables `{ habitId: number; periodStart: string }`) — both invalidate `['stats']`.
+  - `DistributionBar({ title, distribution })` — reused by Task 5.
+  - `WeekPage` at `/`, reading `?start=YYYY-MM-DD`.
+  - Cell buttons are labelled `"<habit>, <Wed 18 Nov>, <state label>"` (weekly habits: `"<habit>, week of <Mon 16 Nov>, <state label>"`); the e2e test in Task 7 relies on this.
+
+- [ ] **Step 1: Write the failing tests**
+
+`web/src/features/stats/DistributionBar.test.tsx`:
+```tsx
+import { render, screen } from '@testing-library/react'
+import { describe, expect, it } from 'vitest'
+import { DistributionBar } from './DistributionBar'
+
+describe('DistributionBar', () => {
+  it('shows counts with rounded percentages', () => {
+    render(<DistributionBar title="This week" distribution={{ green: 1, yellow: 1, red: 1, grey: 0, total: 3 }} />)
+
+    expect(screen.getByRole('heading', { name: 'This week' })).toBeInTheDocument()
+    expect(screen.getByText('Green 1 (33%)')).toBeInTheDocument()
+    expect(screen.getByText('Yellow 1 (33%)')).toBeInTheDocument()
+    expect(screen.getByText('Red 1 (33%)')).toBeInTheDocument()
+    expect(screen.getByText('Grey 0 (0%)')).toBeInTheDocument()
+  })
+
+  it('says when nothing is marked', () => {
+    render(<DistributionBar title="This week" distribution={{ green: 0, yellow: 0, red: 0, grey: 0, total: 0 }} />)
+
+    expect(screen.getByText('Nothing marked yet')).toBeInTheDocument()
+  })
+})
+```
+
+`web/src/features/week/WeekPage.test.tsx`:
+```tsx
+import { screen, waitFor, within } from '@testing-library/react'
+import { describe, expect, it } from 'vitest'
+import type { Streak, WeekCell, WeekView } from '../../api/types'
+import { jsonResponse, problemResponse, requests, stubApi, type ApiRequest } from '../../test/http'
+import { renderWithProviders } from '../../test/utils'
+import { WeekPage } from './WeekPage'
+
+const days = ['16', '17', '18', '19', '20', '21', '22'].map((d) => `2026-11-${d}`)
+
+function daily(states: WeekCell['state'][]): WeekCell[] {
+  return days.map((date, i) => ({
+    date,
+    periodStart: date,
+    state: states[i],
+    editable: date <= '2026-11-18',
+    note: i === 0 ? 'great' : null,
+  }))
+}
+
+const week: WeekView = {
+  start: '2026-11-16',
+  today: '2026-11-18',
+  distribution: { green: 1, yellow: 0, red: 1, grey: 0, total: 2 },
+  habits: [
+    { id: 1, name: 'Read', minText: '1 page', targetText: '20 pages', frequency: 'DAILY',
+      cells: daily(['GREEN', 'RED', 'PENDING', 'PENDING', 'PENDING', 'PENDING', 'PENDING']) },
+    { id: 2, name: 'Piano', minText: '5 min', targetText: '30 min', frequency: 'WEEKLY',
+      cells: [{ date: '2026-11-16', periodStart: '2026-11-16', state: 'PENDING', editable: true, note: null }] },
+  ],
+}
+const streaks: Streak[] = [{ habitId: 1, name: 'Read', current: 0, best: 9 }]
+
+function api(overrides: (r: ApiRequest) => Response | undefined = () => undefined) {
+  return stubApi((r) => {
+    const custom = overrides(r)
+    if (custom) return custom
+    if (r.url.startsWith('/api/stats/week')) return jsonResponse(week)
+    if (r.url === '/api/stats/streaks') return jsonResponse(streaks)
+    return undefined
+  })
+}
+
+describe('WeekPage', () => {
+  it('shows the grid, distribution and streaks', async () => {
+    api()
+    renderWithProviders(<WeekPage />)
+
+    expect(await screen.findByRole('heading', { name: '16 – 22 Nov 2026' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Read, Mon 16 Nov, Target hit' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Read, Tue 17 Nov, Did nothing' })).toBeEnabled()
+    expect(screen.getByRole('button', { name: 'Read, Thu 19 Nov, Not marked yet' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Piano, week of Mon 16 Nov, Not marked yet' })).toBeEnabled()
+    expect(screen.getByText('Green 1 (50%)')).toBeInTheDocument()
+    expect(await screen.findByRole('listitem', { name: 'Read' })).toHaveTextContent('0 now · best 9')
+  })
+
+  it("marks today's cells", async () => {
+    api()
+    renderWithProviders(<WeekPage />)
+
+    expect(await screen.findByRole('button', { name: 'Read, Wed 18 Nov, Not marked yet' })).toHaveAttribute('aria-current', 'date')
+    expect(screen.getByRole('button', { name: /^Piano/ })).toHaveAttribute('aria-current', 'date')
+    expect(screen.getByRole('button', { name: /^Read, Tue/ })).not.toHaveAttribute('aria-current')
+  })
+
+  it('saves a color with a note', async () => {
+    const fetchMock = api((r) => (r.method === 'PUT' ? jsonResponse({ periodStart: '2026-11-18', color: 'GREEN', note: 'ch 4' }) : undefined))
+    const { user } = renderWithProviders(<WeekPage />)
+
+    await user.click(await screen.findByRole('button', { name: 'Read, Wed 18 Nov, Not marked yet' }))
+    const dialog = screen.getByRole('dialog', { name: 'Read, Wed 18 Nov' })
+    expect(within(dialog).getByRole('button', { name: 'Save' })).toBeDisabled()
+    expect(within(dialog).getByRole('button', { name: /^Green/ })).toHaveTextContent('Target: 20 pages')
+    expect(within(dialog).getByRole('button', { name: /^Yellow/ })).toHaveTextContent('Minimum: 1 page')
+    await user.click(within(dialog).getByRole('button', { name: /^Green/ }))
+    await user.type(within(dialog).getByLabelText('Note (optional)'), 'ch 4')
+    await user.click(within(dialog).getByRole('button', { name: 'Save' }))
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(requests(fetchMock).find((r) => r.method === 'PUT')).toEqual({
+      method: 'PUT',
+      url: '/api/habits/1/check-ins/2026-11-18',
+      body: { color: 'GREEN', note: 'ch 4' },
+    })
+    await waitFor(() =>
+      expect(requests(fetchMock).filter((r) => r.url.startsWith('/api/stats/week')).length).toBeGreaterThan(1),
+    )
+  })
+
+  it('opens with the current color and note, and clears', async () => {
+    const fetchMock = api((r) => (r.method === 'DELETE' ? new Response(null, { status: 204 }) : undefined))
+    const { user } = renderWithProviders(<WeekPage />)
+
+    await user.click(await screen.findByRole('button', { name: 'Read, Mon 16 Nov, Target hit' }))
+    const dialog = screen.getByRole('dialog')
+    expect(within(dialog).getByRole('button', { name: /^Green/ })).toHaveAttribute('aria-pressed', 'true')
+    expect(within(dialog).getByLabelText('Note (optional)')).toHaveValue('great')
+    await user.click(within(dialog).getByRole('button', { name: 'Clear' }))
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(requests(fetchMock).find((r) => r.method === 'DELETE')?.url).toBe('/api/habits/1/check-ins/2026-11-16')
+  })
+
+  it('has no Clear for unmarked periods and closes on Cancel', async () => {
+    api()
+    const { user } = renderWithProviders(<WeekPage />)
+
+    await user.click(await screen.findByRole('button', { name: /^Piano/ }))
+    expect(screen.getByRole('dialog', { name: 'Piano, week of Mon 16 Nov' })).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Clear' })).not.toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Cancel' }))
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+  })
+
+  it('shows save errors in the picker', async () => {
+    api((r) => (r.method === 'PUT' ? problemResponse(422, 'CHECK_IN_NOT_ALLOWED') : undefined))
+    const { user } = renderWithProviders(<WeekPage />)
+
+    await user.click(await screen.findByRole('button', { name: 'Read, Tue 17 Nov, Did nothing' }))
+    await user.click(screen.getByRole('button', { name: /^Yellow/ }))
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+
+    expect(await within(screen.getByRole('dialog')).findByRole('alert')).toHaveTextContent(
+      'That period can no longer be changed',
+    )
+  })
+
+  it('moves between weeks', async () => {
+    const fetchMock = api()
+    const { user } = renderWithProviders(<WeekPage />)
+
+    expect(screen.queryByRole('button', { name: 'This week' })).not.toBeInTheDocument()
+    await user.click(await screen.findByRole('button', { name: 'Previous week' }))
+
+    expect(await screen.findByRole('button', { name: 'This week' })).toBeInTheDocument()
+    expect(requests(fetchMock).map((r) => r.url)).toContain('/api/stats/week?start=2026-11-09')
+  })
+
+  it('points to the habits page when there are none', async () => {
+    api((r) => (r.url.startsWith('/api/stats/week') ? jsonResponse({ ...week, habits: [], distribution: { green: 0, yellow: 0, red: 0, grey: 0, total: 0 } }) : undefined))
+    renderWithProviders(<WeekPage />)
+
+    expect(await screen.findByRole('link', { name: 'Create your first habit' })).toHaveAttribute('href', '/habits')
+  })
+})
+```
+
+- [ ] **Step 2: Run them to verify they fail**
+
+Run: `cd web && npx vitest run src/features/stats src/features/week`
+Expected: FAIL — `./DistributionBar` and `./WeekPage` cannot be resolved.
+
+- [ ] **Step 3: Implement the stats API hooks**
+
+`web/src/features/stats/api.ts`:
+```ts
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { api } from '../../api/client'
+import type { Color, MonthView, Streak, WeekView } from '../../api/types'
+
+export function useWeek(start?: string) {
+  return useQuery({
+    queryKey: ['stats', 'week', start ?? 'current'],
+    queryFn: () => api.get<WeekView>('/api/stats/week', { start }),
+  })
+}
+
+export function useMonth(month?: string) {
+  return useQuery({
+    queryKey: ['stats', 'month', month ?? 'current'],
+    queryFn: () => api.get<MonthView>('/api/stats/month', { month }),
+  })
+}
+
+export function useStreaks() {
+  return useQuery({ queryKey: ['stats', 'streaks'], queryFn: () => api.get<Streak[]>('/api/stats/streaks') })
+}
+
+interface CheckInKey {
+  habitId: number
+  periodStart: string
+}
+
+function checkInPath({ habitId, periodStart }: CheckInKey): string {
+  return `/api/habits/${habitId}/check-ins/${periodStart}`
+}
+
+export function useSaveCheckIn() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ color, note, ...key }: CheckInKey & { color: Color; note: string | null }) =>
+      api.put(checkInPath(key), { color, note }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['stats'] }),
+  })
+}
+
+export function useClearCheckIn() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: (key: CheckInKey) => api.del(checkInPath(key)),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['stats'] }),
+  })
+}
+```
+
+- [ ] **Step 4: Implement the distribution bar and streak list**
+
+`web/src/features/stats/DistributionBar.tsx`:
+```tsx
+import type { Distribution } from '../../api/types'
+
+const SEGMENTS = [
+  { key: 'green', label: 'Green', className: 'bg-cell-green' },
+  { key: 'yellow', label: 'Yellow', className: 'bg-cell-yellow' },
+  { key: 'red', label: 'Red', className: 'bg-cell-red' },
+  { key: 'grey', label: 'Grey', className: 'bg-cell-grey' },
+] as const
+
+export function DistributionBar({ title, distribution }: { title: string; distribution: Distribution }) {
+  const { total } = distribution
+  return (
+    <section className="rounded-lg bg-surface p-4">
+      <h2 className="mb-3 text-sm font-semibold text-slate-200">{title}</h2>
+      {total === 0 ? (
+        <p className="text-sm">Nothing marked yet</p>
+      ) : (
+        <>
+          <div className="flex h-3 overflow-hidden rounded-md" aria-hidden="true">
+            {SEGMENTS.map(({ key, className }) => (
+              <div key={key} className={className} style={{ width: `${(distribution[key] * 100) / total}%` }} />
+            ))}
+          </div>
+          <ul className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs">
+            {SEGMENTS.map(({ key, label, className }) => (
+              <li key={key} className="flex items-center gap-1">
+                <span className={`inline-block h-2.5 w-2.5 rounded-sm ${className}`} aria-hidden="true" />
+                {`${label} ${distribution[key]} (${Math.round((distribution[key] * 100) / total)}%)`}
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
+    </section>
+  )
+}
+
+export default DistributionBar
+```
+
+`web/src/features/stats/StreakList.tsx`:
+```tsx
+import { useStreaks } from './api'
+
+/** Current and best streak per habit; streaks count GREEN/YELLOW periods and skip paused ones. */
+export function StreakList() {
+  const { data } = useStreaks()
+  return (
+    <section className="rounded-lg bg-surface p-4">
+      <h2 className="mb-2 text-sm font-semibold text-slate-200">Streaks</h2>
+      {data?.length === 0 && <p className="text-sm">No habits yet</p>}
+      <ul>
+        {data?.map((streak) => (
+          <li key={streak.habitId} aria-label={streak.name}
+            className="flex justify-between border-b border-muted/10 py-1.5 text-sm last:border-0">
+            <span>{streak.name}</span>
+            <span>{`${streak.current} now · best ${streak.best}`}</span>
+          </li>
+        ))}
+      </ul>
+    </section>
+  )
+}
+
+export default StreakList
+```
+
+- [ ] **Step 5: Implement the grid and picker**
+
+`web/src/features/week/WeekGrid.tsx`:
+```tsx
+import type { WeekCell, WeekHabit } from '../../api/types'
+import { addDays, dayOfMonth, formatDay, WEEKDAYS } from '../../lib/dates'
+import { cellClass, STATE_LABEL } from '../../lib/cells'
+
+/** "Wed 18 Nov", or "week of Mon 16 Nov" for weekly habits. */
+export function periodLabel(habit: WeekHabit, cell: WeekCell): string {
+  return habit.frequency === 'WEEKLY' ? `week of ${formatDay(cell.date)}` : formatDay(cell.date)
+}
+
+function coversToday(habit: WeekHabit, cell: WeekCell, today: string): boolean {
+  return habit.frequency === 'WEEKLY' ? cell.date <= today && today <= addDays(cell.date, 6) : cell.date === today
+}
+
+interface WeekGridProps {
+  start: string
+  today: string
+  habits: WeekHabit[]
+  onPick(habit: WeekHabit, cell: WeekCell): void
+}
+
+export function WeekGrid({ start, today, habits, onPick }: WeekGridProps) {
+  return (
+    <table className="w-full table-fixed border-separate border-spacing-1 md:border-spacing-1.5">
+      <thead>
+        <tr>
+          <th className="w-16 md:w-28" />
+          {WEEKDAYS.map((weekday, i) => (
+            <th key={weekday} scope="col" className="text-center text-[11px] font-medium">
+              {weekday}
+              <span className="block text-[10px] opacity-70">{dayOfMonth(addDays(start, i))}</span>
+            </th>
+          ))}
+        </tr>
+      </thead>
+      <tbody>
+        {habits.map((habit) => (
+          <tr key={habit.id}>
+            <th scope="row" className="truncate text-left text-xs font-medium text-slate-300 md:text-sm">
+              {habit.name}
+              {habit.frequency === 'WEEKLY' && <span className="block text-[10px] font-normal opacity-70">weekly</span>}
+            </th>
+            {habit.cells.map((cell) => {
+              const isToday = coversToday(habit, cell, today)
+              return (
+                <td key={cell.date} colSpan={habit.frequency === 'WEEKLY' ? 7 : undefined}>
+                  <button
+                    type="button"
+                    aria-label={`${habit.name}, ${periodLabel(habit, cell)}, ${STATE_LABEL[cell.state]}`}
+                    aria-current={isToday ? 'date' : undefined}
+                    disabled={!cell.editable}
+                    onClick={() => onPick(habit, cell)}
+                    className={`block h-8 w-full rounded-md md:h-9 ${cellClass(cell.state)} ${
+                      isToday ? 'outline-2 outline-offset-2 outline-accent' : ''
+                    } ${cell.editable ? 'cursor-pointer' : cell.state === 'NOT_DUE' ? '' : 'opacity-55'}`}
+                  />
+                </td>
+              )
+            })}
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  )
+}
+
+export default WeekGrid
+```
+
+`web/src/features/week/CellPicker.tsx`:
+```tsx
+import { useState } from 'react'
+import { messageFor } from '../../api/errors'
+import type { Color, WeekCell, WeekHabit } from '../../api/types'
+import { cellClass, STATE_LABEL } from '../../lib/cells'
+import { useClearCheckIn, useSaveCheckIn } from '../stats/api'
+import { periodLabel } from './WeekGrid'
+
+const CHOICES: { color: Color; label: string; hint(habit: WeekHabit): string }[] = [
+  { color: 'GREEN', label: 'Green', hint: (habit) => `Target: ${habit.targetText}` },
+  { color: 'YELLOW', label: 'Yellow', hint: (habit) => `Minimum: ${habit.minText}` },
+  { color: 'RED', label: 'Red', hint: () => 'Did nothing' },
+]
+
+function isColor(state: WeekCell['state']): state is Color {
+  return state === 'GREEN' || state === 'YELLOW' || state === 'RED'
+}
+
+interface CellPickerProps {
+  habit: WeekHabit
+  cell: WeekCell
+  onClose(): void
+}
+
+/** Bottom sheet on phones, centred dialog on wider screens. Saves only on "Save". */
+export function CellPicker({ habit, cell, onClose }: CellPickerProps) {
+  const saveCheckIn = useSaveCheckIn()
+  const clearCheckIn = useClearCheckIn()
+  const marked = isColor(cell.state)
+  const [color, setColor] = useState<Color | null>(marked ? (cell.state as Color) : null)
+  const [note, setNote] = useState(cell.note ?? '')
+  const [error, setError] = useState<string | null>(null)
+  const busy = saveCheckIn.isPending || clearCheckIn.isPending
+  const key = { habitId: habit.id, periodStart: cell.periodStart ?? cell.date }
+  const title = `${habit.name}, ${periodLabel(habit, cell)}`
+
+  async function run(action: () => Promise<unknown>): Promise<void> {
+    setError(null)
+    try {
+      await action()
+      onClose()
+    } catch (err) {
+      setError(messageFor(err))
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-20 flex items-end justify-center bg-black/60 md:items-center"
+      onClick={(event) => {
+        if (event.target === event.currentTarget) onClose()
+      }}>
+      <div role="dialog" aria-modal="true" aria-label={title}
+        onKeyDown={(event) => {
+          if (event.key === 'Escape') onClose()
+        }}
+        className="w-full rounded-t-2xl bg-surface p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom))] md:max-w-sm md:rounded-2xl">
+        <h2 className="text-base font-semibold text-white">{habit.name}</h2>
+        <p className="mb-4 text-xs">{`${periodLabel(habit, cell)} · ${STATE_LABEL[cell.state]}`}</p>
+        {CHOICES.map((choice) => (
+          <button key={choice.color} type="button" aria-pressed={color === choice.color}
+            onClick={() => setColor(choice.color)}
+            className={`mb-2 flex w-full items-center gap-3 rounded-lg border bg-bg p-3 text-left text-sm text-slate-100 ${
+              color === choice.color ? 'border-accent ring-1 ring-accent' : 'border-muted/20'
+            }`}>
+            <span className={`h-5 w-5 flex-none rounded-md ${cellClass(choice.color)}`} aria-hidden="true" />
+            <span>
+              {choice.label}
+              <small className="block text-xs text-muted">{choice.hint(habit)}</small>
+            </span>
+          </button>
+        ))}
+        <label htmlFor="check-in-note" className="mt-3 mb-1 block text-xs">Note (optional)</label>
+        <textarea id="check-in-note" rows={2} maxLength={500} value={note} onChange={(e) => setNote(e.target.value)}
+          className="w-full rounded border border-muted/30 bg-bg px-3 py-2 text-sm" />
+        {error && <p role="alert" className="mt-2 text-sm text-red-400">{error}</p>}
+        <div className="mt-4 flex items-center justify-between">
+          {marked ? (
+            <button type="button" disabled={busy} className="rounded border border-muted/30 px-3 py-1.5 text-sm"
+              onClick={() => void run(() => clearCheckIn.mutateAsync(key))}>Clear</button>
+          ) : (
+            <span />
+          )}
+          <div className="flex gap-2">
+            <button type="button" onClick={onClose} className="rounded border border-muted/30 px-3 py-1.5 text-sm">
+              Cancel
+            </button>
+            <button type="button" disabled={!color || busy}
+              className="rounded bg-accent px-3 py-1.5 text-sm font-medium text-bg disabled:opacity-50"
+              onClick={() => {
+                if (color) void run(() => saveCheckIn.mutateAsync({ ...key, color, note: note.trim() || null }))
+              }}>
+              Save
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default CellPicker
+```
+
+- [ ] **Step 6: Implement the page and route**
+
+`web/src/features/week/WeekPage.tsx`:
+```tsx
+import { useState } from 'react'
+import { Link, useSearchParams } from 'react-router'
+import type { WeekCell, WeekHabit } from '../../api/types'
+import { addDays, formatWeekRange } from '../../lib/dates'
+import { useWeek } from '../stats/api'
+import { DistributionBar } from '../stats/DistributionBar'
+import { StreakList } from '../stats/StreakList'
+import { CellPicker } from './CellPicker'
+import { WeekGrid } from './WeekGrid'
+
+const navButton = 'rounded border border-muted/30 px-2.5 py-1 text-xs'
+
+export function WeekPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const start = searchParams.get('start') ?? undefined
+  const { data, isPending, isError } = useWeek(start)
+  const [picked, setPicked] = useState<{ habit: WeekHabit; cell: WeekCell } | null>(null)
+
+  if (isPending) return <p>Loading…</p>
+  if (isError) return <p role="alert">Couldn't load this week.</p>
+
+  const goTo = (weekStart: string) => setSearchParams({ start: weekStart })
+
+  return (
+    <section>
+      <div className="mb-4 flex items-center gap-2">
+        <button type="button" aria-label="Previous week" className={navButton}
+          onClick={() => goTo(addDays(data.start, -7))}>◀</button>
+        <h1 className="text-lg font-semibold text-accent md:text-xl">{formatWeekRange(data.start)}</h1>
+        <button type="button" aria-label="Next week" className={navButton}
+          onClick={() => goTo(addDays(data.start, 7))}>▶</button>
+        {start && (
+          <button type="button" className={navButton} onClick={() => setSearchParams({})}>This week</button>
+        )}
+      </div>
+      {data.habits.length === 0 ? (
+        <p className="mb-4">
+          No habits yet. <Link to="/habits" className="text-accent underline">Create your first habit</Link>
+        </p>
+      ) : (
+        <WeekGrid start={data.start} today={data.today} habits={data.habits}
+          onPick={(habit, cell) => setPicked({ habit, cell })} />
+      )}
+      <div className="mt-4 grid gap-4 md:grid-cols-2">
+        <DistributionBar title="This week" distribution={data.distribution} />
+        <StreakList />
+      </div>
+      {picked && <CellPicker habit={picked.habit} cell={picked.cell} onClose={() => setPicked(null)} />}
+    </section>
+  )
+}
+
+export default WeekPage
+```
+
+`web/src/app/router.tsx`: delete the `Welcome` component, import `WeekPage`, and change the index route:
+```tsx
+import { WeekPage } from '../features/week/WeekPage'
+// …
+        <Route path="/" element={<WeekPage />} />
+```
+
+`web/src/app/router.test.tsx`: the "shows the shell to signed-in users" and "keeps signed-in users away from the login page" tests now render the week page, whose requests 404 in those stubs. That's fine (the page shows "Couldn't load this week." and the assertions only check the shell), so leave them unchanged.
+
+- [ ] **Step 7: Run tests, lint and build**
+
+Run: `cd web && npm test && npm run lint && npm run build`
+Expected: all PASS.
+
+- [ ] **Step 8: Commit**
+
+```bash
+git add web
+git commit -m "feat(web): add week grid with check-in picker, distribution and streaks" \
+  -m "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+```
+
+---
+
+### Task 5: Month view (score heatmap, distribution, per-habit calendars)
+
+Matches mockup 3 in `docs/superpowers/specs/2026-11-22-chronos-ui-mockups.html`.
+
+**Files:**
+- Create: `web/src/features/month/{CalendarGrid,MonthPage}.tsx`
+- Modify: `web/src/app/router.tsx` (add `/month`)
+- Test: `web/src/features/month/MonthPage.test.tsx`
+
+**Interfaces:**
+- Consumes: `useMonth` (Task 4), `DistributionBar` (Task 4), `MonthView` (Task 1), `addMonths`, `formatDay`, `formatMonth`, `dayOfMonth`, `weekdayIndex`, `WEEKDAYS` (Task 1), `cellClass`, `STATE_LABEL` (Task 1).
+- Produces:
+  - `scoreClass(score: number | null): string` and `CalendarGrid({ days, showNumbers?, compact? })`, where `days: { date: string; className: string; label: string }[]` (one month, in order).
+  - `MonthPage` at `/month`, reading `?month=YYYY-MM`.
+
+- [ ] **Step 1: Write the failing test**
+
+`web/src/features/month/MonthPage.test.tsx`:
+```tsx
+import { screen, within } from '@testing-library/react'
+import { describe, expect, it } from 'vitest'
+import type { CellState, MonthView } from '../../api/types'
+import { jsonResponse, requests, stubApi } from '../../test/http'
+import { renderWithProviders } from '../../test/utils'
+import { MonthPage } from './MonthPage'
+
+const dates = Array.from({ length: 30 }, (_, i) => `2026-11-${String(i + 1).padStart(2, '0')}`)
+const scores: (number | null)[] = [2, 0.3, 1, 1.25, 0.5]
+
+const month: MonthView = {
+  month: '2026-11',
+  distribution: { green: 2, yellow: 1, red: 1, grey: 0, total: 4 },
+  overview: dates.map((date, i) => ({ date, score: scores[i] ?? null })),
+  habits: [
+    { id: 1, name: 'Read', frequency: 'DAILY',
+      cells: dates.map((date, i) => ({ date, state: ((['GREEN', 'RED'] as CellState[])[i] ?? 'PENDING') })) },
+  ],
+}
+
+describe('MonthPage', () => {
+  it('colors the overview by score, Monday first', async () => {
+    stubApi(({ url }) => (url.startsWith('/api/stats/month') ? jsonResponse(month) : undefined))
+    renderWithProviders(<MonthPage />, { route: '/month' })
+
+    expect(await screen.findByRole('heading', { name: 'November 2026' })).toBeInTheDocument()
+    const overview = screen.getByRole('region', { name: 'Daily score' })
+    expect(within(overview).getByRole('img', { name: 'Sun 1 Nov: score 2.0' })).toHaveClass('bg-cell-green')
+    expect(within(overview).getByRole('img', { name: 'Mon 2 Nov: score 0.3' })).toHaveClass('bg-cell-red')
+    expect(within(overview).getByRole('img', { name: 'Tue 3 Nov: score 1.0' })).toHaveClass('bg-cell-yellow')
+    expect(within(overview).getByRole('img', { name: 'Wed 4 Nov: score 1.3' })).toHaveClass('bg-cell-green')
+    expect(within(overview).getByRole('img', { name: 'Thu 5 Nov: score 0.5' })).toHaveClass('bg-cell-yellow')
+    expect(within(overview).getByRole('img', { name: 'Fri 6 Nov: no score' })).toHaveClass('border')
+    // 1 Nov 2026 is a Sunday: six blanks before it.
+    expect(overview.querySelectorAll('[data-blank]')).toHaveLength(6)
+  })
+
+  it('shows the distribution and per-habit calendars', async () => {
+    stubApi(({ url }) => (url.startsWith('/api/stats/month') ? jsonResponse(month) : undefined))
+    renderWithProviders(<MonthPage />, { route: '/month' })
+
+    expect(await screen.findByText('Green 2 (50%)')).toBeInTheDocument()
+    const read = screen.getByRole('region', { name: 'Read' })
+    expect(within(read).getByRole('img', { name: 'Read, Sun 1 Nov, Target hit' })).toHaveClass('bg-cell-green')
+    expect(within(read).getByRole('img', { name: 'Read, Mon 2 Nov, Did nothing' })).toHaveClass('bg-cell-red')
+  })
+
+  it('moves between months', async () => {
+    const fetchMock = stubApi(({ url }) => (url.startsWith('/api/stats/month') ? jsonResponse(month) : undefined))
+    const { user } = renderWithProviders(<MonthPage />, { route: '/month' })
+
+    await user.click(await screen.findByRole('button', { name: 'Next month' }))
+
+    expect(await screen.findByRole('button', { name: 'This month' })).toBeInTheDocument()
+    expect(requests(fetchMock).map((r) => r.url)).toContain('/api/stats/month?month=2026-12')
+  })
+})
+```
+
+- [ ] **Step 2: Run it to verify it fails**
+
+Run: `cd web && npx vitest run src/features/month`
+Expected: FAIL — `./MonthPage` cannot be resolved.
+
+- [ ] **Step 3: Implement the calendar grid**
+
+`web/src/features/month/CalendarGrid.tsx`:
+```tsx
+import { dayOfMonth, weekdayIndex, WEEKDAYS } from '../../lib/dates'
+
+export interface CalendarDay {
+  date: string
+  className: string
+  label: string
+}
+
+/** Score → color: no score outlined, < 0.5 red, < 1.25 yellow, otherwise green (GREEN = 2, YELLOW = 1, RED/GREY = 0). */
+export function scoreClass(score: number | null): string {
+  if (score === null) return 'border border-muted/40'
+  if (score < 0.5) return 'bg-cell-red'
+  if (score < 1.25) return 'bg-cell-yellow'
+  return 'bg-cell-green'
+}
+
+interface CalendarGridProps {
+  days: CalendarDay[]
+  showNumbers?: boolean
+  compact?: boolean
+}
+
+/** One month as a Monday-first 7-column grid. */
+export function CalendarGrid({ days, showNumbers = false, compact = false }: CalendarGridProps) {
+  const blanks = days.length > 0 ? weekdayIndex(days[0].date) : 0
+  return (
+    <div className={`grid grid-cols-7 ${compact ? 'gap-0.5' : 'gap-1'}`}>
+      {!compact && WEEKDAYS.map((weekday) => (
+        <div key={weekday} className="text-center text-[10px]" aria-hidden="true">{weekday[0]}</div>
+      ))}
+      {Array.from({ length: blanks }, (_, i) => <div key={`blank-${i}`} data-blank />)}
+      {days.map((day) => (
+        <div key={day.date} role="img" aria-label={day.label}
+          className={`aspect-square ${compact ? 'rounded-sm' : 'rounded-md p-0.5 text-[10px] font-semibold text-bg'} ${day.className}`}>
+          {showNumbers && <span className={day.className.includes('border') ? 'text-muted' : ''}>{dayOfMonth(day.date)}</span>}
+        </div>
+      ))}
+    </div>
+  )
+}
+
+export default CalendarGrid
+```
+
+- [ ] **Step 4: Implement the page and route**
+
+`web/src/features/month/MonthPage.tsx`:
+```tsx
+import { useSearchParams } from 'react-router'
+import { addMonths, formatDay, formatMonth } from '../../lib/dates'
+import { cellClass, STATE_LABEL } from '../../lib/cells'
+import { useMonth } from '../stats/api'
+import { DistributionBar } from '../stats/DistributionBar'
+import { CalendarGrid, scoreClass } from './CalendarGrid'
+
+const navButton = 'rounded border border-muted/30 px-2.5 py-1 text-xs'
+
+export function MonthPage() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const month = searchParams.get('month') ?? undefined
+  const { data, isPending, isError } = useMonth(month)
+
+  if (isPending) return <p>Loading…</p>
+  if (isError) return <p role="alert">Couldn't load this month.</p>
+
+  const overview = data.overview.map(({ date, score }) => ({
+    date,
+    className: scoreClass(score),
+    label: `${formatDay(date)}: ${score === null ? 'no score' : `score ${score.toFixed(1)}`}`,
+  }))
+
+  return (
+    <section>
+      <div className="mb-4 flex items-center gap-2">
+        <button type="button" aria-label="Previous month" className={navButton}
+          onClick={() => setSearchParams({ month: addMonths(data.month, -1) })}>◀</button>
+        <h1 className="text-lg font-semibold text-accent md:text-xl">{formatMonth(data.month)}</h1>
+        <button type="button" aria-label="Next month" className={navButton}
+          onClick={() => setSearchParams({ month: addMonths(data.month, 1) })}>▶</button>
+        {month && <button type="button" className={navButton} onClick={() => setSearchParams({})}>This month</button>}
+      </div>
+      <div className="grid gap-4 md:grid-cols-2">
+        <section aria-label="Daily score" className="rounded-lg bg-surface p-4">
+          <h2 className="mb-3 text-sm font-semibold text-slate-200">All habits: daily score</h2>
+          <CalendarGrid days={overview} showNumbers />
+          <p className="mt-2 text-xs">Green = 2, yellow = 1, red / grey = 0, averaged over habits due that day.</p>
+        </section>
+        <div className="flex flex-col gap-4">
+          <DistributionBar title={`${formatMonth(data.month)} distribution`} distribution={data.distribution} />
+          {data.habits.length > 0 && (
+            <div className="grid grid-cols-2 gap-3 rounded-lg bg-surface p-4 sm:grid-cols-3">
+              {data.habits.map((habit) => (
+                <section key={habit.id} aria-label={habit.name}>
+                  <h3 className="mb-1 truncate text-xs text-slate-300">{habit.name}</h3>
+                  <CalendarGrid compact days={habit.cells.map(({ date, state }) => ({
+                    date,
+                    className: cellClass(state),
+                    label: `${habit.name}, ${formatDay(date)}, ${STATE_LABEL[state]}`,
+                  }))} />
+                </section>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+export default MonthPage
+```
+
+`web/src/app/router.tsx`: import `MonthPage` and add, inside the `Shell` route:
+```tsx
+import { MonthPage } from '../features/month/MonthPage'
+// …
+        <Route path="/month" element={<MonthPage />} />
+```
+
+- [ ] **Step 5: Run tests, lint and build**
+
+Run: `cd web && npm test && npm run lint && npm run build`
+Expected: all PASS.
+
+> `1.25.toFixed(1)` is `"1.3"` in V8 (the test relies on it); if a runtime prints `"1.2"`, change the fixture score to `1.3` rather than the rounding.
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add web
+git commit -m "feat(web): add month view with score heatmap and per-habit calendars" \
+  -m "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+```
+
+---
+
+### Task 6: Settings (timezone, password)
+
+Matches the Settings frame of mockup 4.
+
+**Files:**
+- Create: `web/src/features/settings/SettingsPage.tsx`
+- Modify: `web/src/app/router.tsx` (add `/settings`)
+- Test: `web/src/features/settings/SettingsPage.test.tsx`
+
+**Interfaces:**
+- Consumes: `useSession` (`me`, `setMe`), `browserTimezone` (Task 2); `inputClass` (Task 2); `api`, `messageFor`, `Me` (Task 1).
+- Produces: `SettingsPage` at `/settings`.
+
+- [ ] **Step 1: Write the failing test**
+
+`web/src/features/settings/SettingsPage.test.tsx`:
+```tsx
+import { screen } from '@testing-library/react'
+import { describe, expect, it } from 'vitest'
+import { browserTimezone } from '../auth/session'
+import { jsonResponse, problemResponse, requests, stubApi } from '../../test/http'
+import { renderWithProviders } from '../../test/utils'
+import { SettingsPage } from './SettingsPage'
+
+describe('SettingsPage', () => {
+  it('shows the account', () => {
+    stubApi(() => undefined)
+    renderWithProviders(<SettingsPage />, { route: '/settings' })
+
+    expect(screen.getByText('bob')).toBeInTheDocument()
+    expect(screen.getByLabelText('Timezone')).toHaveValue('Asia/Kolkata')
+  })
+
+  it('saves the timezone, defaulting to this device', async () => {
+    const fetchMock = stubApi(({ method, body }) =>
+      method === 'PUT' ? jsonResponse({ username: 'bob', ...(body as object) }) : undefined,
+    )
+    const { user } = renderWithProviders(<SettingsPage />, { route: '/settings' })
+
+    await user.click(screen.getByRole('button', { name: 'Use this device' }))
+    expect(screen.getByLabelText('Timezone')).toHaveValue(browserTimezone())
+    await user.click(screen.getByRole('button', { name: 'Save timezone' }))
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Timezone saved')
+    expect(requests(fetchMock)).toEqual([
+      { method: 'PUT', url: '/api/auth/me', body: { timezone: browserTimezone() } },
+    ])
+  })
+
+  it('changes the password', async () => {
+    const fetchMock = stubApi(({ method }) =>
+      method === 'PUT' ? jsonResponse({ username: 'bob', timezone: 'Asia/Kolkata' }) : undefined,
+    )
+    const { user } = renderWithProviders(<SettingsPage />, { route: '/settings' })
+
+    await user.type(screen.getByLabelText('Current password'), 'old-password')
+    await user.type(screen.getByLabelText('New password'), 'new-password')
+    await user.click(screen.getByRole('button', { name: 'Change password' }))
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Password changed')
+    expect(screen.getByLabelText('Current password')).toHaveValue('')
+    expect(requests(fetchMock)[0].body).toEqual({ currentPassword: 'old-password', newPassword: 'new-password' })
+  })
+
+  it('shows a wrong current password', async () => {
+    stubApi(() => problemResponse(400, 'VALIDATION', 'currentPassword: is incorrect'))
+    const { user } = renderWithProviders(<SettingsPage />, { route: '/settings' })
+
+    await user.type(screen.getByLabelText('Current password'), 'nope-nope')
+    await user.type(screen.getByLabelText('New password'), 'new-password')
+    await user.click(screen.getByRole('button', { name: 'Change password' }))
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('currentPassword: is incorrect')
+  })
+})
+```
+
+- [ ] **Step 2: Run it to verify it fails**
+
+Run: `cd web && npx vitest run src/features/settings`
+Expected: FAIL — `./SettingsPage` cannot be resolved.
+
+- [ ] **Step 3: Implement the page and route**
+
+`web/src/features/settings/SettingsPage.tsx`:
+```tsx
+import { useQueryClient } from '@tanstack/react-query'
+import { useState, type FormEvent } from 'react'
+import { api } from '../../api/client'
+import { messageFor } from '../../api/errors'
+import type { Me } from '../../api/types'
+import { inputClass } from '../auth/LoginPage'
+import { browserTimezone, useSession } from '../auth/session'
+
+type Feedback = { kind: 'ok' | 'error'; text: string } | null
+
+function FeedbackLine({ feedback }: { feedback: Feedback }) {
+  if (!feedback) return null
+  return feedback.kind === 'ok'
+    ? <p role="status" className="mt-2 text-sm text-cell-green">{feedback.text}</p>
+    : <p role="alert" className="mt-2 text-sm text-red-400">{feedback.text}</p>
+}
+
+/** Every timezone the browser knows, for the datalist (empty on very old browsers). */
+function timezones(): string[] {
+  return typeof Intl.supportedValuesOf === 'function' ? Intl.supportedValuesOf('timeZone') : []
+}
+
+export function SettingsPage() {
+  const { me, setMe } = useSession()
+  const queryClient = useQueryClient()
+  const [timezone, setTimezone] = useState(me?.timezone ?? '')
+  const [tzFeedback, setTzFeedback] = useState<Feedback>(null)
+  const [currentPassword, setCurrentPassword] = useState('')
+  const [newPassword, setNewPassword] = useState('')
+  const [pwFeedback, setPwFeedback] = useState<Feedback>(null)
+
+  async function saveTimezone(event: FormEvent<HTMLFormElement>): Promise<void> {
+    event.preventDefault()
+    setTzFeedback(null)
+    try {
+      setMe(await api.put<Me>('/api/auth/me', { timezone }))
+      // "Today" may have moved, so every stats view is stale.
+      await queryClient.invalidateQueries({ queryKey: ['stats'] })
+      setTzFeedback({ kind: 'ok', text: 'Timezone saved' })
+    } catch (err) {
+      setTzFeedback({ kind: 'error', text: messageFor(err) })
+    }
+  }
+
+  async function changePassword(event: FormEvent<HTMLFormElement>): Promise<void> {
+    event.preventDefault()
+    setPwFeedback(null)
+    try {
+      setMe(await api.put<Me>('/api/auth/me', { currentPassword, newPassword }))
+      setCurrentPassword('')
+      setNewPassword('')
+      setPwFeedback({ kind: 'ok', text: 'Password changed' })
+    } catch (err) {
+      setPwFeedback({ kind: 'error', text: messageFor(err) })
+    }
+  }
+
+  const card = 'mb-4 rounded-lg bg-surface p-4'
+  const heading = 'mb-3 text-sm font-semibold text-slate-200'
+  return (
+    <section className="max-w-md">
+      <h1 className="mb-4 text-xl font-semibold text-accent">Settings</h1>
+      <div className={card}>
+        <h2 className={heading}>Account</h2>
+        <p className="text-sm">Username: <b className="text-slate-200">{me?.username}</b></p>
+      </div>
+      <form className={card} onSubmit={(event) => void saveTimezone(event)}>
+        <h2 className={heading}>Timezone</h2>
+        <label htmlFor="timezone" className="sr-only">Timezone</label>
+        <input id="timezone" list="timezones" required value={timezone}
+          onChange={(e) => setTimezone(e.target.value)} className={`${inputClass} w-full`} />
+        <datalist id="timezones">
+          {timezones().map((zone) => <option key={zone} value={zone} />)}
+        </datalist>
+        <div className="mt-3 flex gap-2">
+          <button type="button" onClick={() => setTimezone(browserTimezone())}
+            className="rounded border border-muted/30 px-3 py-1.5 text-sm">Use this device</button>
+          <button type="submit" className="rounded bg-accent px-3 py-1.5 text-sm font-medium text-bg">Save timezone</button>
+        </div>
+        <FeedbackLine feedback={tzFeedback} />
+      </form>
+      <form className={card} onSubmit={(event) => void changePassword(event)}>
+        <h2 className={heading}>Change password</h2>
+        <div className="mb-3 flex flex-col gap-1">
+          <label htmlFor="current-password" className="text-sm">Current password</label>
+          <input id="current-password" type="password" autoComplete="current-password" required
+            value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className={inputClass} />
+        </div>
+        <div className="mb-3 flex flex-col gap-1">
+          <label htmlFor="new-password" className="text-sm">New password</label>
+          <input id="new-password" type="password" autoComplete="new-password" required minLength={8} maxLength={128}
+            value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className={inputClass} />
+        </div>
+        <button type="submit" className="rounded bg-accent px-3 py-1.5 text-sm font-medium text-bg">Change password</button>
+        <FeedbackLine feedback={pwFeedback} />
+      </form>
+    </section>
+  )
+}
+
+export default SettingsPage
+```
+
+`web/src/app/router.tsx`: import `SettingsPage` and add, inside the `Shell` route:
+```tsx
+import { SettingsPage } from '../features/settings/SettingsPage'
+// …
+        <Route path="/settings" element={<SettingsPage />} />
+```
+
+- [ ] **Step 4: Run tests, lint and build**
+
+Run: `cd web && npm test && npm run lint && npm run build`
+Expected: all PASS.
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add web
+git commit -m "feat(web): add settings for timezone and password" \
+  -m "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+```
+
+---
+
+### Task 7: End-to-end test, Docker image, Render blueprint and README
+
+**Files:**
+- Create: `web/e2e/habit.spec.ts`, `Dockerfile`, `.dockerignore`, `render.yaml`
+- Modify: `README.md` (append "Frontend" and "Deployment")
+
+**Interfaces:**
+- Consumes: every page from Tasks 2–6; cell labels from Task 4 (`"<habit>, <day>, <state label>"`, today's cell has `aria-current="date"`) and Task 5 (`role="img"`, same label format); the backend from the backend plan (`/api/public/health`, `SpaWebConfig`, `COOKIE_SECURE`, Gradle project `api`).
+- Produces: the deployable image and the Render Blueprint.
+
+- [ ] **Step 1: Write the end-to-end test**
+
+`web/e2e/habit.spec.ts`:
+```ts
+import { expect, test } from '@playwright/test'
+
+test('sign up, create a habit, mark today green and see it on week and month', async ({ page }) => {
+  const username = `e2e_${Date.now()}`
+
+  await page.goto('/signup')
+  await page.getByLabel('Username').fill(username)
+  await page.getByLabel('Password').fill('password123')
+  await page.getByRole('button', { name: 'Sign up' }).click()
+  await expect(page.getByRole('link', { name: 'Create your first habit' })).toBeVisible()
+
+  await page.getByRole('link', { name: 'Create your first habit' }).click()
+  await page.getByRole('button', { name: 'New habit' }).click()
+  await page.getByLabel('Name').fill('Read')
+  await page.getByLabel('Bare minimum (YELLOW)').fill('1 page')
+  await page.getByLabel('Target (GREEN)').fill('20 pages')
+  await page.getByRole('button', { name: 'Create habit' }).click()
+  await expect(page.getByRole('listitem', { name: 'Read' })).toBeVisible()
+
+  await page.getByRole('link', { name: 'Week' }).click()
+  const today = page.getByRole('button', { name: /^Read, / }).and(page.locator('[aria-current="date"]'))
+  await expect(today).toHaveAccessibleName(/Not marked yet$/)
+  await today.click()
+  const picker = page.getByRole('dialog')
+  await picker.getByRole('button', { name: /^Green/ }).click()
+  await picker.getByRole('button', { name: 'Save' }).click()
+  await expect(picker).toHaveCount(0)
+  await expect(today).toHaveAccessibleName(/Target hit$/)
+  await expect(page.getByText('Green 1 (100%)')).toBeVisible()
+
+  await page.getByRole('link', { name: 'Month' }).click()
+  await expect(page.getByRole('img', { name: /^Read, .*, Target hit$/ })).toBeVisible()
+})
+```
+
+Playwright (copied config) starts only the Vite dev server, so the API must already be running with a database (see the README "Frontend" section). Each run signs up a fresh user, so it is rerunnable.
+
+- [ ] **Step 2: Run it**
+
+Run (three terminals, from the repo root):
+```bash
+cd api && docker compose up -d && set -a && . ./.env && set +a && ./gradlew bootRun
+cd web && npx playwright install chromium && npm run e2e
+```
+Expected: `1 passed`.
+
+- [ ] **Step 3: Add the Docker image, ignore file and Render Blueprint**
+
+`Dockerfile` (same as `../Dionysus/Dockerfile`):
+```dockerfile
+# One image serving both the web app and the API (same origin, so the session cookie just works).
+
+FROM node:22-alpine AS web
+WORKDIR /web
+COPY web/package.json web/package-lock.json ./
+RUN npm ci
+COPY web/ ./
+RUN npm run build
+
+FROM eclipse-temurin:21-jdk-alpine AS api
+WORKDIR /api
+COPY api/gradlew api/settings.gradle api/build.gradle ./
+COPY api/gradle gradle
+RUN ./gradlew dependencies --no-daemon -q > /dev/null
+COPY api/src src
+COPY --from=web /web/dist src/main/resources/static
+RUN ./gradlew bootJar --no-daemon -q -x test
+
+FROM eclipse-temurin:21-jre-alpine
+WORKDIR /app
+RUN addgroup -S app && adduser -S app -G app
+USER app
+COPY --from=api /api/build/libs/api-*.jar app.jar
+ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -XX:+UseSerialGC -Xss512k"
+EXPOSE 8080
+ENTRYPOINT ["java", "-jar", "app.jar"]
+```
+
+`.dockerignore`:
+```
+**/node_modules
+**/.gradle
+**/build
+**/.idea
+**/.DS_Store
+api/.env
+web/dist
+web/test-results
+web/playwright-report
+.git
+docs
+```
+
+`render.yaml`:
+```yaml
+# Render Blueprint: one Docker web service serving the web app and the API.
+# Secrets use sync: false, so Render asks for them when the Blueprint is first applied.
+services:
+  - type: web
+    name: chronos
+    runtime: docker
+    plan: free
+    region: singapore
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /api/public/health
+    autoDeploy: true
+    envVars:
+      - key: DATABASE_URL
+        sync: false
+      - key: DATABASE_USER
+        sync: false
+      - key: DATABASE_PASSWORD
+        sync: false
+```
+
+- [ ] **Step 4: Verify the image**
+
+Run (with the compose Postgres from Step 2 still up):
+```bash
+docker build -t chronos .
+docker run --rm -d --name chronos-check -p 8090:8080 \
+  -e DATABASE_URL=jdbc:postgresql://host.docker.internal:5433/chronos \
+  -e DATABASE_USER=chronos -e DATABASE_PASSWORD=chronos -e COOKIE_SECURE=false chronos
+sleep 20
+curl -s localhost:8090/api/public/health
+curl -s -o /dev/null -w '%{http_code}\n' localhost:8090/month
+docker stop chronos-check
+```
+Expected: `{"status":"UP"}` then `200` (client route served by `index.html`).
+
+> Rancher Desktop: if `docker` can't reach the daemon, export `DOCKER_HOST=unix://$HOME/.rd/docker.sock` first.
+
+- [ ] **Step 5: Append the README sections**
+
+Append to `README.md`:
+````markdown
+
+## Frontend (`web/`)
+
+Vite + React 19 + TypeScript, TanStack Query, react-router, Tailwind CSS 4. Requires Node 22+.
+
+```bash
+cd web
+npm install
+npm run dev        # http://localhost:5173, proxies /api to the backend on :8080
+npm test           # Vitest unit/component tests
+npm run lint       # oxlint
+npm run build      # type-check + production build into web/dist
+npm run e2e        # Playwright (needs the backend running; signs up a fresh user each run)
+```
+
+Pages: **Week** (`/`, grid + picker, distribution, streaks), **Month** (`/month`), **Habits** (`/habits`),
+**Settings** (`/settings`). Static mockups: `docs/superpowers/specs/2026-11-22-chronos-ui-mockups.html`.
+
+## Deployment (one Docker service)
+
+The root `Dockerfile` builds the web app, copies it into the API's `static/` folder and produces a single image.
+Spring Boot serves the site and the API from the same origin, so the session cookie needs no CORS: client routes such
+as `/month` fall back to `index.html`, `/assets/*` is cached for a year, and `/api/**` is untouched.
+
+```bash
+docker build -t chronos .
+docker run --rm -p 8090:8080 -e DATABASE_URL=jdbc:postgresql://host.docker.internal:5433/chronos \
+  -e DATABASE_USER=chronos -e DATABASE_PASSWORD=chronos -e COOKIE_SECURE=false chronos   # http://localhost:8090
+```
+
+Hosting: Render (free web service, Docker runtime) + Neon (free Postgres; give Chronos its own project/database).
+
+1. In Neon, create a database and copy the **direct** (non-pooler) connection string; convert it to
+   `DATABASE_URL=jdbc:postgresql://<host>/<db>?sslmode=require`, `DATABASE_USER`, `DATABASE_PASSWORD`.
+2. In Render, **New → Blueprint** and pick this repo; `render.yaml` defines the service (Singapore, health check
+   `/api/public/health`) and prompts for the three variables above. Flyway creates the schema on first start.
+3. Every push to `main` redeploys. The free plan sleeps after 15 minutes idle; the first request then takes ~30–60 s
+   (the app shows a "waking up" notice).
+````
+
+- [ ] **Step 6: Commit**
+
+```bash
+git add web/e2e Dockerfile .dockerignore render.yaml README.md
+git commit -m "feat: add e2e test, Docker image and Render blueprint" \
+  -m "Co-authored-by: Copilot <223556219+Copilot@users.noreply.github.com>"
+```
+
+- [ ] **Step 7: Hand over for a manual check**
+
+Start the app locally and leave it running for the user:
+```bash
+cd api && docker compose up -d && set -a && . ./.env && set +a && ./gradlew bootRun   # :8080
+cd web && npm run dev                                                                # :5173
+```
+Then ask the user to open http://localhost:5173, sign up, and check the week, month, habits and settings pages
+against the mockups. Deploying to Render/Neon needs the user's accounts; walk them through the README steps rather
+than doing it for them.
