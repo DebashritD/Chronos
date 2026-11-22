@@ -1,14 +1,14 @@
-import { CircleCheck, LayoutGrid, List, UserRound, type LucideIcon } from 'lucide-react'
 import { NavLink, Outlet } from 'react-router'
 import { useSession } from '../features/auth/session'
 import { Logo } from './Logo'
+import { AccountIcon, HabitsIcon, ProgressIcon, TodayIcon, type TabIcon } from './TabIcons'
 import { WakingNotice } from './WakingNotice'
 
-const NAV: { to: string; label: string; icon: LucideIcon; end: boolean }[] = [
-  { to: '/', label: 'Today', icon: CircleCheck, end: true },
-  { to: '/progress', label: 'Progress', icon: LayoutGrid, end: false },
-  { to: '/habits', label: 'Habits', icon: List, end: false },
-  { to: '/settings', label: 'Account', icon: UserRound, end: false },
+const NAV: { to: string; label: string; icon: TabIcon; end: boolean }[] = [
+  { to: '/', label: 'Today', icon: TodayIcon, end: true },
+  { to: '/progress', label: 'Progress', icon: ProgressIcon, end: false },
+  { to: '/habits', label: 'Habits', icon: HabitsIcon, end: false },
+  { to: '/settings', label: 'Account', icon: AccountIcon, end: false },
 ]
 
 function sideClass({ isActive }: { isActive: boolean }): string {
@@ -32,8 +32,12 @@ export function Shell() {
         <nav aria-label="Primary" className="flex flex-col gap-1">
           {NAV.map(({ to, label, icon: Icon, end }) => (
             <NavLink key={to} to={to} end={end} className={sideClass}>
-              <Icon size={20} strokeWidth={2} aria-hidden="true" />
-              {label}
+              {({ isActive }) => (
+                <>
+                  <Icon size={20} active={isActive} />
+                  {label}
+                </>
+              )}
             </NavLink>
           ))}
         </nav>
@@ -56,8 +60,12 @@ export function Shell() {
         className="fixed inset-x-0 bottom-0 z-10 flex h-[calc(4rem+env(safe-area-inset-bottom))] border-t border-line bg-bg/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden">
         {NAV.map(({ to, label, icon: Icon, end }) => (
           <NavLink key={to} to={to} end={end} className={tabClass}>
-            <Icon size={24} strokeWidth={2} aria-hidden="true" />
-            {label}
+            {({ isActive }) => (
+              <>
+                <Icon size={24} active={isActive} />
+                {label}
+              </>
+            )}
           </NavLink>
         ))}
       </nav>
