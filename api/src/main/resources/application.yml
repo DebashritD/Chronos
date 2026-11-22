@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: chronos-api
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5433/chronos}
+    username: ${DATABASE_USER:chronos}
+    password: ${DATABASE_PASSWORD:chronos}
+  session:
+    jdbc:
+      initialize-schema: never
+    timeout: 30d
+
+server:
+  port: ${PORT:8080}
+  forward-headers-strategy: framework
+
+chronos:
+  cookie:
+    secure: ${COOKIE_SECURE:true}

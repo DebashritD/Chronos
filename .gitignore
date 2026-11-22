@@ -1,0 +1,11 @@
+.idea/
+*.iml
+.DS_Store
+node_modules/
+web/dist/
+web/test-results/
+web/playwright-report/
+.superpowers/
+api/.gradle/
+api/build/
+api/.env
