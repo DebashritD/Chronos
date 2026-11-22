@@ -13,6 +13,8 @@ spring:
 server:
   port: ${PORT:8080}
   forward-headers-strategy: native
+  mime-mappings:
+    webmanifest: application/manifest+json
 
 chronos:
   cookie:
