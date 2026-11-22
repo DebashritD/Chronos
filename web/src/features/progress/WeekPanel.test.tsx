@@ -23,10 +23,10 @@ const week: WeekView = {
   today: '2026-11-18',
   distribution: { green: 1, yellow: 0, red: 1, grey: 0, total: 2 },
   habits: [
-    { id: 1, name: 'Read', minText: '1 page', targetText: '20 pages', frequency: 'DAILY', intervalDays: null,
+    { id: 1, name: 'Read', minText: '1 page', targetText: '20 pages', frequency: 'DAILY', intervalDays: null, status: 'ACTIVE',
       current: { periodStart: '2026-11-18', state: 'PENDING', editable: true, note: null, closesAt: '2026-11-18T18:30:00Z' },
       cells: daily(['GREEN', 'RED', 'PENDING', 'PENDING', 'PENDING', 'PENDING', 'PENDING']) },
-    { id: 2, name: 'Piano', minText: '5 min', targetText: '30 min', frequency: 'WEEKLY', intervalDays: null,
+    { id: 2, name: 'Piano', minText: '5 min', targetText: '30 min', frequency: 'WEEKLY', intervalDays: null, status: 'ACTIVE',
       current: { periodStart: '2026-11-16', state: 'PENDING', editable: true, note: null, closesAt: '2026-11-22T18:30:00Z' },
       cells: [{ date: '2026-11-16', periodStart: '2026-11-16', state: 'PENDING', editable: true, note: null,
         closesAt: '2026-11-22T18:30:00Z' }] },

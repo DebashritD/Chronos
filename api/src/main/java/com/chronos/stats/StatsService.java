@@ -81,7 +81,7 @@ public class StatsService {
                             timeline.isEditable(currentStart), habitNotes.get(currentStart),
                             closesAt(timeline, currentStart, zone));
             rows.add(new WeekResponse.Habit(habit.id(), habit.name(), habit.minText(), habit.targetText(),
-                    habit.frequency(), habit.intervalDays(), current, cells));
+                    habit.frequency(), habit.intervalDays(), habit.status(), current, cells));
             distribution = distribution.plus(timeline.distribution(start, end));
         }
         return new WeekResponse(start, today, rows, distribution);

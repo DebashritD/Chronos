@@ -59,6 +59,7 @@ export interface WeekHabit extends HabitTexts {
   id: number
   frequency: Frequency
   intervalDays: number | null
+  status: HabitStatus
   /** null when today is before the habit's first period */
   current: CurrentPeriod | null
   cells: WeekCell[]

@@ -92,14 +92,17 @@ class StatsIntegrationTest extends IntegrationTest {
         insertHabit(bob, "Read", "DAILY", null, nov(1));
         long run = insertHabit(bob, "Run", "EVERY_N_DAYS", 3, nov(2));     // periods …, 17–19, 20–22
         insertHabit(bob, "Swim", "EVERY_N_DAYS", 7, nov(1));              // period 15–21 began last week
-        insertHabit(bob, "Clean", "WEEKLY", null, nov(1));
+        long clean = insertHabit(bob, "Clean", "WEEKLY", null, nov(1));
         insertHabit(bob, "Later", "DAILY", null, nov(20));
+        jdbc.sql("UPDATE habit SET status = 'PAUSED' WHERE id = :id").param("id", clean).update();
         insertCheckIn(run, nov(17), "YELLOW");
         jdbc.sql("UPDATE check_in SET note = 'slow' WHERE habit_id = :id").param("id", run).update();
 
         // A past week is requested on purpose: `current` always describes today.
         mvc.perform(get("/api/stats/week").param("start", "2026-11-09").with(as(bob)))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.habits[0].status").value("ACTIVE"))
+                .andExpect(jsonPath("$.habits[3].status").value("PAUSED"))
                 .andExpect(jsonPath("$.habits[0].current.periodStart").value("2026-11-18"))
                 .andExpect(jsonPath("$.habits[0].current.state").value("PENDING"))
                 .andExpect(jsonPath("$.habits[0].current.editable").value(true))

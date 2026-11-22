@@ -42,23 +42,26 @@ const week: WeekView = {
   today: '2026-11-18',
   distribution: { green: 2, yellow: 0, red: 1, grey: 0, total: 3 },
   habits: [
-    { id: 1, name: 'Read', minText: '1 page', targetText: '20 pages', frequency: 'DAILY', intervalDays: null,
+    { id: 1, name: 'Read', minText: '1 page', targetText: '20 pages', frequency: 'DAILY', intervalDays: null, status: 'ACTIVE',
       current: currentOf(readCells[2]), cells: readCells },
-    { id: 2, name: 'Run', minText: '1 km', targetText: '5 km', frequency: 'EVERY_N_DAYS', intervalDays: 3,
+    { id: 2, name: 'Run', minText: '1 km', targetText: '5 km', frequency: 'EVERY_N_DAYS', intervalDays: 3, status: 'ACTIVE',
       current: currentOf(runCells[1]), cells: runCells },
-    { id: 3, name: 'Piano', minText: '5 min', targetText: '30 min', frequency: 'WEEKLY', intervalDays: null,
+    { id: 3, name: 'Piano', minText: '5 min', targetText: '30 min', frequency: 'WEEKLY', intervalDays: null, status: 'ACTIVE',
       current: currentOf(pianoCell), cells: [pianoCell] },
-    { id: 4, name: 'Meditate', minText: '1 min', targetText: '10 min', frequency: 'DAILY', intervalDays: null,
+    { id: 4, name: 'Meditate', minText: '1 min', targetText: '10 min', frequency: 'DAILY', intervalDays: null, status: 'PAUSED',
       current: currentOf(meditateCells[2]), cells: meditateCells },
-    { id: 5, name: 'Stretch', minText: '1 pose', targetText: '15 min', frequency: 'DAILY', intervalDays: null,
+    { id: 5, name: 'Stretch', minText: '1 pose', targetText: '15 min', frequency: 'DAILY', intervalDays: null, status: 'ACTIVE',
       current: currentOf(stretchCells[2]), cells: stretchCells },
     // Swim: one 7-day period 15–21 Nov that began last week, so no cell of this week starts it.
-    { id: 6, name: 'Swim', minText: '1 lap', targetText: '20 laps', frequency: 'EVERY_N_DAYS', intervalDays: 7,
+    { id: 6, name: 'Swim', minText: '1 lap', targetText: '20 laps', frequency: 'EVERY_N_DAYS', intervalDays: 7, status: 'ACTIVE',
       current: { periodStart: '2026-11-15', state: 'PENDING', editable: true, note: null, closesAt: '2026-11-21T18:30:00Z' },
       cells: daily(['NOT_DUE', 'NOT_DUE', 'NOT_DUE', 'NOT_DUE', 'NOT_DUE', 'NOT_DUE', 'PENDING']).map((cell) =>
         cell.date === '2026-11-22' ? { ...cell, closesAt: '2026-11-28T18:30:00Z' } : cell) },
+    // Hike was paused mid-period: its 17–19 Nov period started before the pause, so it is still pending and editable.
+    { id: 8, name: 'Hike', minText: '1 km', targetText: '10 km', frequency: 'EVERY_N_DAYS', intervalDays: 3, status: 'PAUSED',
+      current: currentOf(runCells[1]), cells: runCells },
     // Yoga starts on 20 Nov: no current period yet.
-    { id: 7, name: 'Yoga', minText: '1 pose', targetText: '20 min', frequency: 'DAILY', intervalDays: null,
+    { id: 7, name: 'Yoga', minText: '1 pose', targetText: '20 min', frequency: 'DAILY', intervalDays: null, status: 'ACTIVE',
       current: null, cells: daily(['NOT_DUE', 'NOT_DUE', 'NOT_DUE', 'NOT_DUE', 'PENDING', 'PENDING', 'PENDING']) },
   ],
 }
