@@ -4,6 +4,7 @@ import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router'
 import App from './App.tsx'
 import { createQueryClient } from './api/queryClient'
+import { SessionProvider } from './features/auth/session'
 import '@fontsource/inter/400.css'
 import '@fontsource/inter/500.css'
 import '@fontsource/inter/600.css'
@@ -17,7 +18,9 @@ createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <App />
+        <SessionProvider>
+          <App />
+        </SessionProvider>
       </BrowserRouter>
     </QueryClientProvider>
   </StrictMode>,
