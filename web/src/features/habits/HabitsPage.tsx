@@ -62,57 +62,55 @@ export function HabitsPage() {
     const isPaused = habit.status === 'PAUSED'
     return (
       <li key={habit.id} aria-label={habit.name} className={`${card} ${isArchived || isPaused ? 'opacity-60' : ''}`}>
-        <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <div className="flex flex-wrap items-center gap-2">
-              <h2 className="text-[20px] font-bold break-words text-fg">{habit.name}</h2>
-              {isPaused && (
-                <span className="rounded-full bg-surface px-2 py-0.5 text-[11px] font-semibold tracking-wide text-muted uppercase">
-                  Paused
-                </span>
-              )}
-            </div>
-            <p className="mt-0.5 text-[13px] text-muted">
-              {frequencyLabel(habit.frequency, habit.intervalDays)} · since {formatDay(habit.startDate)}
-            </p>
-          </div>
-          <div className="flex flex-none gap-2">
-            {isArchived ? (
-              <IconButton label={`Unarchive ${habit.name}`} title="Restore" onClick={() => void act(habit.id, 'unarchive')}>
-                <ArchiveRestore size={18} aria-hidden="true" />
-              </IconButton>
-            ) : (
-              <>
-                <IconButton label={`Edit ${habit.name}`} title="Edit" onClick={() => setEditingId(habit.id)}>
-                  <Pencil size={18} aria-hidden="true" />
-                </IconButton>
-                {isPaused ? (
-                  <IconButton label={`Resume ${habit.name}`} title="Resume" onClick={() => void act(habit.id, 'resume')}>
-                    <Play size={18} aria-hidden="true" />
-                  </IconButton>
-                ) : (
-                  <IconButton label={`Pause ${habit.name}`} title="Pause" onClick={() => void act(habit.id, 'pause')}>
-                    <Pause size={18} aria-hidden="true" />
-                  </IconButton>
-                )}
-                <IconButton label={`Archive ${habit.name}`} title="Stop (archive)" onClick={() => void act(habit.id, 'archive')}>
-                  <Square size={16} aria-hidden="true" />
-                </IconButton>
-              </>
+        <div>
+          <div className="flex flex-wrap items-center gap-2">
+            <h2 className="text-[20px] font-bold break-words text-fg">{habit.name}</h2>
+            {isPaused && (
+              <span className="rounded-full bg-surface px-2 py-0.5 text-[11px] font-semibold tracking-wide text-muted uppercase">
+                Paused
+              </span>
             )}
           </div>
+          <p className="mt-0.5 text-[13px] text-muted">
+            {frequencyLabel(habit.frequency, habit.intervalDays)} · since {formatDay(habit.startDate)}
+          </p>
         </div>
         <dl className="mt-4 grid gap-2">
           <Rule swatch="bg-cell-green" term="Green" detail={habit.targetText} />
           <Rule swatch="bg-cell-yellow" term="Yellow" detail={habit.minText} />
         </dl>
+        <div className="mt-4 flex justify-end gap-2">
+          {isArchived ? (
+            <IconButton label={`Unarchive ${habit.name}`} title="Restore" onClick={() => void act(habit.id, 'unarchive')}>
+              <ArchiveRestore size={18} aria-hidden="true" />
+            </IconButton>
+          ) : (
+            <>
+              <IconButton label={`Edit ${habit.name}`} title="Edit" onClick={() => setEditingId(habit.id)}>
+                <Pencil size={18} aria-hidden="true" />
+              </IconButton>
+              {isPaused ? (
+                <IconButton label={`Resume ${habit.name}`} title="Resume" onClick={() => void act(habit.id, 'resume')}>
+                  <Play size={18} aria-hidden="true" />
+                </IconButton>
+              ) : (
+                <IconButton label={`Pause ${habit.name}`} title="Pause" onClick={() => void act(habit.id, 'pause')}>
+                  <Pause size={18} aria-hidden="true" />
+                </IconButton>
+              )}
+              <IconButton label={`Archive ${habit.name}`} title="Stop (archive)" onClick={() => void act(habit.id, 'archive')}>
+                <Square size={16} aria-hidden="true" />
+              </IconButton>
+            </>
+          )}
+        </div>
       </li>
     )
   }
 
   const list = 'grid grid-cols-1 gap-3'
   return (
-    <section className="max-w-3xl">
+    <section className="max-w-3xl pb-20 md:pb-0">
       <div className="mb-6 flex items-end justify-between">
         <h1 className={pageTitle}>Habits</h1>
         {!creating && (
