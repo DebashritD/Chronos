@@ -187,6 +187,45 @@ describe('TodayPage', () => {
     )
   })
 
+  it('shows the saved note and edits it in place', async () => {
+    const fetchMock = api((r) => (r.method === 'PUT' ? jsonResponse({ periodStart: '2026-11-18', color: 'GREEN', note: 'ch 4' }) : undefined))
+    const { user } = renderWithProviders(<TodayPage />)
+
+    const read = await screen.findByRole('article', { name: 'Read' })
+    await user.click(within(read).getByRole('button', { name: 'Edit note for Read' }))
+    const field = within(read).getByRole('textbox', { name: 'Note for Read' })
+    expect(field).toHaveValue('ch 3')
+    await user.clear(field)
+    await user.type(field, '  ch 4  ')
+    await user.click(within(read).getByRole('button', { name: 'Save note' }))
+
+    await waitFor(() =>
+      expect(requests(fetchMock).find((r) => r.method === 'PUT')).toEqual({
+        method: 'PUT',
+        url: '/api/habits/1/check-ins/2026-11-18',
+        body: { color: 'GREEN', note: 'ch 4' },
+      }),
+    )
+    await waitFor(() => expect(within(read).queryByRole('textbox')).not.toBeInTheDocument())
+  })
+
+  it('offers a note only once the habit is marked, and Cancel discards the draft', async () => {
+    const fetchMock = api()
+    const { user } = renderWithProviders(<TodayPage />)
+
+    const stretch = await screen.findByRole('article', { name: 'Stretch' })
+    expect(within(stretch).queryByRole('button', { name: /note/i })).not.toBeInTheDocument()
+
+    const read = screen.getByRole('article', { name: 'Read' })
+    expect(read).toHaveTextContent('ch 3')
+    await user.click(within(read).getByRole('button', { name: 'Edit note for Read' }))
+    await user.type(within(read).getByRole('textbox', { name: 'Note for Read' }), ' more')
+    await user.click(within(read).getByRole('button', { name: 'Cancel' }))
+    expect(within(read).queryByRole('textbox')).not.toBeInTheDocument()
+    expect(read).toHaveTextContent('ch 3')
+    expect(requests(fetchMock).some((r) => r.method === 'PUT')).toBe(false)
+  })
+
   it('marks the current period of multi-day habits, even one that began last week', async () => {
     const fetchMock = api((r) => (r.method === 'PUT' ? jsonResponse({ periodStart: '2026-11-16', color: 'YELLOW', note: null }) : undefined))
     const { user } = renderWithProviders(<TodayPage />)

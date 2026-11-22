@@ -1,10 +1,10 @@
-import { Check, Clock, Flame } from 'lucide-react'
+import { Check, Clock, Flame, NotebookPen } from 'lucide-react'
 import { useId, useState } from 'react'
 import { messageFor } from '../../api/errors'
 import type { Color, WeekCell, WeekHabit } from '../../api/types'
 import { cellClass, isColor } from '../../lib/cells'
 import { formatTimeLeft, isUrgent } from '../../lib/timeLeft'
-import { card } from '../../lib/ui'
+import { card, pillButton } from '../../lib/ui'
 import { useSaveCheckIn } from '../stats/api'
 
 const BUTTONS: { color: Color; label: string; selected: string }[] = [
@@ -42,6 +42,7 @@ export function HabitCard({ habit, cell, streak, now, onOpen }: HabitCardProps) 
   const saveCheckIn = useSaveCheckIn()
   const titleId = useId()
   const [error, setError] = useState<string | null>(null)
+  const [draft, setDraft] = useState<string | null>(null)
   const marked = isColor(cell.state)
   const timeLeft = cell.closesAt ? formatTimeLeft(cell.closesAt, now, habit.frequency) : null
   const tone: Tone = marked ? 'done' : cell.closesAt && isUrgent(cell.closesAt, now) ? 'urgent' : 'normal'
@@ -51,6 +52,16 @@ export function HabitCard({ habit, cell, streak, now, onOpen }: HabitCardProps) 
     setError(null)
     try {
       await saveCheckIn.mutateAsync({ habitId: habit.id, periodStart: cell.periodStart ?? cell.date, color, note: cell.note })
+    } catch (err) {
+      setError(messageFor(err))
+    }
+  }
+
+  async function saveNote(color: Color, text: string): Promise<void> {
+    setError(null)
+    try {
+      await saveCheckIn.mutateAsync({ habitId: habit.id, periodStart: cell.periodStart ?? cell.date, color, note: text.trim() || null })
+      setDraft(null)
     } catch (err) {
       setError(messageFor(err))
     }
@@ -110,6 +121,30 @@ export function HabitCard({ habit, cell, streak, now, onOpen }: HabitCardProps) 
           </span>
         )}
       </div>
+      {marked && draft === null && (
+        <button type="button" onClick={() => setDraft(cell.note ?? '')}
+          aria-label={`${cell.note ? 'Edit' : 'Add'} note for ${habit.name}`}
+          className="mt-3 flex w-full items-start gap-2 rounded-[14px] bg-surface px-3 py-2.5 text-left text-[14px]">
+          <NotebookPen size={16} className="mt-0.5 flex-none text-muted" aria-hidden="true" />
+          {cell.note
+            ? <span className="min-w-0 break-words whitespace-pre-wrap text-fg">{cell.note}</span>
+            : <span className="text-muted">Add a note</span>}
+        </button>
+      )}
+      {marked && draft !== null && (
+        <form className="mt-3" onSubmit={(e) => { e.preventDefault(); void saveNote(cell.state as Color, draft) }}>
+          <label htmlFor={`${titleId}-note`} className="sr-only">Note for {habit.name}</label>
+          <textarea id={`${titleId}-note`} rows={2} maxLength={500} autoFocus value={draft}
+            onChange={(e) => setDraft(e.target.value)} placeholder="How did it go?"
+            className="w-full rounded-[14px] border border-line bg-surface px-3 py-2.5 text-[14px] text-fg placeholder:text-dim focus:border-accent focus:outline-none" />
+          <div className="mt-2 flex justify-end gap-2">
+            <button type="button" onClick={() => setDraft(null)}
+              className={pillButton}>Cancel</button>
+            <button type="submit" disabled={saveCheckIn.isPending}
+              className="rounded-full bg-accent px-3 py-1.5 text-[13px] font-semibold text-bg disabled:opacity-50">Save note</button>
+          </div>
+        </form>
+      )}
       {error && <p role="alert" className="mt-2 text-sm text-cell-red">{error}</p>}
     </article>
   )
