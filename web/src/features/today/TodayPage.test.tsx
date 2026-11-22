@@ -187,6 +187,20 @@ describe('TodayPage', () => {
     )
   })
 
+  it('vibrates on a tap and pops the button once saved', async () => {
+    const vibrate = vi.fn(() => true)
+    Object.defineProperty(navigator, 'vibrate', { value: vibrate, configurable: true })
+    api((r) => (r.method === 'PUT' ? jsonResponse({ periodStart: '2026-11-18', color: 'YELLOW', note: 'ch 3' }) : undefined))
+    const { user } = renderWithProviders(<TodayPage />)
+
+    const read = await screen.findByRole('article', { name: 'Read' })
+    await user.click(within(read).getByRole('button', { name: 'Minimum' }))
+
+    expect(vibrate).toHaveBeenCalledWith(14)
+    await waitFor(() => expect(within(read).getByRole('button', { name: 'Minimum' })).toHaveAttribute('data-pop'))
+    delete (navigator as { vibrate?: unknown }).vibrate
+  })
+
   it('shows the saved note and edits it in place', async () => {
     const fetchMock = api((r) => (r.method === 'PUT' ? jsonResponse({ periodStart: '2026-11-18', color: 'GREEN', note: 'ch 4' }) : undefined))
     const { user } = renderWithProviders(<TodayPage />)

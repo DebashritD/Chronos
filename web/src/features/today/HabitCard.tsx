@@ -3,6 +3,7 @@ import { useId, useState } from 'react'
 import { messageFor } from '../../api/errors'
 import type { Color, WeekCell, WeekHabit } from '../../api/types'
 import { cellClass, isColor } from '../../lib/cells'
+import { hapticMark } from '../../lib/haptics'
 import { formatTimeLeft, isUrgent } from '../../lib/timeLeft'
 import { card, pillButton } from '../../lib/ui'
 import { useSaveCheckIn } from '../stats/api'
@@ -43,6 +44,7 @@ export function HabitCard({ habit, cell, streak, now, onOpen }: HabitCardProps) 
   const titleId = useId()
   const [error, setError] = useState<string | null>(null)
   const [draft, setDraft] = useState<string | null>(null)
+  const [popped, setPopped] = useState<Color | null>(null)
   const marked = isColor(cell.state)
   const timeLeft = cell.closesAt ? formatTimeLeft(cell.closesAt, now, habit.frequency) : null
   const tone: Tone = marked ? 'done' : cell.closesAt && isUrgent(cell.closesAt, now) ? 'urgent' : 'normal'
@@ -50,8 +52,10 @@ export function HabitCard({ habit, cell, streak, now, onOpen }: HabitCardProps) 
   async function mark(color: Color): Promise<void> {
     if (cell.state === color) return
     setError(null)
+    hapticMark(color)
     try {
       await saveCheckIn.mutateAsync({ habitId: habit.id, periodStart: cell.periodStart ?? cell.date, color, note: cell.note })
+      setPopped(color)
     } catch (err) {
       setError(messageFor(err))
     }
@@ -92,7 +96,9 @@ export function HabitCard({ habit, cell, streak, now, onOpen }: HabitCardProps) 
           return (
             <button key={color} type="button" aria-pressed={pressed} disabled={saveCheckIn.isPending}
               onClick={() => void mark(color)}
-              className={`flex items-center justify-center gap-1.5 rounded-[14px] border py-3 text-[14px] font-semibold transition-transform active:scale-[0.97] disabled:opacity-60 ${
+              onAnimationEnd={() => setPopped(null)}
+              data-pop={popped === color ? '' : undefined}
+              className={`flex items-center justify-center gap-1.5 rounded-[14px] border py-3 text-[14px] font-semibold transition-[transform,background-color,border-color] active:scale-[0.97] disabled:opacity-60 data-pop:animate-pop ${
                 pressed ? selected : 'border-line bg-surface text-fg'
               }`}>
               {label}
