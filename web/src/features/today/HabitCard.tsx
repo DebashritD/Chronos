@@ -1,0 +1,118 @@
+import { Check, Clock, Flame } from 'lucide-react'
+import { useId, useState } from 'react'
+import { messageFor } from '../../api/errors'
+import type { Color, WeekCell, WeekHabit } from '../../api/types'
+import { cellClass, isColor } from '../../lib/cells'
+import { formatTimeLeft, isUrgent } from '../../lib/timeLeft'
+import { card } from '../../lib/ui'
+import { useSaveCheckIn } from '../stats/api'
+
+const BUTTONS: { color: Color; label: string; selected: string }[] = [
+  { color: 'GREEN', label: 'Target', selected: 'border-cell-green bg-cell-green text-bg' },
+  { color: 'YELLOW', label: 'Minimum', selected: 'border-cell-yellow bg-cell-yellow text-bg' },
+  { color: 'RED', label: 'Missed', selected: 'border-cell-red bg-cell-red text-white' },
+]
+
+type Tone = 'normal' | 'urgent' | 'done'
+
+const TONE_CLASS: Record<Tone, string> = {
+  normal: 'bg-surface text-muted',
+  urgent: 'bg-urgent/15 text-urgent',
+  done: 'bg-cell-green/15 text-cell-green',
+}
+
+function meta(habit: WeekHabit): string {
+  const texts = `Min ${habit.minText} · Target ${habit.targetText}`
+  if (habit.frequency === 'EVERY_N_DAYS') return `Every ${habit.intervalDays} days · ${texts}`
+  if (habit.frequency === 'WEEKLY') return `This week · ${texts}`
+  return texts
+}
+
+interface HabitCardProps {
+  habit: WeekHabit
+  cell: WeekCell
+  /** Current streak, once the streaks query has loaded. */
+  streak: number | undefined
+  now: Date
+  onOpen(): void
+}
+
+/** One habit on Today: tap Target / Minimum / Missed to save at once (keeping any note); tap the name for the picker. */
+export function HabitCard({ habit, cell, streak, now, onOpen }: HabitCardProps) {
+  const saveCheckIn = useSaveCheckIn()
+  const titleId = useId()
+  const [error, setError] = useState<string | null>(null)
+  const marked = isColor(cell.state)
+  const timeLeft = cell.closesAt ? formatTimeLeft(cell.closesAt, now, habit.frequency) : null
+  const tone: Tone = marked ? 'done' : cell.closesAt && isUrgent(cell.closesAt, now) ? 'urgent' : 'normal'
+
+  async function mark(color: Color): Promise<void> {
+    if (cell.state === color) return
+    setError(null)
+    try {
+      await saveCheckIn.mutateAsync({ habitId: habit.id, periodStart: cell.periodStart ?? cell.date, color, note: cell.note })
+    } catch (err) {
+      setError(messageFor(err))
+    }
+  }
+
+  return (
+    <article aria-labelledby={titleId} className={card}>
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0">
+          <h2 id={titleId} className="text-[18px] font-bold text-fg">
+            <button type="button" aria-haspopup="dialog" onClick={onOpen} className="text-left hover:underline">
+              {habit.name}
+            </button>
+          </h2>
+          <p className="mt-0.5 truncate text-[13px] text-muted">{meta(habit)}</p>
+        </div>
+        {streak !== undefined && (
+          <span className="flex flex-none items-center gap-1 text-[15px] font-bold text-fg">
+            <Flame size={18} className={streak > 0 ? 'text-urgent' : 'text-dim'} aria-hidden="true" />
+            <span className="sr-only">Current streak </span>
+            {streak}
+          </span>
+        )}
+      </div>
+      <div className="mt-4 grid grid-cols-3 gap-2">
+        {BUTTONS.map(({ color, label, selected }) => {
+          const pressed = cell.state === color
+          return (
+            <button key={color} type="button" aria-pressed={pressed} disabled={saveCheckIn.isPending}
+              onClick={() => void mark(color)}
+              className={`flex items-center justify-center gap-1.5 rounded-[14px] border py-3 text-[14px] font-semibold transition-transform active:scale-[0.97] disabled:opacity-60 ${
+                pressed ? selected : 'border-line bg-surface text-fg'
+              }`}>
+              {pressed && <Check size={16} strokeWidth={3} aria-hidden="true" />}
+              {label}
+            </button>
+          )
+        })}
+      </div>
+      <div className="mt-3 flex items-center justify-between gap-3">
+        {timeLeft ? (
+          <span data-tone={tone}
+            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-semibold ${TONE_CLASS[tone]}`}>
+            <Clock size={13} aria-hidden="true" />
+            {timeLeft}
+          </span>
+        ) : (
+          <span />
+        )}
+        {habit.frequency === 'DAILY' && (
+          <span className="flex gap-1 md:hidden" aria-hidden="true">
+            {habit.cells.map((c) => (
+              <span key={c.date} className={`h-1.5 w-4 rounded-full ${
+                c.state === 'PENDING' || c.state === 'NOT_DUE' ? 'bg-surface' : cellClass(c.state)
+              }`} />
+            ))}
+          </span>
+        )}
+      </div>
+      {error && <p role="alert" className="mt-2 text-sm text-cell-red">{error}</p>}
+    </article>
+  )
+}
+
+export default HabitCard

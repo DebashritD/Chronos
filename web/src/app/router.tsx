@@ -5,6 +5,7 @@ import { useSession } from '../features/auth/session'
 import { SignupPage } from '../features/auth/SignupPage'
 import { HabitsPage } from '../features/habits/HabitsPage'
 import { ProgressPage } from '../features/progress/ProgressPage'
+import { TodayPage } from '../features/today/TodayPage'
 import { NotFound } from './NotFound'
 import { Shell } from './Shell'
 
@@ -23,19 +24,13 @@ function GuestOnly({ children }: { children: ReactNode }) {
   return <>{children}</>
 }
 
-/** Temporary home page; Task 5 replaces it with Today. */
-function Welcome() {
-  const { me } = useSession()
-  return <p className="text-muted">Welcome, {me?.username}.</p>
-}
-
 export function AppRouter() {
   return (
     <Routes>
       <Route path="/login" element={<GuestOnly><LoginPage /></GuestOnly>} />
       <Route path="/signup" element={<GuestOnly><SignupPage /></GuestOnly>} />
       <Route element={<RequireAuth><Shell /></RequireAuth>}>
-        <Route path="/" element={<Welcome />} />
+        <Route path="/" element={<TodayPage />} />
         <Route path="/habits" element={<HabitsPage />} />
         <Route path="/progress" element={<ProgressPage />} />
         <Route path="*" element={<NotFound />} />
