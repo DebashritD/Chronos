@@ -21,7 +21,7 @@ function Rule({ swatch, term, detail }: { swatch: string; term: string; detail: 
   return (
     <div className="flex items-center gap-3 rounded-[14px] bg-surface px-3 py-2.5">
       <span className={`h-4 w-4 flex-none rounded-[5px] ${swatch}`} aria-hidden="true" />
-      <dt className="w-14 flex-none text-[13px] font-semibold text-muted">{term}</dt>
+      <dt className="sr-only">{term}</dt>
       <dd className="min-w-0 text-[15px] break-words text-fg">{detail}</dd>
     </div>
   )
