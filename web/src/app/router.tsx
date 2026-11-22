@@ -4,6 +4,7 @@ import { LoginPage } from '../features/auth/LoginPage'
 import { useSession } from '../features/auth/session'
 import { SignupPage } from '../features/auth/SignupPage'
 import { HabitsPage } from '../features/habits/HabitsPage'
+import { ProgressPage } from '../features/progress/ProgressPage'
 import { NotFound } from './NotFound'
 import { Shell } from './Shell'
 
@@ -36,6 +37,7 @@ export function AppRouter() {
       <Route element={<RequireAuth><Shell /></RequireAuth>}>
         <Route path="/" element={<Welcome />} />
         <Route path="/habits" element={<HabitsPage />} />
+        <Route path="/progress" element={<ProgressPage />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
