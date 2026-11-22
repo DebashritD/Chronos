@@ -1,5 +1,8 @@
 package com.chronos.support;
 
+import com.chronos.core.auth.LoginThrottle;
+import com.chronos.core.user.AppUserPrincipal;
+import com.chronos.core.user.UserRepository;
 import jakarta.servlet.http.Cookie;
 import org.junit.jupiter.api.BeforeEach;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -7,12 +10,15 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.context.annotation.Import;
 import org.springframework.jdbc.core.simple.JdbcClient;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
+
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 
 @SpringBootTest(properties = {
         "chronos.cookie.secure=false",
@@ -24,12 +30,23 @@ import java.util.List;
 public abstract class IntegrationTest {
 
     public static final LocalDate TODAY = LocalDate.of(2026, 11, 18);
+    public static final String PASSWORD = "password123";
+    public static final String ZONE = "Asia/Kolkata";
 
     @Autowired
     protected MockMvc mvc;
 
     @Autowired
     protected JdbcClient jdbc;
+
+    @Autowired
+    protected UserRepository users;
+
+    @Autowired
+    protected PasswordEncoder passwordEncoder;
+
+    @Autowired
+    protected LoginThrottle loginThrottle;
 
     /** Empties every application table (keeps Flyway history), so new tables need no changes here. */
     @BeforeEach
@@ -57,5 +74,19 @@ public abstract class IntegrationTest {
             request.addHeader("X-XSRF-TOKEN", token.getValue());
             return request;
         };
+    }
+
+    @BeforeEach
+    void clearLoginThrottle() {
+        loginThrottle.clear();
+    }
+
+    protected AppUserPrincipal createUser(String username) {
+        long id = users.insert(username, passwordEncoder.encode(PASSWORD), ZONE);
+        return new AppUserPrincipal(id, username, null);
+    }
+
+    protected static RequestPostProcessor as(AppUserPrincipal principal) {
+        return user(principal);
     }
 }
