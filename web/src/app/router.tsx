@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 import { Navigate, Route, Routes } from 'react-router'
+import { AccountPage } from '../features/account/AccountPage'
 import { LoginPage } from '../features/auth/LoginPage'
 import { useSession } from '../features/auth/session'
 import { SignupPage } from '../features/auth/SignupPage'
@@ -33,6 +34,7 @@ export function AppRouter() {
         <Route path="/" element={<TodayPage />} />
         <Route path="/habits" element={<HabitsPage />} />
         <Route path="/progress" element={<ProgressPage />} />
+        <Route path="/settings" element={<AccountPage />} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
