@@ -115,7 +115,7 @@ cookie, obtained via `GET /api/auth/csrf`).
 ### Stats (`/api/stats`, authenticated)
 
 - `GET /week?start=YYYY-MM-DD` (Monday; defaults to the current week) →
-  `{start, habits:[{id, name, minText, targetText, frequency, cells:[{date, periodStart, state, editable, note}]}], distribution}`.
+  `{start, today, habits:[{id, name, minText, targetText, frequency, cells:[{date, periodStart, state, editable, note}]}], distribution}`.
   Weekly habits return one cell spanning the week.
 - `GET /month?month=YYYY-MM` (defaults to current) →
   `{month, overview:[{date, score}], habits:[{id, name, frequency, cells:[{date, state}]}], distribution}`.
@@ -128,9 +128,9 @@ Stats include `ACTIVE` and `PAUSED` habits; archived habits are excluded.
 ## Web
 
 - `/login`, `/signup` (timezone from `Intl.DateTimeFormat().resolvedOptions().timeZone`).
-- `/` **Week** — streak list and week distribution bar at the top; week grid (habits × Mon–Sun) with prev/next
-  week navigation. Tapping an editable cell opens a picker showing the habit's min/target text with
-  RED / YELLOW / GREEN / Clear and an optional note.
+- `/` **Week** — week grid (habits × Mon–Sun, today's cell outlined) with prev/next week navigation, then the week
+  distribution bar and streak list below it. Tapping an editable cell opens a picker (bottom sheet on mobile)
+  showing the habit's target/min text as GREEN / YELLOW / RED choices, an optional note, and Clear / Cancel / Save.
 - `/month` — combined daily score heatmap (calendar layout), per-habit calendar heatmaps, month distribution;
   prev/next month navigation.
 - `/habits` — list with create/edit form, pause/resume, archive/unarchive; archived section collapsed.

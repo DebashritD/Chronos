@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><title>Chronos — UI mockups</title>
+<style>
+:root{--bg:#0b0d17;--surface:#151a2e;--muted:#9aa0b8;--accent:#8b9cff;--g:#22c55e;--y:#eab308;--r:#ef4444;--grey:#4b5163}
+*{box-sizing:border-box}body{margin:0;background:#05060c;color:var(--muted);font-family:system-ui,sans-serif;padding:24px}
+h2.label{color:#fff;font-size:14px;font-weight:600;margin:32px 0 8px;letter-spacing:.04em;text-transform:uppercase}
+.row{display:flex;gap:24px;flex-wrap:wrap;align-items:flex-start}
+.frame{background:var(--bg);border:1px solid #23283d;border-radius:12px;overflow:hidden;position:relative}
+.desk{width:880px;min-height:560px}.phone{width:375px;height:720px}
+header{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #1c2133}
+.brand{color:var(--accent);font-weight:600;font-size:20px;letter-spacing:.03em}
+.user{font-size:13px;display:flex;gap:12px}
+nav.top{display:flex;gap:24px;padding:8px 16px;border-bottom:1px solid #1c2133;font-size:14px}
+nav a{color:var(--muted);text-decoration:none}nav a.on{color:var(--accent);font-weight:600}
+nav.bottom{position:absolute;bottom:0;left:0;right:0;display:flex;justify-content:space-around;padding:14px 0 22px;background:rgba(21,26,46,.95);border-top:1px solid #1c2133;font-size:13px}
+main{padding:16px 20px}
+h1{color:var(--accent);font-size:20px;margin:0}
+.bar{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.btn{border:1px solid rgba(154,160,184,.3);border-radius:6px;padding:4px 10px;font-size:12px;color:var(--muted);background:none}
+.primary{background:var(--accent);color:var(--bg);border:none;border-radius:6px;padding:8px 12px;font-weight:600;font-size:13px}
+table{border-collapse:separate;border-spacing:6px;width:100%}
+th{font-size:11px;font-weight:500;text-align:center}th.h{text-align:left;font-size:14px;color:#cfd3e6;font-weight:500;width:110px}
+th small{display:block;font-size:10px;opacity:.7}
+.c{height:36px;border-radius:6px}
+.G{background:var(--g)}.Y{background:var(--y)}.R{background:var(--r)}.GR{background:var(--grey)}
+.P{border:1.5px solid rgba(154,160,184,.6)}.ND{background:transparent}
+.PA{background:var(--surface) repeating-linear-gradient(45deg,rgba(154,160,184,.35) 0 2px,transparent 2px 6px)}
+.today{outline:2px solid var(--accent);outline-offset:2px}
+.locked{opacity:.55}
+.card{background:var(--surface);border-radius:10px;padding:14px;margin-top:14px}
+.card h3{margin:0 0 10px;font-size:13px;color:#cfd3e6;font-weight:600}
+.dist{display:flex;height:12px;border-radius:6px;overflow:hidden}
+.legend{display:flex;gap:14px;font-size:12px;margin-top:8px}.dot{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px}
+.streaks li{display:flex;justify-content:space-between;padding:5px 0;font-size:13px;border-bottom:1px solid #1f2438}
+ul{list-style:none;margin:0;padding:0}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.cal .d{aspect-ratio:1;border-radius:5px;font-size:10px;padding:3px;color:#0b0d17;font-weight:600}
+.cal .wd{font-size:10px;text-align:center}
+.cal .o{border:1.5px solid rgba(154,160,184,.4);color:var(--muted)}
+.mini{display:grid;grid-template-columns:repeat(7,1fr);gap:3px}.mini div{aspect-ratio:1;border-radius:3px}
+.overlay{position:absolute;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center}
+.sheet{background:var(--surface);width:100%;border-radius:16px 16px 0 0;padding:18px}
+.sheet h3{color:#fff;margin:0 0 2px;font-size:16px}.sheet p.sub{margin:0 0 14px;font-size:12px}
+.pick{display:flex;align-items:center;gap:12px;width:100%;padding:12px;border-radius:10px;margin-bottom:8px;border:1px solid #2a3050;background:var(--bg);color:#e6e8f2;font-size:14px;text-align:left}
+.pick.sel{border-color:var(--g);box-shadow:0 0 0 1px var(--g)}
+.pick .sw{width:22px;height:22px;border-radius:6px;flex:none}.pick small{display:block;color:var(--muted);font-size:12px}
+textarea,input,select{width:100%;background:var(--bg);border:1px solid rgba(154,160,184,.3);border-radius:6px;color:var(--muted);padding:8px 10px;font:inherit;font-size:13px}
+label{font-size:12px;display:block;margin:10px 0 4px}
+.habit{background:var(--surface);border-radius:10px;padding:12px;margin-bottom:10px}
+.habit .t{display:flex;justify-content:space-between}.habit b{color:var(--accent)}
+.habit p{margin:3px 0;font-size:13px}.acts{display:flex;gap:6px;margin-top:8px}
+.tag{font-size:10px;text-transform:uppercase;letter-spacing:.06em;background:#2a3050;padding:2px 6px;border-radius:4px}
+.center{display:flex;align-items:center;justify-content:center;height:100%}
+.login{background:var(--surface);border-radius:10px;padding:28px;width:300px}
+.note{font-size:12px;color:#7d84a3;max-width:880px;margin:4px 0 0}
+</style></head><body>
+<h1 style="color:#fff">Chronos: UI mockups</h1>
+<p class="note">Static mockups with sample data. Today is Wed 18 Nov. Cells: green = target hit, yellow = minimum done, red = did nothing, grey = not marked (missed), outlined = not marked yet, hatched = paused, blank = not due.</p>
+
+<h2 class="label">1 · Week view (desktop): home page "/"</h2>
+<div class="frame desk">
+<header><span class="brand">Chronos</span><span class="user"><span>bob</span><span>Log out</span></span></header>
+<nav class="top"><a class="on">Week</a><a>Month</a><a>Habits</a><a>Settings</a></nav>
+<main>
+<div class="bar"><button class="btn">◀</button><h1>16 – 22 Nov 2026</h1><button class="btn">▶</button><button class="btn">This week</button></div>
+<table>
+<tr><th></th><th>Mon<small>16</small></th><th>Tue<small>17</small></th><th>Wed<small>18</small></th><th>Thu<small>19</small></th><th>Fri<small>20</small></th><th>Sat<small>21</small></th><th>Sun<small>22</small></th></tr>
+<tr><th class="h">Read</th><td><div class="c G"></div></td><td><div class="c R"></div></td><td><div class="c P today"></div></td><td><div class="c P locked"></div></td><td><div class="c P locked"></div></td><td><div class="c P locked"></div></td><td><div class="c P locked"></div></td></tr>
+<tr><th class="h">Run<small style="font-size:10px;opacity:.7;display:block">every 3 days</small></th><td><div class="c Y"></div></td><td><div class="c ND"></div></td><td><div class="c ND"></div></td><td><div class="c P locked"></div></td><td><div class="c ND"></div></td><td><div class="c ND"></div></td><td><div class="c P locked"></div></td></tr>
+<tr><th class="h">Meditate</th><td><div class="c PA"></div></td><td><div class="c PA"></div></td><td><div class="c PA"></div></td><td><div class="c PA"></div></td><td><div class="c PA"></div></td><td><div class="c PA"></div></td><td><div class="c PA"></div></td></tr>
+<tr><th class="h">Piano<small style="font-size:10px;opacity:.7;display:block">weekly</small></th><td colspan="7"><div class="c P today"></div></td></tr>
+</table>
+<div class="two">
+<div class="card"><h3>This week</h3>
+<div class="dist"><div class="G" style="width:33%"></div><div class="Y" style="width:33%"></div><div class="R" style="width:34%"></div></div>
+<div class="legend"><span><i class="dot G"></i>Green 1 (33%)</span><span><i class="dot Y"></i>Yellow 1 (33%)</span><span><i class="dot R"></i>Red 1 (33%)</span><span><i class="dot GR"></i>Grey 0</span></div></div>
+<div class="card"><h3>Streaks</h3><ul class="streaks">
+<li><span>Read</span><span>0 now · best 9</span></li><li><span>Run</span><span>4 now · best 6</span></li><li><span>Piano</span><span>7 now · best 7</span></li></ul></div>
+</div>
+</main></div>
+
+<h2 class="label">2 · Mobile: week + cell picker (tap an editable cell)</h2>
+<div class="row">
+<div class="frame phone">
+<header><span class="brand">Chronos</span><span class="user"><span>bob</span><span>Log out</span></span></header>
+<main style="padding:12px">
+<div class="bar"><button class="btn">◀</button><h1 style="font-size:16px">16 – 22 Nov 2026</h1><button class="btn">▶</button></div>
+<table style="border-spacing:3px"><tr><th></th><th>M</th><th>T</th><th>W</th><th>T</th><th>F</th><th>S</th><th>S</th></tr>
+<tr><th class="h" style="font-size:12px;width:64px">Read</th><td><div class="c G" style="height:30px"></div></td><td><div class="c R" style="height:30px"></div></td><td><div class="c P today" style="height:30px"></div></td><td><div class="c P locked" style="height:30px"></div></td><td><div class="c P locked" style="height:30px"></div></td><td><div class="c P locked" style="height:30px"></div></td><td><div class="c P locked" style="height:30px"></div></td></tr>
+<tr><th class="h" style="font-size:12px">Run</th><td><div class="c Y" style="height:30px"></div></td><td></td><td></td><td><div class="c P locked" style="height:30px"></div></td><td></td><td></td><td><div class="c P locked" style="height:30px"></div></td></tr>
+<tr><th class="h" style="font-size:12px">Piano</th><td colspan="7"><div class="c P today" style="height:30px"></div></td></tr></table>
+<div class="card"><h3>This week</h3><div class="dist"><div class="G" style="width:33%"></div><div class="Y" style="width:33%"></div><div class="R" style="width:34%"></div></div></div>
+</main>
+<nav class="bottom"><a class="on">Week</a><a>Month</a><a>Habits</a><a>Settings</a></nav>
+</div>
+
+<div class="frame phone">
+<header><span class="brand">Chronos</span><span class="user"><span>bob</span></span></header>
+<div class="overlay"><div class="sheet">
+<h3>Read</h3><p class="sub">Wed 18 Nov · Not marked yet</p>
+<button class="pick sel"><span class="sw G"></span><span>Green<small>Target: 20 pages</small></span></button>
+<button class="pick"><span class="sw Y"></span><span>Yellow<small>Minimum: 1 page</small></span></button>
+<button class="pick"><span class="sw R"></span><span>Red<small>Did nothing</small></span></button>
+<label>Note (optional)</label><textarea rows="2" placeholder="e.g. finished chapter 4"></textarea>
+<div style="display:flex;justify-content:space-between;margin-top:12px"><button class="btn">Clear</button><span style="display:flex;gap:8px"><button class="btn">Cancel</button><button class="primary">Save</button></span></div>
+</div></div></div>
+
+<div class="frame phone"><div class="center">
+<div class="login"><h1 style="text-align:center;margin-bottom:18px">Log in</h1>
+<label>Username</label><input value="bob"><label>Password</label><input type="password" value="password">
+<button class="primary" style="width:100%;margin-top:16px">Log in</button>
+<p style="text-align:center;font-size:12px;margin-top:14px">New here? <span style="color:var(--accent)">Create an account</span></p></div></div></div>
+</div>
+
+<h2 class="label">3 · Month view: "/month"</h2>
+<div class="frame desk" id="month">
+<header><span class="brand">Chronos</span><span class="user"><span>bob</span><span>Log out</span></span></header>
+<nav class="top"><a>Week</a><a class="on">Month</a><a>Habits</a><a>Settings</a></nav>
+<main>
+<div class="bar"><button class="btn">◀</button><h1>November 2026</h1><button class="btn">▶</button></div>
+<div class="two">
+<div class="card"><h3>All habits: daily score</h3><div class="cal" id="overview"></div>
+<div class="legend"><span><i class="dot R"></i>&lt; 0.5</span><span><i class="dot Y"></i>&lt; 1.25</span><span><i class="dot G"></i>≥ 1.25</span><span><i class="dot P"></i>no data</span></div></div>
+<div class="card"><h3>November distribution</h3>
+<div class="dist"><div class="G" style="width:48%"></div><div class="Y" style="width:27%"></div><div class="R" style="width:15%"></div><div class="GR" style="width:10%"></div></div>
+<div class="legend"><span><i class="dot G"></i>19 (48%)</span><span><i class="dot Y"></i>11 (27%)</span><span><i class="dot R"></i>6 (15%)</span><span><i class="dot GR"></i>4 (10%)</span></div>
+<h3 style="margin-top:18px">Per habit</h3>
+<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px" id="minis"></div></div>
+</div></main></div>
+
+<h2 class="label">4 · Habits: "/habits"</h2>
+<div class="row">
+<div class="frame desk" style="width:520px">
+<header><span class="brand">Chronos</span><span class="user"><span>bob</span><span>Log out</span></span></header>
+<nav class="top"><a>Week</a><a>Month</a><a class="on">Habits</a><a>Settings</a></nav>
+<main>
+<div class="bar" style="justify-content:space-between"><h1>Habits</h1><button class="primary">New habit</button></div>
+<div class="habit"><div class="t"><b>Read</b><span style="font-size:12px">Daily</span></div><p>Minimum: 1 page</p><p>Target: 20 pages</p><div class="acts"><button class="btn">Edit</button><button class="btn">Pause</button><button class="btn">Archive</button></div></div>
+<div class="habit"><div class="t"><b>Run</b><span style="font-size:12px">Every 3 days</span></div><p>Minimum: 1 km</p><p>Target: 5 km</p><div class="acts"><button class="btn">Edit</button><button class="btn">Pause</button><button class="btn">Archive</button></div></div>
+<div class="habit"><div class="t"><b>Meditate</b><span style="font-size:12px">Daily</span></div><span class="tag">Paused</span><p>Minimum: 2 min</p><p>Target: 15 min</p><div class="acts"><button class="btn">Edit</button><button class="btn">Resume</button><button class="btn">Archive</button></div></div>
+<p style="font-size:13px">▸ Archived (1)</p>
+</main></div>
+
+<div class="frame desk" style="width:420px">
+<header><span class="brand">Chronos</span><span class="user"><span>bob</span></span></header>
+<main><h1 style="margin-bottom:10px">New habit</h1>
+<div class="card" style="margin:0">
+<label>Name</label><input value="Run">
+<label>Bare minimum (YELLOW)</label><input value="1 km">
+<label>Target (GREEN)</label><input value="5 km">
+<label>Frequency</label><select><option>Every N days</option></select>
+<label>Every how many days?</label><input value="3">
+<label>Start date (optional, defaults to today)</label><input placeholder="dd/mm/yyyy">
+<div style="display:flex;gap:8px;margin-top:14px"><button class="primary">Create habit</button><button class="btn">Cancel</button></div>
+</div></main></div>
+
+<div class="frame desk" style="width:420px">
+<header><span class="brand">Chronos</span><span class="user"><span>bob</span></span></header>
+<nav class="top"><a>Week</a><a>Month</a><a>Habits</a><a class="on">Settings</a></nav>
+<main><h1 style="margin-bottom:10px">Settings</h1>
+<div class="card" style="margin:0"><h3>Account</h3><p style="font-size:13px;margin:0">Username: <b style="color:#cfd3e6">bob</b></p></div>
+<div class="card"><h3>Timezone</h3><input value="Asia/Kolkata"><div style="display:flex;gap:8px;margin-top:10px"><button class="btn">Use this device</button><button class="primary">Save</button></div></div>
+<div class="card"><h3>Change password</h3><label>Current password</label><input type="password"><label>New password</label><input type="password"><button class="primary" style="margin-top:12px">Change password</button></div>
+</main></div>
+</div>
+
+<script>
+const ov=document.getElementById('overview');
+['M','T','W','T','F','S','S'].forEach(d=>ov.insertAdjacentHTML('beforeend',`<div class="wd">${d}</div>`));
+for(let i=0;i<6;i++)ov.insertAdjacentHTML('beforeend','<div></div>');
+const scores=[1.5,2,1,0.3,1.7,1.3,2,0.7,1.5,1.9,0,1.2,2,1.6,1,2,0.4,null];
+for(let d=1;d<=30;d++){const s=d<=18?scores[d-1]:null;
+ const cls=s==null?'o':s<0.5?'R':s<1.25?'Y':'G';
+ ov.insertAdjacentHTML('beforeend',`<div class="d ${cls}" title="${s==null?'no score':'score '+s}">${d}</div>`);}
+const pal={Read:'GGYRGGGRYGGRGYGGRP',Run:'Y..G..R..G..Y..G..',Piano:'GGGGGGGYYYYYYYGGGG'};
+const mn=document.getElementById('minis');
+for(const [n,p] of Object.entries(pal)){let h='<div class="mini">';for(let i=0;i<6;i++)h+='<div></div>';
+ for(let d=1;d<=30;d++){const ch=d<=18?p[d-1]:(n==='Run'&&d%3!==0?'.':'P');
+  const c={G:'G',Y:'Y',R:'R','.':'ND',P:'P'}[ch];h+=`<div class="${c}"></div>`;}
+ mn.insertAdjacentHTML('beforeend',`<div><div style="font-size:12px;color:#cfd3e6;margin-bottom:4px">${n}</div>${h}</div></div>`);}
+</script>
+</body></html>

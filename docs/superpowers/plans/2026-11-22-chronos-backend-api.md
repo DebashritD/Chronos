@@ -3512,6 +3512,7 @@ class StatsIntegrationTest extends IntegrationTest {
         mvc.perform(get("/api/stats/week").with(as(bob)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.start").value("2026-11-16"))
+                .andExpect(jsonPath("$.today").value("2026-11-18"))
                 .andExpect(jsonPath("$.habits", hasSize(3)))
 
                 .andExpect(jsonPath("$.habits[0].id").value(daily))
@@ -3656,7 +3657,7 @@ import com.chronos.habit.domain.Frequency;
 import java.time.LocalDate;
 import java.util.List;
 
-public record WeekResponse(LocalDate start, List<Habit> habits, Distribution distribution) {
+public record WeekResponse(LocalDate start, LocalDate today, List<Habit> habits, Distribution distribution) {
 
     public record Habit(long id, String name, String minText, String targetText, Frequency frequency,
                         List<Cell> cells) {
@@ -3777,7 +3778,7 @@ public class StatsService {
                     habit.frequency(), cells));
             distribution = distribution.plus(timeline.distribution(start, end));
         }
-        return new WeekResponse(start, rows, distribution);
+        return new WeekResponse(start, today, rows, distribution);
     }
 
     public MonthResponse month(long userId, String requestedMonth) {
