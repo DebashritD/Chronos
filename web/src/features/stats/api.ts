@@ -34,7 +34,8 @@ function checkInPath({ habitId, periodStart }: CheckInKey): string {
 
 /**
  * Returning the invalidation promise makes `mutateAsync` resolve after week, month and streaks have refetched.
- * A yellow that brings the habit's run up to its limit raises the yellow-limit dialog (not when only the note changed).
+ * A yellow that brings the habit's run up to its limit raises the yellow-limit dialog (not when only the note changed);
+ * one past the limit, which restarts the streak, gets a quieter notice.
  */
 export function useSaveCheckIn() {
   const queryClient = useQueryClient()
@@ -43,7 +44,7 @@ export function useSaveCheckIn() {
     mutationFn: ({ color, note, ...key }: CheckInKey & { color: Color; note: string | null }) =>
       api.put(checkInPath(key), { color, note }),
     onMutate: ({ habitId }) => ({
-      runBefore: queryClient.getQueryData<Streak[]>(streaksQuery.queryKey)?.find((s) => s.habitId === habitId)?.yellowRun,
+      before: queryClient.getQueryData<Streak[]>(streaksQuery.queryKey)?.find((s) => s.habitId === habitId),
     }),
     onSuccess: async (_data, { habitId, color }, context) => {
       await queryClient.invalidateQueries({ queryKey: ['stats'] })
@@ -51,8 +52,11 @@ export function useSaveCheckIn() {
       // A failed streaks lookup only skips the dialog; the save itself succeeded.
       const streaks = await queryClient.ensureQueryData(streaksQuery).catch(() => undefined)
       const streak = streaks?.find((s) => s.habitId === habitId)
-      if (atYellowLimit(streak) && streak.yellowRun !== context?.runBefore) {
-        notifyYellowLimit({ name: streak.name, limit: streak.yellowLimit })
+      const before = context?.before
+      if (atYellowLimit(before) && streak && streak.current < before.current) {
+        notifyYellowLimit({ kind: 'reset', name: streak.name, limit: before.yellowLimit })
+      } else if (atYellowLimit(streak) && streak.yellowRun !== before?.yellowRun) {
+        notifyYellowLimit({ kind: 'limit', name: streak.name, limit: streak.yellowLimit })
       }
     },
   })

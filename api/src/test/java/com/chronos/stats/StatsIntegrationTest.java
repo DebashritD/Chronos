@@ -153,7 +153,7 @@ class StatsIntegrationTest extends IntegrationTest {
                 .andExpect(jsonPath("$.month").value("2026-11"))
                 .andExpect(jsonPath("$.overview", hasSize(30)))
                 .andExpect(jsonPath("$.overview[0].date").value("2026-11-01"))
-                .andExpect(jsonPath("$.overview[0].score").value(0.0))   // weekly: week of Oct 26 is GREY
+                .andExpect(jsonPath("$.overview[0].score").value(nullValue())) // weekly: week of Oct 26 is GREY, unscored
                 .andExpect(jsonPath("$.overview[13].score").value(1.0))  // Nov 14: weekly YELLOW only
                 .andExpect(jsonPath("$.overview[14].score").value(1.5))  // Nov 15: GREEN 2 + YELLOW 1
                 .andExpect(jsonPath("$.overview[15].score").value(0.0))  // Nov 16: RED, weekly pending

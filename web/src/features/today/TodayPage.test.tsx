@@ -104,8 +104,8 @@ describe('TodayPage', () => {
 
     expect(await screen.findByRole('heading', { level: 1, name: 'Today' })).toBeInTheDocument()
     expect(screen.getByText('Wednesday, 18 Nov')).toBeInTheDocument()
-    expect(screen.getByRole('img', { name: '1 of 5 done' })).toBeInTheDocument()
-    expect(screen.getByText('4 habits left today. Even the minimum keeps it off red.')).toBeInTheDocument()
+    expect(screen.getByRole('img', { name: '1 of 5 marked (1 target)' })).toBeInTheDocument()
+    expect(screen.getByText('4 habits left today. Even the minimum counts.')).toBeInTheDocument()
     const names = screen.getAllByRole('article').map((article) => within(article).getByRole('heading').textContent)
     expect(names).toEqual(['Read', 'Run', 'Piano', 'Stretch', 'Swim'])
 
@@ -300,8 +300,31 @@ describe('TodayPage', () => {
     api(undefined, allDone)
     renderWithProviders(<TodayPage />)
 
-    expect(await screen.findByRole('img', { name: '1 of 1 done' })).toBeInTheDocument()
+    expect(await screen.findByRole('img', { name: '1 of 1 marked (1 target)' })).toBeInTheDocument()
     expect(screen.getByRole('heading', { name: 'All done' })).toBeInTheDocument()
+  })
+
+  it('answers a miss with a kind word instead of the pop', async () => {
+    let readState: WeekCell['state'] = 'GREEN'
+    api((r) => {
+      if (r.method === 'PUT') {
+        readState = 'RED'
+        return jsonResponse({ periodStart: '2026-11-18', color: 'RED', note: 'ch 3' })
+      }
+      if (r.url.startsWith('/api/stats/week')) {
+        const cells = readCells.map((cell) => (cell.date === '2026-11-18' ? { ...cell, state: readState } : cell))
+        return jsonResponse({ ...week, habits: [{ ...week.habits[0], current: currentOf(cells[2]), cells }] })
+      }
+      return undefined
+    })
+    const { user } = renderWithProviders(<TodayPage />)
+
+    const read = await screen.findByRole('article', { name: 'Read' })
+    await user.click(within(read).getByRole('button', { name: 'Missed' }))
+
+    expect(await within(read).findByRole('status')).toHaveTextContent("That's honest. Tomorrow is a fresh start.")
+    expect(within(read).getByRole('button', { name: 'Missed' })).not.toHaveAttribute('data-pop')
+    expect(screen.getByRole('heading', { name: 'All marked' })).toBeInTheDocument()
   })
 
   it('points to the habits page when there are none', async () => {
@@ -357,6 +380,28 @@ describe('TodayPage', () => {
     await act(async () => {
       await new Promise((resolve) => setTimeout(resolve, 50))
     })
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+  })
+
+  it('flags the yellow that would restart the streak, then says so once it does', async () => {
+    let after = false
+    api((r) => {
+      if (r.method === 'PUT') {
+        after = true
+        return jsonResponse({ periodStart: '2026-11-18', color: 'YELLOW', note: null })
+      }
+      if (r.url === '/api/stats/streaks')
+        return jsonResponse([{ habitId: 5, name: 'Stretch', current: after ? 1 : 3, best: 9, yellowRun: after ? 1 : 2, yellowLimit: 2 }])
+      return undefined
+    })
+    const { user } = renderWithProviders(<TodayPage />)
+
+    const stretch = await screen.findByRole('article', { name: 'Stretch' })
+    const minimum = await within(stretch).findByRole('button', { name: 'Minimum', description: /another restarts the streak/ })
+    expect(minimum).toHaveTextContent('restarts streak')
+    await user.click(minimum)
+
+    expect(await screen.findByText('Fresh start on Stretch: that was yellow 3 in a row, so the streak is back to 1.')).toBeInTheDocument()
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
   })
 })

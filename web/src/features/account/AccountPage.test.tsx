@@ -54,7 +54,7 @@ describe('AccountPage', () => {
     await user.type(screen.getByLabelText('New password'), 'new-password')
     await user.click(screen.getByRole('button', { name: 'Change password' }))
 
-    expect(await screen.findByRole('alert')).toHaveTextContent('currentPassword: is incorrect')
+    expect(await screen.findByRole('alert')).toHaveTextContent('Current password is incorrect.')
   })
 
   it('saves how many yellows in a row keep a streak', async () => {

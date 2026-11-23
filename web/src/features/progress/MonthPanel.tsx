@@ -29,7 +29,7 @@ export function MonthPanel() {
   const overview = data.overview.map(({ date, score }) => ({
     date,
     className: scoreClass(score),
-    label: `${formatDay(date)}: ${score === null ? 'no score' : `score ${score.toFixed(1)}`}`,
+    label: `${formatDay(date)}: ${score === null ? 'nothing marked' : `score ${score.toFixed(1)}`}`,
   }))
 
   return (
@@ -56,10 +56,12 @@ export function MonthPanel() {
         <section aria-label="Daily score" className={card}>
           <h3 className={cardTitle}>Daily score</h3>
           <CalendarGrid days={overview} showNumbers />
-          <div className="mt-4 flex items-center gap-2 text-[11px] text-muted" aria-hidden="true">
+          <div className="mt-4 flex items-center gap-2 text-[12px] text-muted" aria-hidden="true">
             <span>Missed</span>
             <span className="h-2 flex-1 rounded-full bg-linear-to-r from-score-0 via-score-2 to-score-4" />
             <span>Target</span>
+            <span className="ml-2 h-3 w-3 flex-none rounded-[4px] border border-outline bg-surface" />
+            <span>Not marked</span>
           </div>
         </section>
         <div className="flex flex-col gap-4">

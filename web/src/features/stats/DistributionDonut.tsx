@@ -32,7 +32,7 @@ export function DistributionDonut({ title, distribution }: { title: string; dist
           </svg>
           <span className="absolute inset-0 flex flex-col items-center justify-center">
             <span className="text-[20px] font-extrabold text-fg">{total === 0 ? '–' : `${Math.round(shares[0])}%`}</span>
-            <span className="text-[10px] font-semibold tracking-wider text-muted uppercase">green</span>
+            <span className="text-[11px] font-semibold tracking-wider text-muted uppercase">green</span>
           </span>
         </div>
         <div className="min-w-0 flex-1">

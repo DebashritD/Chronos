@@ -8,10 +8,14 @@ import { formatTimeLeft, isUrgent } from '../../lib/timeLeft'
 import { card, pillButton } from '../../lib/ui'
 import { useSaveCheckIn } from '../stats/api'
 
-const BUTTONS: { color: Color; label: string; selected: string }[] = [
-  { color: 'GREEN', label: 'Target', selected: 'border-cell-green bg-cell-green text-bg' },
-  { color: 'YELLOW', label: 'Minimum', selected: 'border-cell-yellow bg-cell-yellow text-bg' },
-  { color: 'RED', label: 'Missed', selected: 'border-cell-red bg-cell-red text-white' },
+/** Each choice wears its colour before it's pressed (dot + tinted edge) and fills with it once selected. */
+const BUTTONS: { color: Color; label: string; idle: string; dot: string; selected: string }[] = [
+  { color: 'GREEN', label: 'Target', idle: 'border-cell-green/30 bg-cell-green/[0.07]', dot: 'bg-cell-green',
+    selected: 'border-cell-green bg-cell-green text-bg' },
+  { color: 'YELLOW', label: 'Minimum', idle: 'border-cell-yellow/30 bg-cell-yellow/[0.07]', dot: 'bg-cell-yellow',
+    selected: 'border-cell-yellow bg-cell-yellow text-bg' },
+  { color: 'RED', label: 'Missed', idle: 'border-cell-red/30 bg-cell-red/[0.07]', dot: 'bg-cell-red',
+    selected: 'border-cell-red bg-cell-red text-bg' },
 ]
 
 type Tone = 'normal' | 'urgent' | 'done'
@@ -47,7 +51,10 @@ export function HabitCard({ habit, cell, streak, now, yellowLimit, onOpen }: Hab
   const [error, setError] = useState<string | null>(null)
   const [draft, setDraft] = useState<string | null>(null)
   const [popped, setPopped] = useState<Color | null>(null)
+  const [missedJustNow, setMissedJustNow] = useState(false)
   const marked = isColor(cell.state)
+  // At the limit, one more yellow restarts the streak (re-tapping today's own yellow changes nothing).
+  const yellowResets = yellowLimit !== undefined && cell.state !== 'YELLOW'
   const timeLeft = cell.closesAt ? formatTimeLeft(cell.closesAt, now, habit.frequency) : null
   const tone: Tone = marked ? 'done' : cell.closesAt && isUrgent(cell.closesAt, now) ? 'urgent' : 'normal'
 
@@ -57,7 +64,9 @@ export function HabitCard({ habit, cell, streak, now, yellowLimit, onOpen }: Hab
     hapticMark(color)
     try {
       await saveCheckIn.mutateAsync({ habitId: habit.id, periodStart: cell.periodStart ?? cell.date, color, note: cell.note })
-      setPopped(color)
+      // A miss gets a quiet word instead of the celebratory pop.
+      setPopped(color === 'RED' ? null : color)
+      setMissedJustNow(color === 'RED')
     } catch (err) {
       setError(messageFor(err))
     }
@@ -82,7 +91,7 @@ export function HabitCard({ habit, cell, streak, now, yellowLimit, onOpen }: Hab
               {habit.name}
             </button>
           </h2>
-          <p className="mt-0.5 truncate text-[13px] text-muted">{meta(habit)}</p>
+          <p className="mt-0.5 text-[13px] break-words text-muted">{meta(habit)}</p>
         </div>
         {streak !== undefined && (
           <span className="flex flex-none items-center gap-1 font-display text-[15px] font-bold text-fg">
@@ -93,21 +102,35 @@ export function HabitCard({ habit, cell, streak, now, yellowLimit, onOpen }: Hab
         )}
       </div>
       <div className="mt-4 grid grid-cols-3 gap-2">
-        {BUTTONS.map(({ color, label, selected }) => {
+        {BUTTONS.map(({ color, label, idle, dot, selected }) => {
           const pressed = cell.state === color
+          const warn = color === 'YELLOW' && yellowResets
           return (
             <button key={color} type="button" aria-pressed={pressed} disabled={saveCheckIn.isPending}
+              aria-describedby={warn ? `${titleId}-reset` : undefined}
               onClick={() => void mark(color)}
               onAnimationEnd={() => setPopped(null)}
               data-pop={popped === color ? '' : undefined}
-              className={`flex items-center justify-center gap-1.5 rounded-[14px] border py-3 text-[14px] font-semibold transition-[transform,background-color,border-color] active:scale-[0.97] disabled:opacity-60 data-pop:animate-pop ${
-                pressed ? selected : 'border-line bg-surface text-fg'
+              className={`flex min-h-12 flex-col items-center justify-center rounded-[14px] border px-1 py-2 text-[14px] font-semibold transition-[transform,background-color,border-color] active:scale-[0.97] disabled:opacity-60 data-pop:animate-pop ${
+                pressed ? selected : `${idle} text-fg`
               }`}>
-              {label}
+              <span className="flex items-center gap-1.5">
+                {!pressed && <span className={`h-2 w-2 flex-none rounded-full ${dot}`} aria-hidden="true" />}
+                {label}
+              </span>
+              {warn && <span className="text-[11px] leading-tight font-medium text-cell-yellow" aria-hidden="true">restarts streak</span>}
             </button>
           )
         })}
       </div>
+      {yellowResets && (
+        <p id={`${titleId}-reset`} className="sr-only">You've used {yellowLimit} yellows in a row; another restarts the streak.</p>
+      )}
+      {missedJustNow && cell.state === 'RED' && (
+        <p role="status" className="mt-3 text-[14px] text-muted">
+          That's honest. {habit.frequency === 'DAILY' ? 'Tomorrow' : 'The next one'} is a fresh start.
+        </p>
+      )}
       <div className="mt-3 flex items-center justify-between gap-3">
         <span className="flex flex-wrap items-center gap-1.5">
           {timeLeft && (

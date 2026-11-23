@@ -81,8 +81,9 @@ Walk periods in order, skipping `PAUSED` ones:
 ### Daily combined score (month overview)
 
 For each date: average over habits whose period *covers* that date and is not paused/not-due, with
-`GREEN = 2`, `YELLOW = 1`, `RED = 0`, `GREY = 0`; `PENDING` excluded. Weekly/every-N habits contribute their
-period's color to every day the period covers. Result is 0–2 (null if no habit contributes); the UI maps it to a color scale.
+`GREEN = 2`, `YELLOW = 1`, `RED = 0`; `GREY` (unmarked) and `PENDING` excluded, so only real marks score. Weekly/every-N
+habits contribute their period's color to every day the period covers, up to today; later dates are null. Result is 0–2
+(null if no habit contributes); the UI maps it to a color scale and shows null days as neutral.
 
 ### Distribution
 

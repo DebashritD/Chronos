@@ -139,9 +139,18 @@ class HabitTimelineTest {
                 List.of(), Map.of(nov(9), Color.YELLOW), false, TODAY);
 
         assertThat(weekly.scoreOn(nov(12))).hasValue(1);
-        assertThat(weekly.scoreOn(nov(4))).hasValue(0);   // week of Nov 2 is GREY
+        assertThat(weekly.scoreOn(nov(4))).isEmpty();     // week of Nov 2 is GREY: unmarked doesn't score
         assertThat(weekly.scoreOn(nov(17))).isEmpty();    // current week is PENDING
         assertThat(weekly.scoreOn(LocalDate.of(2026, 10, 20))).isEmpty();
+    }
+
+    @Test
+    void scoreIgnoresDaysAfterTodayEvenInAMarkedPeriod() {
+        var weekly = new HabitTimeline(new HabitSchedule(Frequency.WEEKLY, null, nov(1)),
+                List.of(), Map.of(nov(16), Color.RED), false, TODAY);
+
+        assertThat(weekly.scoreOn(TODAY)).hasValue(0);
+        assertThat(weekly.scoreOn(TODAY.plusDays(1))).isEmpty();
     }
 
     @Test

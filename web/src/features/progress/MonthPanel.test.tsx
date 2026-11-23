@@ -34,7 +34,7 @@ describe('MonthPanel', () => {
     expect(within(overview).getByRole('img', { name: 'Tue 3 Nov: score 1.0' })).toHaveClass('bg-score-2')
     expect(within(overview).getByRole('img', { name: 'Wed 4 Nov: score 1.3' })).toHaveClass('bg-score-3')
     expect(within(overview).getByRole('img', { name: 'Thu 5 Nov: score 0.5' })).toHaveClass('bg-score-1')
-    expect(within(overview).getByRole('img', { name: 'Fri 6 Nov: no score' })).toHaveClass('bg-surface')
+    expect(within(overview).getByRole('img', { name: 'Fri 6 Nov: nothing marked' })).toHaveClass('bg-surface')
     // 1 Nov 2026 is a Sunday: six blanks before it.
     expect(overview.querySelectorAll('[data-blank]')).toHaveLength(6)
   })

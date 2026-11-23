@@ -8,8 +8,8 @@ export interface CalendarDay {
 }
 
 /**
- * Daily score (GREEN = 2, YELLOW = 1, RED/GREY = 0, averaged over habits due that day) on a five-step
- * red → green scale. Thresholds are explicit so 1.25 lands in step 3 without float surprises.
+ * Daily score (GREEN = 2, YELLOW = 1, RED = 0, averaged over the marks that day) on a five-step red → green scale;
+ * null (nothing marked, or a future day) stays neutral. Thresholds are explicit so 1.25 lands in step 3.
  */
 export function scoreClass(score: number | null): string {
   if (score === null) return 'bg-surface text-dim'

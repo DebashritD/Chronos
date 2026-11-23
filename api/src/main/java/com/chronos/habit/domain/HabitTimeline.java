@@ -102,17 +102,20 @@ public final class HabitTimeline {
         return result;
     }
 
-    /** GREEN 2, YELLOW 1, RED/GREY 0 for the period covering {@code date}; empty if it doesn't count. */
+    /**
+     * GREEN 2, YELLOW 1, RED 0 for the period covering {@code date}; empty if it doesn't count. Only marks score:
+     * unmarked (GREY) periods and days after today stay blank rather than reading as missed.
+     */
     public OptionalInt scoreOn(LocalDate date) {
         Optional<LocalDate> start = schedule.periodContaining(date);
-        if (start.isEmpty()) {
+        if (start.isEmpty() || date.isAfter(today)) {
             return OptionalInt.empty();
         }
         return switch (stateOf(start.get())) {
             case GREEN -> OptionalInt.of(2);
             case YELLOW -> OptionalInt.of(1);
-            case RED, GREY -> OptionalInt.of(0);
-            case PAUSED, PENDING, NOT_DUE -> OptionalInt.empty();
+            case RED -> OptionalInt.of(0);
+            case GREY, PAUSED, PENDING, NOT_DUE -> OptionalInt.empty();
         };
     }
 
