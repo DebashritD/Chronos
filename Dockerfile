@@ -11,10 +11,10 @@ FROM eclipse-temurin:21-jdk-alpine AS api
 WORKDIR /api
 COPY api/gradlew api/settings.gradle api/build.gradle ./
 COPY api/gradle gradle
-RUN ./gradlew dependencies --no-daemon -q > /dev/null
+RUN ./gradlew resolveDependencies --no-daemon -q
 COPY api/src src
 COPY --from=web /web/dist src/main/resources/static
-RUN ./gradlew bootJar --no-daemon -q -x test
+RUN ./gradlew bootJar --no-daemon --offline --console=plain -x test
 
 FROM eclipse-temurin:21-jre-alpine
 WORKDIR /app

@@ -37,3 +37,9 @@ dependencies {
 tasks.named('test') {
     useJUnitPlatform()
 }
+
+// Docker layer warm-up: downloads the jars bootJar needs (`dependencies` only fetches metadata).
+tasks.register('resolveDependencies') {
+    def classpaths = [configurations.compileClasspath, configurations.runtimeClasspath, configurations.annotationProcessor]
+    doLast { classpaths.each { it.files } }
+}
