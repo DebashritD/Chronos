@@ -25,19 +25,21 @@ export function periodContaining(schedule: Schedule, date: string): string | nul
 
 /**
  * The saved week with each active habit's current period re-derived for the device's today, so Today moves on to new
- * periods offline after midnight. Same day (or habits not loaded): the saved week as is.
+ * periods offline after midnight. Paused habits keep their saved current (the server still lists them in the week);
+ * habits missing from the saved habits list (archived) are dropped. Same day (or habits not loaded): the saved week as is.
  */
 export function localTodayWeek(week: WeekView, habits: Habit[] | undefined, timezone: string, now: Date): WeekView {
   const today = todayIn(timezone, now)
   if (today <= week.today || !habits) return week
   const saved = new Map(week.habits.map((h) => [h.id, h]))
   const rows = habits
-    .filter((habit) => habit.status === 'ACTIVE')
     .map((habit): WeekHabit => {
       const row = saved.get(habit.id)
       const start = periodContaining(habit, today)
       let current: CurrentPeriod | null = null
-      if (start !== null) {
+      if (habit.status === 'PAUSED') {
+        current = row?.current ?? null
+      } else if (start !== null) {
         const closesAt = startOfDayIn(addDays(start, periodLength(habit)), timezone)
         const kept = row?.current?.periodStart === start ? row.current : null
         current = kept

@@ -79,10 +79,16 @@ describe('localTodayWeek', () => {
     expect(currentOf(view, 2)).toMatchObject({ periodStart: '2026-11-23', state: 'PENDING' })
   })
 
-  it('has no current period before the habit starts, and leaves paused habits out', () => {
+  it('has no current period before the habit starts', () => {
     const view = localTodayWeek(week, habits, TZ, THU)
     expect(currentOf(view, 4)).toBeNull()
-    expect(view.habits.map((h) => h.id)).toEqual([1, 2, 3, 4])
+  })
+
+  it('keeps paused habits with their saved current and drops habits no longer listed (archived)', () => {
+    const view = localTodayWeek(week, [daily, paused, habit(6, { status: 'PAUSED' })], TZ, THU)
+    expect(view.habits.map((h) => h.id)).toEqual([1, 5, 6])
+    expect(view.habits[1]).toEqual(week.habits[4])
+    expect(currentOf(view, 6)).toBeNull()
   })
 
   it('computes closesAt in a non-UTC timezone', () => {

@@ -73,7 +73,7 @@ offline. Marks sync automatically when the connection returns.
     - If the start equals the saved `current.periodStart`, keep the saved `current`.
     - Otherwise make a fresh `current`: `state: 'PENDING'`, `editable: true`, `note: null`,
       `closesAt` = midnight after `periodEnd` in the user's timezone.
-  - Paused, archived and not-yet-started habits are left out, as the server does. Streaks stay as last synced.
+  - Paused habits are kept unchanged (Today’s cards already hide them); archived habits are left out; not-yet-started habits get no current period. Streaks stay as last synced.
   - `TodayPage` uses this derived week. The derived cells are patched by the optimistic update like any other.
 - **Progress offline.** Shows any saved week or month. A week or month that was never loaded shows
   "Connect to load this week." / "Connect to load this month." instead of an error.
