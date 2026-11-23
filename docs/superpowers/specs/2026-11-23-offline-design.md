@@ -43,6 +43,8 @@ offline. Marks sync automatically when the connection returns.
   - Clears the query cache, the mutation cache, `chronos.me` and the IndexedDB entry.
   - If check-ins are still pending it first asks: "{n} marks haven't synced. Log out anyway?"
     (singular: "1 mark hasn't synced. Log out anyway?").
+  - Offline, the Log out button (and the confirm in that question) is disabled, with a dim `text-[13px]` line
+    "Connect to log out." under it.
 
 ## 2. Marking offline
 
@@ -58,10 +60,13 @@ offline. Marks sync automatically when the connection returns.
     `current` get the new `state` (`GREEN`/`YELLOW`/`RED`, or `PENDING` on clear) and `note`.
   - Today's card, summary and segments update at once. Month data refreshes after sync.
 - **Replay results.**
-  - Network error or 5xx: stays queued and retries (`retry` with backoff while online; paused while offline).
-  - 401: the mutation stays paused; the login screen shows; after the same user logs in, the queue resumes.
+  - Network error: stays queued and retries without limit (`retry` with backoff while online; paused while offline).
+  - 5xx: retries up to 8 times with the default backoff, then is dropped like a 4xx (a stuck mark would block the
+    queue, and TanStack waits for paused mutations before refetching queries on reconnect).
+  - 401: the mark reports the 401 to the session (signs out, so the login screen shows) and waits; after the same
+    user logs in, the queue resumes.
   - Any other 4xx (e.g. 404 archived habit, 409/422 not editable): drop that mutation, show a toast
-    "Couldn't sync {habit name}. Refreshed.", and invalidate `['stats']`.
+    "Couldn’t sync {habit name}. Refreshed.", and invalidate `['stats']`.
 - **Yellow-limit dialog.** Runs from the hook-level `onSuccess` as today. It fires when a queued mark syncs while
   the page is still mounted. Marks restored after a reload sync without the dialog.
 - **New day offline.**
@@ -88,14 +93,17 @@ offline. Marks sync automatically when the connection returns.
 - **`WakingNotice`.** Hidden while offline.
 - **Toasts.** Sync failures use a quiet one-line toast that auto-dismisses after 4 s. Never red text.
 - **Copy rules.** Curly apostrophes (’), no exclamation marks.
+  - New copy: "Offline", "Offline · {n} waiting to sync", "Syncing {n}…", "Couldn’t sync {habit name}. Refreshed.",
+    "{n} marks haven’t synced. Log out anyway?", "Connect to load this week.", "Connect to load this month.",
+    "Connect to log out."
 - **Unit tests (vitest).**
   - `localTodayWeek`: daily, every-N, weekly; new week; before start; paused excluded; unchanged period kept;
     `closesAt` in a non-UTC timezone.
   - The optimistic week patch (save and clear).
   - `SyncStatus` copy for each case.
   - The queue with `onlineManager.setOnline(false)`: a mark pauses, shows instantly, and replays when back
-    online; a 4xx drops it with a toast.
-  - Logout with pending marks asks first; 401 keeps the queue.
+    online; a 4xx, or a 5xx after 8 retries, drops it with a toast.
+  - Logout with pending marks asks first; logout is disabled offline; a check-in 401 signs out and keeps the queue.
 - **E2E (Playwright).** A second config runs against `vite preview` of a production build (the service worker only
   exists there). Sign up, add a habit, go offline (`context.setOffline(true)`), mark it, reload, see the mark and
   "Offline · 1 waiting to sync", go online, wait for the status to clear, and confirm with a fresh fetch that the

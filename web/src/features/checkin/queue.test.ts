@@ -2,7 +2,9 @@ import { MutationObserver, onlineManager, type QueryClient } from '@tanstack/rea
 import { persistQueryClientRestore, persistQueryClientSave } from '@tanstack/react-query-persist-client'
 import { waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { ApiError } from '../../api/errors'
 import { CACHE_KEY, createPersister, persistOptions } from '../../api/persist'
+import { setQueryErrorHandler } from '../../api/queryErrorBridge'
 import { createQueryClient } from '../../api/queryClient'
 import type { WeekView } from '../../api/types'
 import { subscribeSyncToast } from '../../lib/syncToast'
@@ -24,7 +26,9 @@ const noContent = () => new Response(null, { status: 204 })
 
 let queryClient: QueryClient
 function mark(vars: CheckInVars) {
-  void new MutationObserver<void, Error, CheckInVars>(queryClient, { mutationKey: CHECK_IN_KEY }).mutate(vars).catch(() => undefined)
+  // No backoff in tests; the retry rules themselves come from the queue's defaults.
+  void new MutationObserver<void, Error, CheckInVars>(queryClient, { mutationKey: CHECK_IN_KEY, retryDelay: 0 })
+    .mutate(vars).catch(() => undefined)
 }
 const stateOf = () => queryClient.getQueryData<WeekView>(WEEK_KEY)?.habits[0].current?.state
 const writes = (fetchMock: ReturnType<typeof stubApi>) => requests(fetchMock).filter((r) => r.method !== 'GET')
@@ -83,13 +87,50 @@ describe('check-in queue', () => {
     unsubscribe()
   })
 
-  it('keeps a mark through a 401 and resends it once signed back in', async () => {
+  it('gives up on a mark after eight retries on server errors, like a rejected one, and carries on with the queue', async () => {
+    let down = true
+    const fetchMock = stubApi(() => (down ? problemResponse(503, 'UNAVAILABLE') : noContent()))
+    const toast = vi.fn()
+    const unsubscribe = subscribeSyncToast(toast)
+    mark(GREEN)
+
+    await waitFor(() => expect(toast).toHaveBeenCalledWith('Couldn’t sync Read. Refreshed.'))
+    expect(writes(fetchMock)).toHaveLength(9)
+    expect(pendingCheckIns(queryClient)).toBe(0)
+    expect(queryClient.getQueryState(WEEK_KEY)?.isInvalidated).toBe(true)
+
+    down = false
+    mark(GREEN)
+    await waitFor(() => expect(pendingCheckIns(queryClient)).toBe(0))
+    expect(writes(fetchMock)).toHaveLength(10)
+    unsubscribe()
+  })
+
+  it('keeps retrying a mark through network errors', async () => {
+    let failures = 0
+    const fetchMock = stubApi(() => {
+      if (failures++ < 10) throw new TypeError('Failed to fetch')
+      return noContent()
+    })
+    mark(GREEN)
+
+    await waitFor(() => expect(pendingCheckIns(queryClient)).toBe(0))
+    expect(writes(fetchMock)).toHaveLength(11)
+  })
+
+  it('keeps a mark through a 401, signs out, and resends it once signed back in', async () => {
     let signedIn = false
     const fetchMock = stubApi(() => (signedIn ? noContent() : problemResponse(401, 'UNAUTHENTICATED')))
+    const onQueryError = vi.fn()
+    setQueryErrorHandler(onQueryError)
     mark(GREEN)
 
     await waitFor(() => expect(writes(fetchMock)).toHaveLength(1))
+    expect(onQueryError).toHaveBeenCalledTimes(1)
+    expect(onQueryError).toHaveBeenCalledWith(expect.objectContaining({ status: 401 }))
+    expect(onQueryError.mock.calls[0][0]).toBeInstanceOf(ApiError)
     expect(pendingCheckIns(queryClient)).toBe(1)
+    setQueryErrorHandler(null)
 
     signedIn = true
     authRestored()

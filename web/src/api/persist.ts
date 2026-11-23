@@ -3,7 +3,10 @@ import type { PersistQueryClientOptions, Persister } from '@tanstack/react-query
 import { del, get, set } from 'idb-keyval'
 import { isCheckIn } from '../features/checkin/queue'
 
-/** Bump by hand only when the shape of cached data changes; ordinary deploys keep saved data and queued marks. */
+/**
+ * Bump by hand only when the shape of cached data changes; ordinary deploys keep saved data and queued marks.
+ * Bumping it (like the 7-day maxAge running out) drops any unsynced marks along with the cache.
+ */
 export const CACHE_VERSION = '1'
 export const CACHE_KEY = 'chronos-cache'
 export const PERSIST_MAX_AGE = 7 * 24 * 60 * 60 * 1000

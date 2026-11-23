@@ -1,5 +1,5 @@
 import { MutationObserver, onlineManager } from '@tanstack/react-query'
-import { screen, within } from '@testing-library/react'
+import { act, screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
 import { browserTimezone } from '../auth/session'
 import type { CheckInVars } from '../checkin/patchWeek'
@@ -19,9 +19,10 @@ describe('AccountPage', () => {
   })
 
   it('asks before logging out with marks still waiting to sync', async () => {
-    const fetchMock = stubApi(({ url }) => (url === '/api/auth/logout' ? new Response(null, { status: 200 }) : undefined))
+    // The marks' writes hang, so they stay unsynced while online.
+    const fetchMock = stubApi(() => undefined).mockImplementation(async (input: RequestInfo | URL) =>
+      String(input) === '/api/auth/logout' ? new Response(null, { status: 200 }) : new Promise<Response>(() => {}))
     const { queryClient, user } = renderWithProviders(<AccountPage />, { route: '/settings' })
-    onlineManager.setOnline(false)
     for (const periodStart of ['2026-11-17', '2026-11-18']) {
       void new MutationObserver<void, Error, CheckInVars>(queryClient, { mutationKey: CHECK_IN_KEY })
         .mutate({ op: 'save', habitId: 1, periodStart, color: 'GREEN', note: null }).catch(() => undefined)
@@ -38,6 +39,35 @@ describe('AccountPage', () => {
     await user.click(screen.getByRole('button', { name: 'Log out' }))
     await user.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Log out' }))
     expect(await screen.findByTestId('location-display')).toHaveTextContent('/login')
+  })
+
+  it('can’t log out offline', async () => {
+    stubApi(() => undefined)
+    renderWithProviders(<AccountPage />, { route: '/settings' })
+
+    act(() => onlineManager.setOnline(false))
+    expect(screen.getByRole('button', { name: 'Log out' })).toBeDisabled()
+    expect(screen.getByText('Connect to log out.')).toBeInTheDocument()
+
+    act(() => onlineManager.setOnline(true))
+    expect(screen.getByRole('button', { name: 'Log out' })).toBeEnabled()
+    expect(screen.queryByText('Connect to log out.')).not.toBeInTheDocument()
+  })
+
+  it('won’t confirm a logout after going offline with the question open', async () => {
+    stubApi(() => undefined).mockImplementation(() => new Promise<Response>(() => {}))
+    const { queryClient, user } = renderWithProviders(<AccountPage />, { route: '/settings' })
+    void new MutationObserver<void, Error, CheckInVars>(queryClient, { mutationKey: CHECK_IN_KEY })
+      .mutate({ op: 'save', habitId: 1, periodStart: '2026-11-18', color: 'GREEN', note: null }).catch(() => undefined)
+
+    await user.click(screen.getByRole('button', { name: 'Log out' }))
+    const dialog = await screen.findByRole('alertdialog')
+    act(() => onlineManager.setOnline(false))
+
+    const confirm = within(dialog).getByRole('button', { name: 'Log out' })
+    expect(confirm).toBeDisabled()
+    await user.click(confirm)
+    expect(screen.getByRole('alertdialog')).toBeInTheDocument()
   })
 
   it('shows the account', () => {

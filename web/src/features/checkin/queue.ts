@@ -1,12 +1,16 @@
 import type { Mutation, QueryClient } from '@tanstack/react-query'
 import { api } from '../../api/client'
 import { ApiError } from '../../api/errors'
+import { notifyQueryError } from '../../api/queryErrorBridge'
 import type { Habit, WeekView } from '../../api/types'
 import { showSyncToast } from '../../lib/syncToast'
 import { AuthDiscardedError, authDiscarded, waitForAuth } from './authGate'
 import { patchWeek, type CheckInVars } from './patchWeek'
 
 export const CHECK_IN_KEY = ['checkIn'] as const
+
+/** Retries after a server error; a mark stuck behind a broken server would block the queue (and refetches on reconnect). */
+const MAX_SERVER_ERROR_RETRIES = 8
 
 async function send(vars: CheckInVars): Promise<void> {
   const path = `/api/habits/${vars.habitId}/check-ins/${vars.periodStart}`
@@ -17,6 +21,8 @@ async function send(vars: CheckInVars): Promise<void> {
       return
     } catch (error) {
       if (!(error instanceof ApiError && error.status === 401)) throw error
+      // Signs out like a query 401 would, so the login screen shows; this mark waits for the same user.
+      notifyQueryError(error)
       await waitForAuth()
     }
   }
@@ -44,15 +50,20 @@ export function registerCheckInDefaults(queryClient: QueryClient): void {
   queryClient.setMutationDefaults(CHECK_IN_KEY, {
     mutationFn: (vars: CheckInVars) => send(vars),
     scope: { id: 'checkIn' },
-    retry: (_failureCount, error) =>
-      !(error instanceof AuthDiscardedError) && !(error instanceof ApiError && error.status < 500),
+    retry: (failureCount, error) => {
+      if (error instanceof AuthDiscardedError) return false
+      // Network errors (offline, server unreachable) retry without limit.
+      if (!(error instanceof ApiError)) return true
+      return error.status >= 500 && failureCount < MAX_SERVER_ERROR_RETRIES
+    },
     onMutate: async (vars: CheckInVars) => {
       await queryClient.cancelQueries({ queryKey: ['stats', 'week'] })
       queryClient.setQueriesData<WeekView>({ queryKey: ['stats', 'week'] }, (week) => week && patchWeek(week, vars))
     },
     onSuccess: () => checkInSynced(queryClient),
     onError: (error, vars: CheckInVars) => {
-      if (error instanceof ApiError && error.status < 500) {
+      // Rejected, or the server kept failing: drop the mark and show the server's truth.
+      if (error instanceof ApiError) {
         showSyncToast(`Couldn’t sync ${habitName(queryClient, vars.habitId)}. Refreshed.`)
         return queryClient.invalidateQueries({ queryKey: ['stats'] })
       }
