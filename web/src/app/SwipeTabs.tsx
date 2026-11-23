@@ -109,8 +109,8 @@ export function SwipeTabs() {
   const peer = neighbour && neighbour.from === pathname ? neighbour : null
   return (
     <>
-      <div className="overflow-x-clip">
-        <div ref={trackRef} className="relative">
+      <div className="flex flex-1 flex-col overflow-x-clip">
+        <div ref={trackRef} className="relative flex-1">
           <Outlet />
           {peer && (
             <div aria-hidden="true" inert className="absolute w-full"

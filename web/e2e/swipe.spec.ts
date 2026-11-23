@@ -21,11 +21,11 @@ test('swiping left on Today opens Progress, and right comes back', async ({ page
   await expect(page.getByRole('link', { name: 'Create your first habit' })).toBeVisible()
 
   const tabs = page.getByRole('navigation', { name: 'Tabs' })
-  await touchDrag(page, { x: 320, y: 240 }, { x: 60, y: 240 })
+  await touchDrag(page, { x: 320, y: 700 }, { x: 60, y: 700 })
   await expect(page).toHaveURL(/\/progress$/)
   await expect(tabs.getByRole('link', { name: 'Progress' })).toHaveAttribute('aria-current', 'page')
 
-  await touchDrag(page, { x: 60, y: 240 }, { x: 320, y: 240 })
+  await touchDrag(page, { x: 60, y: 700 }, { x: 320, y: 700 })
   await expect(page).toHaveURL(/\/$/)
   await expect(tabs.getByRole('link', { name: 'Today' })).toHaveAttribute('aria-current', 'page')
 })
