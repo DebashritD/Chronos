@@ -1,6 +1,9 @@
-import { afterEach, describe, expect, test } from 'vitest'
+import { createElement, useRef } from 'react'
+import { fireEvent, render } from '@testing-library/react'
+import { afterEach, describe, expect, test, vi } from 'vitest'
 import {
-  dragOffset, ignoreStart, lockFor, pullDistance, releaseDecision, startsOnControl, velocityOf,
+  dragOffset, ignoreStart, lockFor, pullDistance, releaseDecision, startsOnControl, useTabSwipe, velocityOf,
+  type TabSwipeHandlers,
 } from './useTabSwipe'
 
 afterEach(() => {
@@ -85,5 +88,27 @@ describe('velocityOf', () => {
   })
   test('is 0 when the samples share a timestamp', () => {
     expect(velocityOf({ x: 0, y: 0, t: 5 }, { x: -30, y: 0, t: 5 }, 'x', 5)).toBe(0)
+  })
+})
+
+describe('useTabSwipe', () => {
+  function Track({ handlers }: { handlers: TabSwipeHandlers }) {
+    const ref = useRef<HTMLDivElement>(null)
+    useTabSwipe(ref, true, handlers)
+    return createElement('div', { ref, 'data-testid': 'track' })
+  }
+
+  test('settles a locked swipe when a second finger lands', () => {
+    vi.stubGlobal('innerWidth', 390)
+    const handlers = { onDrag: vi.fn(), onRelease: vi.fn() }
+    const { getByTestId } = render(createElement(Track, { handlers }))
+    const track = getByTestId('track')
+    fireEvent.touchStart(track, { touches: [{ clientX: 200, clientY: 300 }] })
+    fireEvent.touchMove(track, { touches: [{ clientX: 160, clientY: 302 }] })
+    expect(handlers.onDrag).toHaveBeenCalledWith(-40)
+    fireEvent.touchStart(track, { touches: [{ clientX: 160, clientY: 302 }, { clientX: 250, clientY: 300 }] })
+    expect(handlers.onRelease).toHaveBeenCalledWith(0, 0)
+    fireEvent.touchEnd(track, { changedTouches: [{ clientX: 150, clientY: 302 }] })
+    expect(handlers.onRelease).toHaveBeenCalledTimes(1)
   })
 })

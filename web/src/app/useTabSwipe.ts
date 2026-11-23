@@ -89,7 +89,8 @@ export function useTabSwipe(ref: RefObject<HTMLElement | null>, enabled: boolean
     function onStart(event: TouchEvent): void {
       const touch = event.touches[0]
       if (event.touches.length !== 1 || ignoreStart(event.target, touch.clientX, window.innerWidth)) {
-        start = null
+        // A second finger ends any locked gesture; settle it so the track or pull chip doesn't stay stuck.
+        onCancel()
         return
       }
       start = { x: touch.clientX, y: touch.clientY, t: swipeClock.now() }
