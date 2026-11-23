@@ -44,6 +44,9 @@ public class AccountService {
         if (request.timezone() != null) {
             users.updateTimezone(userId, validZone(request.timezone()));
         }
+        if (request.maxYellows() != null) {
+            users.updateMaxYellows(userId, request.maxYellows());
+        }
         if (request.newPassword() != null) {
             if (request.currentPassword() == null
                     || !passwordEncoder.matches(request.currentPassword(), user.passwordHash())) {

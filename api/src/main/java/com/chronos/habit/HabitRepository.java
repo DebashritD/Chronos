@@ -20,10 +20,10 @@ public class HabitRepository {
     }
 
     public long insert(long userId, String name, String minText, String targetText, Frequency frequency,
-                       Integer intervalDays, LocalDate startDate) {
+                       Integer intervalDays, LocalDate startDate, boolean yellowCap) {
         return jdbc.sql("""
-                        INSERT INTO habit (user_id, name, min_text, target_text, frequency, interval_days, start_date)
-                        VALUES (:userId, :name, :minText, :targetText, :frequency, :intervalDays, :startDate)
+                        INSERT INTO habit (user_id, name, min_text, target_text, frequency, interval_days, start_date, yellow_cap)
+                        VALUES (:userId, :name, :minText, :targetText, :frequency, :intervalDays, :startDate, :yellowCap)
                         RETURNING id
                         """)
                 .param("userId", userId)
@@ -32,6 +32,7 @@ public class HabitRepository {
                 .param("targetText", targetText)
                 .param("frequency", frequency.name())
                 .param("intervalDays", intervalDays)
+                .param("yellowCap", yellowCap)
                 .param("startDate", startDate)
                 .query(Long.class)
                 .single();
@@ -63,6 +64,11 @@ public class HabitRepository {
                 .param("minText", minText)
                 .param("targetText", targetText)
                 .update();
+    }
+
+    public void updateYellowCap(long habitId, boolean yellowCap) {
+        jdbc.sql("UPDATE habit SET yellow_cap = :yellowCap, updated_at = now() WHERE id = :id")
+                .param("id", habitId).param("yellowCap", yellowCap).update();
     }
 
     public void updateStatus(long habitId, HabitStatus status) {

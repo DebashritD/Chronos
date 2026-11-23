@@ -13,5 +13,6 @@ public record CreateHabitRequest(
         @NotBlank @Size(max = 200) String targetText,
         @NotNull Frequency frequency,
         Integer intervalDays,
-        LocalDate startDate) {
+        LocalDate startDate,
+        Boolean yellowCap) {
 }

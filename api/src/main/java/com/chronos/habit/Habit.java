@@ -9,7 +9,7 @@ import java.time.OffsetDateTime;
 
 public record Habit(long id, long userId, String name, String minText, String targetText, Frequency frequency,
                    Integer intervalDays, LocalDate startDate, HabitStatus status, OffsetDateTime createdAt,
-                   OffsetDateTime updatedAt) {
+                   OffsetDateTime updatedAt, boolean yellowCap) {
 
     public HabitSchedule schedule() {
         return new HabitSchedule(frequency, intervalDays, startDate);

@@ -6,5 +6,6 @@ import jakarta.validation.constraints.Size;
 public record UpdateHabitRequest(
         @NotBlank @Size(max = 80) String name,
         @NotBlank @Size(max = 200) String minText,
-        @NotBlank @Size(max = 200) String targetText) {
+        @NotBlank @Size(max = 200) String targetText,
+        Boolean yellowCap) {
 }

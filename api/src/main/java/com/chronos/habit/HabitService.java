@@ -51,7 +51,8 @@ public class HabitService {
             throw validation("intervalDays: only allowed for EVERY_N_DAYS");
         }
         long id = habits.insert(userId, request.name().strip(), request.minText().strip(),
-                request.targetText().strip(), request.frequency(), interval, startDate);
+                request.targetText().strip(), request.frequency(), interval, startDate,
+                request.yellowCap() == null || request.yellowCap());
         return requireOwned(userId, id);
     }
 
@@ -59,6 +60,9 @@ public class HabitService {
     public Habit update(long userId, long habitId, UpdateHabitRequest request) {
         requireOwned(userId, habitId);
         habits.updateTexts(habitId, request.name().strip(), request.minText().strip(), request.targetText().strip());
+        if (request.yellowCap() != null) {
+            habits.updateYellowCap(habitId, request.yellowCap());
+        }
         return requireOwned(userId, habitId);
     }
 

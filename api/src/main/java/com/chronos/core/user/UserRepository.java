@@ -43,6 +43,11 @@ public class UserRepository {
                 .param("id", id).param("timezone", timezone).update();
     }
 
+    public void updateMaxYellows(long id, int maxYellows) {
+        jdbc.sql("UPDATE app_user SET max_yellows = :maxYellows WHERE id = :id")
+                .param("id", id).param("maxYellows", maxYellows).update();
+    }
+
     public void updatePasswordHash(long id, String passwordHash) {
         jdbc.sql("UPDATE app_user SET password_hash = :hash WHERE id = :id")
                 .param("id", id).param("hash", passwordHash).update();

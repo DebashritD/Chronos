@@ -208,4 +208,24 @@ class StatsIntegrationTest extends IntegrationTest {
         mvc.perform(get("/api/stats/week").with(as(bob))).andExpect(jsonPath("$.habits", hasSize(0)));
         mvc.perform(get("/api/stats/streaks").with(as(bob))).andExpect(jsonPath("$", hasSize(0)));
     }
+
+    @Test
+    void streaksApplyTheUsersYellowCapToCappedHabitsOnly() throws Exception {
+        long capped = insertHabit(bob, "Read", "DAILY", null, nov(15));
+        long free = insertHabit(bob, "Run", "DAILY", null, nov(15));
+        jdbc.sql("UPDATE habit SET yellow_cap = false WHERE id = :id").param("id", free).update();
+        for (long habit : new long[] {capped, free}) {
+            insertCheckIn(habit, nov(15), "YELLOW");
+            insertCheckIn(habit, nov(16), "YELLOW");
+            insertCheckIn(habit, nov(17), "YELLOW");
+        }
+
+        mvc.perform(get("/api/stats/streaks").with(as(bob)))
+                .andExpect(jsonPath("$[0].current").value(1))
+                .andExpect(jsonPath("$[0].yellowRun").value(1))
+                .andExpect(jsonPath("$[0].yellowLimit").value(2))
+                .andExpect(jsonPath("$[1].current").value(3))
+                .andExpect(jsonPath("$[1].yellowRun").value(3))
+                .andExpect(jsonPath("$[1].yellowLimit").doesNotExist());
+    }
 }

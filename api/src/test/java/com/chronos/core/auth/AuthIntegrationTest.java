@@ -228,4 +228,20 @@ class AuthIntegrationTest extends IntegrationTest {
                         {"username": "%s", "password": "%s"}
                         """.formatted(username, password));
     }
+
+    @Test
+    void updateMeSavesMaxYellowsWithinOneToSeven() throws Exception {
+        var bob = createUser("bob");
+
+        mvc.perform(get("/api/auth/me").with(as(bob)))
+                .andExpect(jsonPath("$.maxYellows").value(2));
+        mvc.perform(put("/api/auth/me").with(as(bob)).with(xsrf())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"maxYellows\": 3}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.maxYellows").value(3));
+        mvc.perform(put("/api/auth/me").with(as(bob)).with(xsrf())
+                        .contentType(MediaType.APPLICATION_JSON).content("{\"maxYellows\": 8}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION"));
+    }
 }

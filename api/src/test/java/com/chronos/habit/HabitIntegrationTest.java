@@ -214,4 +214,28 @@ class HabitIntegrationTest extends IntegrationTest {
                         "to_date", rs.getString("to_date") == null ? "open" : rs.getString("to_date")))
                 .list();
     }
+
+    @Test
+    void yellowCapDefaultsOnAndCanBeSwitchedOff() throws Exception {
+        String body = mvc.perform(create("""
+                        {"name": "Read", "minText": "1 page", "targetText": "20 pages", "frequency": "DAILY"}
+                        """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.yellowCap").value(true))
+                .andReturn().getResponse().getContentAsString();
+        long id = Long.parseLong(body.replaceAll(".*\"id\":(\\d+).*", "$1"));
+
+        mvc.perform(put("/api/habits/{id}", id).with(as(bob)).with(xsrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name": "Read", "minText": "1 page", "targetText": "20 pages", "yellowCap": false}
+                                """))
+                .andExpect(jsonPath("$.yellowCap").value(false));
+        mvc.perform(put("/api/habits/{id}", id).with(as(bob)).with(xsrf())
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name": "Read", "minText": "1 page", "targetText": "20 pages"}
+                                """))
+                .andExpect(jsonPath("$.yellowCap").value(false));
+    }
 }

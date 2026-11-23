@@ -115,12 +115,14 @@ public class StatsService {
 
     public List<StreakResponse> streaks(long userId) {
         LocalDate today = userService.today(userId);
+        int maxYellows = userService.get(userId).maxYellows();
         List<Habit> habits = habitService.list(userId, null);
         Map<Long, HabitTimeline> byId = timelines.load(habits, today);
         return habits.stream()
                 .map(h -> {
-                    var streak = byId.get(h.id()).streak(null);
-                    return new StreakResponse(h.id(), h.name(), streak.current(), streak.best());
+                    Integer limit = h.yellowCap() ? maxYellows : null;
+                    var streak = byId.get(h.id()).streak(limit);
+                    return new StreakResponse(h.id(), h.name(), streak.current(), streak.best(), streak.yellowRun(), limit);
                 })
                 .toList();
     }
