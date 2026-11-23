@@ -111,4 +111,17 @@ describe('useTabSwipe', () => {
     fireEvent.touchEnd(track, { changedTouches: [{ clientX: 150, clientY: 302 }] })
     expect(handlers.onRelease).toHaveBeenCalledTimes(1)
   })
+
+  test('at the top, blocks scrolling before the lock only for a mostly-downward move', () => {
+    vi.stubGlobal('innerWidth', 390)
+    const handlers = { onDrag: vi.fn(), onRelease: vi.fn(), onPull: vi.fn(), onPullEnd: vi.fn() }
+    const { getByTestId } = render(createElement(Track, { handlers }))
+    const track = getByTestId('track')
+    fireEvent.touchStart(track, { touches: [{ clientX: 200, clientY: 300 }] })
+    expect(fireEvent.touchMove(track, { touches: [{ clientX: 206, clientY: 302 }] })).toBe(true)
+    fireEvent.touchEnd(track, { changedTouches: [{ clientX: 206, clientY: 302 }] })
+
+    fireEvent.touchStart(track, { touches: [{ clientX: 200, clientY: 300 }] })
+    expect(fireEvent.touchMove(track, { touches: [{ clientX: 202, clientY: 306 }] })).toBe(false)
+  })
 })

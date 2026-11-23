@@ -109,8 +109,9 @@ export function useTabSwipe(ref: RefObject<HTMLElement | null>, enabled: boolean
       const dy = last.y - start.y
       const canPull = atTop && handlersRef.current.onPull !== undefined
       if (lock === null) {
-        // At the top there is nothing to scroll up to, so block the native bounce before the lock decides.
-        if (canPull && dy > 0 && event.cancelable) event.preventDefault()
+        // At the top there is nothing to scroll up to, so block the native bounce before the lock decides,
+        // but only while the move is mostly downward: an early sideways move may still become a scroll or swipe.
+        if (canPull && dy > Math.abs(dx) && event.cancelable) event.preventDefault()
         const next = lockFor(dx, dy)
         if (next === null) return
         lock = next === 'horizontal' ? 'horizontal' : canPull && dy > 0 ? 'pull' : 'ignored'
