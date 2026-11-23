@@ -76,7 +76,7 @@ export function AccountPage() {
       <h1 className={`${pageTitle} mb-5`}>Account</h1>
       <div className={`${card} mb-4 flex items-center gap-4`}>
         <span aria-hidden="true"
-          className="flex h-12 w-12 flex-none items-center justify-center rounded-full bg-linear-to-br from-accent to-[#bf5af2] text-lg font-bold text-white">
+          className="flex h-12 w-12 flex-none items-center justify-center rounded-full bg-accent text-lg font-bold text-bg">
           {me?.username.charAt(0).toUpperCase()}
         </span>
         <div className="min-w-0">

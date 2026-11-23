@@ -43,7 +43,7 @@ export function Shell() {
         </nav>
         <div className="mt-auto flex items-center gap-3 rounded-2xl bg-card p-3">
           <span aria-hidden="true"
-            className="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-linear-to-br from-accent to-[#bf5af2] text-sm font-bold text-white">
+            className="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-accent text-sm font-bold text-bg">
             {me?.username.charAt(0).toUpperCase()}
           </span>
           <span className="min-w-0">

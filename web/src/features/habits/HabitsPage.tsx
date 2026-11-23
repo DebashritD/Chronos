@@ -123,7 +123,7 @@ export function HabitsPage() {
         <h1 className={pageTitle}>Habits</h1>
         {!creating && (
           <button type="button" aria-label="New habit" onClick={() => setCreating(true)}
-            className="fixed right-5 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-10 flex h-14 w-14 items-center justify-center rounded-full bg-accent text-bg shadow-lg shadow-accent/30 md:static md:h-auto md:w-auto md:gap-2 md:rounded-[14px] md:px-4 md:py-2.5 md:text-sm md:font-semibold md:shadow-none">
+            className="fixed right-5 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-10 flex h-14 w-14 items-center justify-center rounded-full bg-accent text-bg shadow-lg shadow-black/40 md:static md:h-auto md:w-auto md:gap-2 md:rounded-[14px] md:px-4 md:py-2.5 md:text-sm md:font-semibold md:shadow-none">
             <Plus size={24} strokeWidth={2.5} aria-hidden="true" />
             <span className="hidden md:inline">New habit</span>
           </button>

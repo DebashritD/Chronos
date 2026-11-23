@@ -3,21 +3,21 @@
 /* UI v2 design tokens (dark only). `surface` is the raised "card2" tone and `muted` the secondary text, so the
    copied WakingNotice (bg-surface / text-muted) matches without changes. */
 @theme {
-  --color-bg: #0a0a0f;
-  --color-card: #15151d;
-  --color-surface: #1c1c26;
+  --color-bg: #0a0d14;
+  --color-card: #10141d;
+  --color-surface: #131824;
   --color-line: rgb(255 255 255 / 0.06);
-  --color-fg: #f4f4f7;
-  --color-muted: #8e8e9a;
+  --color-fg: #e9edf3;
+  --color-muted: #8891a1;
   /* Tertiary text; still ≥4.5:1 on surface */
-  --color-dim: #848492;
-  --color-accent: #7c8cff;
+  --color-dim: #7d8698;
+  --color-accent: #5ab9fc;
   --color-urgent: #ff9f0a;
-  --color-outline: #34343f;
+  --color-outline: #2a3140;
   --color-cell-green: #30d158;
   --color-cell-yellow: #ffd60a;
   --color-cell-red: #ff453a;
-  --color-cell-grey: #2c2c36;
+  --color-cell-grey: #232a37;
   /* Month daily-score scale, red → green */
   --color-score-0: #ff453a;
   --color-score-1: #ff8a3d;
@@ -56,7 +56,7 @@ h1, h2, h3 {
 
 /* PAUSED cells: diagonal hatching */
 .cell-paused {
-  background: repeating-linear-gradient(135deg, #26262f 0 4px, #1a1a22 4px 8px);
+  background: repeating-linear-gradient(135deg, #232a37 0 4px, #161b26 4px 8px);
 }
 
 /* The app logo: a rounded tile with a red → yellow → green → accent sweep */
