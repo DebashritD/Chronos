@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router'
 import { MOBILE_QUERY, REDUCED_MOTION_QUERY, useMediaQuery } from '../lib/useMediaQuery'
 import { renderTabPage } from './tabPages'
@@ -22,10 +22,17 @@ export function SwipeTabs() {
   const [neighbour, setNeighbour] = useState<Neighbour | null>(null)
   const settling = useRef(false)
   const snapTimer = useRef<number | undefined>(undefined)
+  const commitTimer = useRef<number | undefined>(undefined)
   const scrollOnArrive = useRef(false)
 
   // A committed swipe lands here: reset the track before the new page paints.
+  // Any other route change (a tab tap mid-settle) cancels the pending swipe.
   useLayoutEffect(() => {
+    if (commitTimer.current !== undefined) {
+      window.clearTimeout(commitTimer.current)
+      commitTimer.current = undefined
+      setNeighbour(null)
+    }
     const track = trackRef.current
     if (track) {
       track.style.transition = ''
@@ -38,6 +45,11 @@ export function SwipeTabs() {
       window.scrollTo(0, 0)
     }
   }, [pathname])
+
+  useEffect(() => () => {
+    window.clearTimeout(snapTimer.current)
+    window.clearTimeout(commitTimer.current)
+  }, [])
 
   function moveTrack(x: number, ms = 0): void {
     const track = trackRef.current
@@ -68,6 +80,7 @@ export function SwipeTabs() {
         return
       }
       settling.current = true
+      window.clearTimeout(snapTimer.current)
       const to = TABS[index + (decision === 'next' ? 1 : -1)].to
       const track = trackRef.current
       if (reduced && track) {
@@ -76,8 +89,10 @@ export function SwipeTabs() {
       } else {
         moveTrack(decision === 'next' ? -window.innerWidth : window.innerWidth, SETTLE_MS)
       }
-      window.setTimeout(() => {
+      commitTimer.current = window.setTimeout(() => {
+        commitTimer.current = undefined
         scrollOnArrive.current = true
+        setNeighbour(null)
         navigate(to)
       }, reduced ? FADE_MS : SETTLE_MS)
     },

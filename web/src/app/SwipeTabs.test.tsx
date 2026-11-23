@@ -1,7 +1,7 @@
 import { QueryClientProvider } from '@tanstack/react-query'
-import { render, screen, waitFor } from '@testing-library/react'
+import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
-import { MemoryRouter, Route, Routes } from 'react-router'
+import { Link, MemoryRouter, Route, Routes } from 'react-router'
 import { createQueryClient } from '../api/queryClient'
 import { drag, pause, stubMedia, useFakeSwipeClock } from '../test/touch'
 import { LocationDisplay } from '../test/utils'
@@ -25,6 +25,8 @@ function renderTabs(route = '/') {
           </Route>
         </Routes>
         <LocationDisplay />
+        <Link to="/">Go Today</Link>
+        <Link to="/habits">Go Habits</Link>
       </MemoryRouter>
     </QueryClientProvider>,
   )
@@ -64,6 +66,24 @@ describe('tab swipe', () => {
     renderTabs('/progress')
     drag(screen.getByText('Progress page'), [100, 400], [300, 400])
     await waitFor(() => expect(location()).toHaveTextContent(/^\/$/))
+  })
+
+  test('the neighbour is gone after a committed swipe and a return', async () => {
+    renderTabs('/')
+    drag(screen.getByText('Today page'), [300, 400], [100, 400])
+    await waitFor(() => expect(location()).toHaveTextContent('/progress'))
+    fireEvent.click(screen.getByText('Go Today'))
+    await waitFor(() => expect(location()).toHaveTextContent(/^\/$/))
+    expect(screen.queryByText('Neighbour /progress')).not.toBeInTheDocument()
+  })
+
+  test('a tab tap during the settle wins over the swipe', async () => {
+    renderTabs('/')
+    drag(screen.getByText('Today page'), [300, 400], [100, 400])
+    fireEvent.click(screen.getByText('Go Habits'))
+    await pause(SETTLE_MS + 50)
+    expect(location()).toHaveTextContent('/habits')
+    expect(screen.getByText('Habits page')).toBeInTheDocument()
   })
 
   test('shows the neighbour while dragging', () => {
