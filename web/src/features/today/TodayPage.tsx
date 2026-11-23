@@ -45,7 +45,14 @@ export function TodayPage() {
     }
   }, [closesAt, now, queryClient])
 
-  if (week.isPending) return <p className="text-muted">Loading…</p>
+  if (week.isPending) {
+    return (
+      <div>
+        <p className="text-muted">Loading…</p>
+        <SyncStatus className="mt-1" />
+      </div>
+    )
+  }
   if (week.isError) return <p role="alert" className="text-cell-red">Couldn't load today.</p>
 
   // After midnight with no fresh week (offline), today's periods are derived on the device.

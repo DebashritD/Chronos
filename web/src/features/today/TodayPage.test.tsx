@@ -317,6 +317,14 @@ describe('TodayPage', () => {
     await waitFor(() => expect(requests(fetchMock).some((r) => r.method === 'PUT')).toBe(true))
   })
 
+  it('says it is offline while a never-loaded week waits for the connection', async () => {
+    stubApi(() => undefined)
+    onlineManager.setOnline(false)
+    renderWithProviders(<TodayPage />)
+    expect(await screen.findByText('Offline')).toBeInTheDocument()
+    expect(screen.getByText('Loading…')).toBeInTheDocument()
+  })
+
   it('celebrates when everything is marked', async () => {
     const allDone: WeekView = {
       ...week,

@@ -7,13 +7,13 @@ export function syncStatusText(online: boolean, pending: number): string | null 
   return pending > 0 ? `Offline · ${pending} waiting to sync` : 'Offline'
 }
 
-/** Dim line under the page date; hidden when online with nothing queued. */
-export function SyncStatus() {
+/** Dim line under the page date; hidden when online with nothing queued. `className` sets its spacing. */
+export function SyncStatus({ className = '-mt-4 mb-4' }: { className?: string }) {
   const online = useOnline()
   const pending = useMutationState({ filters: { mutationKey: CHECK_IN_KEY, status: 'pending' } }).length
   const text = syncStatusText(online, pending)
   if (text === null) return null
-  return <p className="-mt-4 mb-4 text-[13px] text-dim">{text}</p>
+  return <p className={`${className} text-[13px] text-dim`}>{text}</p>
 }
 
 export default SyncStatus
