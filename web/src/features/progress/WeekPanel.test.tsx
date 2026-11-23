@@ -86,6 +86,17 @@ describe('WeekPanel', () => {
     expect(screen.getByRole('button', { name: /^Read, Tue/ })).not.toHaveAttribute('aria-current')
   })
 
+  it('draws each day as a thin pill inside a tappable cell', async () => {
+    api()
+    renderWithProviders(<WeekPanel />, { route: '/progress' })
+
+    const cell = await screen.findByRole('button', { name: 'Read, Mon 16 Nov, Target hit' })
+    expect(cell).toHaveClass('h-7')
+    expect(cell).not.toHaveClass('bg-cell-green')
+    expect(cell.querySelector('[data-pill]')).toHaveClass('h-2', 'rounded-full', 'bg-cell-green')
+    expect(screen.getByRole('button', { name: /^Piano/ }).querySelector('[data-pill]')).toHaveClass('border-outline')
+  })
+
   it('saves a color with a note', async () => {
     const fetchMock = api((r) => (r.method === 'PUT' ? jsonResponse({ periodStart: '2026-11-18', color: 'GREEN', note: 'ch 4' }) : undefined))
     const { user } = renderWithProviders(<WeekPanel />, { route: '/progress' })

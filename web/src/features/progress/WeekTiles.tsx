@@ -5,9 +5,9 @@ import { addDays, dayOfMonth, WEEKDAYS } from '../../lib/dates'
 import { WeekCellButton } from './WeekCellButton'
 import { subtitle, weekSegments } from './weekLayout'
 
-const tile = 'rounded-card border border-line bg-card p-4'
+const tile = 'rounded-card border border-line bg-card px-4 py-3'
 const days = 'grid grid-cols-7 gap-1.5'
-const cellHeight = 'h-10 md:h-11'
+const cellHeight = 'h-7'
 
 interface WeekTilesProps {
   start: string
@@ -17,7 +17,7 @@ interface WeekTilesProps {
   onPick(habit: WeekHabit, cell: WeekCell): void
 }
 
-/** Progress week: a shared Mon–Sun header, then one tile per habit with its full name above a full-width tracker. */
+/** Progress week: a shared Mon–Sun header, then one compact tile per habit, with its name above a thin strip of day pills. */
 export function WeekTiles({ start, today, habits, streakOf, onPick }: WeekTilesProps) {
   return (
     <div className="flex flex-col gap-3">
@@ -45,10 +45,10 @@ export function WeekTiles({ start, today, habits, streakOf, onPick }: WeekTilesP
           const streak = streakOf(habit.id)
           return (
             <li key={habit.id} aria-label={habit.name} className={tile}>
-              <div className="mb-3 flex items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <h3 className="text-[16px] leading-snug font-semibold break-words text-fg">{habit.name}</h3>
-                  {sub && <p className="mt-0.5 text-[12px] text-dim first-letter:uppercase">{sub}</p>}
+              <div className="flex items-baseline justify-between gap-3">
+                <div className="min-w-0 break-words">
+                  <h3 className="inline text-[16px] leading-snug font-semibold text-fg">{habit.name}</h3>
+                  {sub && <span className="ml-1.5 text-[12px] text-dim">{sub}</span>}
                 </div>
                 {streak !== undefined && streak > 0 && (
                   <span className="flex flex-none items-center gap-1 font-display text-[14px] font-semibold text-fg">
@@ -58,14 +58,16 @@ export function WeekTiles({ start, today, habits, streakOf, onPick }: WeekTilesP
                   </span>
                 )}
               </div>
-              <div className={days}>
+              <div className={`${days} mt-2`}>
                 {weekSegments(habit, start).map(({ col, span, cell, from, to }) => (
                   <div key={col} style={{ gridColumn: `${col + 1} / span ${span}` }}>
                     {cell ? (
                       <WeekCellButton habit={habit} cell={cell} isToday={from <= today && today <= to} onPick={onPick}
-                        shape={cellHeight} />
+                        shape={cellHeight} pill />
                     ) : (
-                      <span aria-hidden="true" className={`block rounded-cell ${cellHeight} ${cellClass('NOT_DUE')}`} />
+                      <span aria-hidden="true" className={`flex items-center ${cellHeight}`}>
+                        <span className={`block h-2 w-full rounded-full ${cellClass('NOT_DUE')}`} />
+                      </span>
                     )}
                   </div>
                 ))}
