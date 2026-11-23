@@ -33,7 +33,7 @@ down on Today and Progress to refresh.
   `input[type=range]`; a dialog is open (any `[aria-modal="true"]` element in the document); or the touch starts within 16px of the left or right screen edge (reserved
   for the browser's back gesture).
 - **Reduced motion:** with `prefers-reduced-motion: reduce`, the page does not follow the finger. A committed swipe
-  switches tabs with a 150 ms opacity fade instead of a slide.
+  switches tabs at once, with no slide or fade.
 - Tapping tabs works exactly as today.
 
 ## Architecture

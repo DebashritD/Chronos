@@ -8,7 +8,6 @@ import { TABS, tabIndex } from './tabs'
 import { dragOffset, releaseDecision, useTabSwipe } from './useTabSwipe'
 
 export const SETTLE_MS = 250
-export const FADE_MS = 150
 const PULL_PATHS = new Set(['/', '/progress'])
 
 interface Neighbour { from: string; dir: 1 | -1; top: number }
@@ -42,7 +41,6 @@ export function SwipeTabs() {
     if (track) {
       track.style.transition = ''
       track.style.transform = ''
-      track.style.opacity = ''
     }
     settling.current = false
     if (scrollOnArrive.current) {
@@ -84,22 +82,22 @@ export function SwipeTabs() {
         snapTimer.current = window.setTimeout(() => setNeighbour(null), SETTLE_MS)
         return
       }
-      settling.current = true
       window.clearTimeout(snapTimer.current)
       const to = TABS[index + (decision === 'next' ? 1 : -1)].to
-      const track = trackRef.current
-      if (reduced && track) {
-        track.style.transition = `opacity ${FADE_MS}ms ease-out`
-        track.style.opacity = '0'
-      } else {
-        moveTrack(decision === 'next' ? -window.innerWidth : window.innerWidth, SETTLE_MS)
+      // Reduced motion switches at once; the global reduced-motion CSS would turn any fade into a blank pause.
+      if (reduced) {
+        scrollOnArrive.current = true
+        navigate(to)
+        return
       }
+      settling.current = true
+      moveTrack(decision === 'next' ? -window.innerWidth : window.innerWidth, SETTLE_MS)
       commitTimer.current = window.setTimeout(() => {
         commitTimer.current = undefined
         scrollOnArrive.current = true
         setNeighbour(null)
         navigate(to)
-      }, reduced ? FADE_MS : SETTLE_MS)
+      }, SETTLE_MS)
     },
     onPull: pulls ? (dy) => pullRef.current?.move(dy) : undefined,
     onPullEnd: pulls ? (dy) => pullRef.current?.release(dy) : undefined,

@@ -153,12 +153,13 @@ describe('tab swipe', () => {
     expect(location()).toHaveTextContent('/nope')
   })
 
-  test('with reduced motion, a committed swipe still switches tabs', async () => {
+  test('with reduced motion, a committed swipe switches tabs at once with no fade', () => {
     stubMedia({ reduced: true })
     renderTabs('/')
     drag(screen.getByText('Today page'), [300, 400], [100, 400])
     expect(screen.queryByText('Neighbour /progress')).not.toBeInTheDocument()
-    await waitFor(() => expect(location()).toHaveTextContent('/progress'))
+    expect(location()).toHaveTextContent('/progress')
+    expect(screen.getByText('Progress page').closest('[style]')).toBeNull()
   })
 })
 
