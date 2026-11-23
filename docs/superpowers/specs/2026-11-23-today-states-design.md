@@ -60,7 +60,7 @@ From `earliest`: under 1h `{m}m left`; under 1 day `{h}h left`; else `{d}d left`
 
 - `web/src/features/today/todaySummary.ts`: pure `todaySummary(items, now, streakOf): Summary` returning
   `{ headline, line, tone: 'default' | 'green', countdown: { text, urgent } | null, segments: CellState[], label }`.
-- `web/src/features/today/TodaySummary.tsx`: renders it.
+- `web/src/features/today/TodaySummaryView.tsx`: renders it.
 - `TodayPage.tsx`: drops `encouragement` and the ring card; renders `<TodaySummary …/>`.
 
 ## Testing

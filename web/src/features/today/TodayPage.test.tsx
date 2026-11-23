@@ -104,8 +104,11 @@ describe('TodayPage', () => {
 
     expect(await screen.findByRole('heading', { level: 1, name: 'Today' })).toBeInTheDocument()
     expect(screen.getByText('Wednesday, 18 Nov')).toBeInTheDocument()
-    expect(screen.getByRole('img', { name: '1 of 5 marked (1 target)' })).toBeInTheDocument()
-    expect(screen.getByText('4 habits left today. Even the minimum counts.')).toBeInTheDocument()
+    const progress = screen.getByRole('region', { name: "Today's progress" })
+    expect(within(progress).getByRole('heading', { name: 'Good start' })).toBeInTheDocument()
+    expect(within(progress).getByText('1 of 5 marked. 4 to go.')).toBeInTheDocument()
+    expect(within(progress).getByText('12h left')).toBeInTheDocument()
+    expect(within(progress).getByRole('img', { name: '1 of 5 marked: 1 target' })).toBeInTheDocument()
     const names = screen.getAllByRole('article').map((article) => within(article).getByRole('heading').textContent)
     expect(names).toEqual(['Read', 'Run', 'Piano', 'Stretch', 'Swim'])
 
@@ -300,8 +303,8 @@ describe('TodayPage', () => {
     api(undefined, allDone)
     renderWithProviders(<TodayPage />)
 
-    expect(await screen.findByRole('img', { name: '1 of 1 marked (1 target)' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'All done' })).toBeInTheDocument()
+    expect(await screen.findByRole('img', { name: '1 of 1 marked: 1 target' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'All green' })).toBeInTheDocument()
   })
 
   it('answers a miss with a kind word instead of the pop', async () => {

@@ -235,7 +235,7 @@ export function todaySummary(items: TodayItem[], now: Date, streakOf: (habitId: 
 ### Task 2: Borderless `TodaySummary` on the Today page
 
 **Files:**
-- Create: `web/src/features/today/TodaySummary.tsx`
+- Create: `web/src/features/today/TodaySummaryView.tsx`
 - Modify: `web/src/features/today/TodayPage.tsx` (remove `encouragement`, the ring `<section>`, `ProgressRing` import, `marks`/`marked`/`count`)
 - Delete: `web/src/features/today/ProgressRing.tsx`
 - Test: `web/src/features/today/TodayPage.test.tsx`
@@ -264,7 +264,7 @@ export function todaySummary(items: TodayItem[], now: Date, streakOf: (habitId: 
 
 - [ ] **Step 2: Run** `npx vitest run src/features/today/TodayPage.test.tsx` — expect those two tests to FAIL.
 
-- [ ] **Step 3: Create** `web/src/features/today/TodaySummary.tsx`:
+- [ ] **Step 3: Create** `web/src/features/today/TodaySummaryView.tsx`:
 
 ```tsx
 import type { CellState } from '../../api/types'
@@ -303,7 +303,7 @@ export function TodaySummary({ summary }: { summary: Summary }) {
 - [ ] **Step 4: Wire into `TodayPage.tsx`:**
   - Delete the `encouragement` function and the `import { ProgressRing } from './ProgressRing'` line; delete the
     now-unused `Color` and `isColor` imports if nothing else uses them.
-  - Add imports: `import { TodaySummary } from './TodaySummary'` and `import { todaySummary } from './todaySummary'`.
+  - Add imports: `import { TodaySummary } from './TodaySummaryView'` and `import { todaySummary } from './todaySummary'`.
   - Replace the lines from `const count = …` through `const streakFor = …` with:
     ```ts
     const streakFor = (habitId: number) => streaks.data?.find((s) => s.habitId === habitId)

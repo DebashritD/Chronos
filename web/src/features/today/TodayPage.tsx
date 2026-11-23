@@ -1,8 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query'
-import type { Color } from '../../api/types'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router'
-import { isColor } from '../../lib/cells'
 import { formatLongDay } from '../../lib/dates'
 import { atYellowLimit } from '../../lib/yellowLimit'
 import { useNow } from '../../lib/useNow'
@@ -13,15 +11,9 @@ import { WeekGrid } from '../progress/WeekGrid'
 import { useStreaks, useWeek } from '../stats/api'
 import { StreakList } from '../stats/StreakList'
 import { HabitCard } from './HabitCard'
-import { ProgressRing } from './ProgressRing'
 import { todayItems, type TodayItem } from './todayItems'
-
-function encouragement(total: number, left: number, missed: number): [string, string] {
-  if (total === 0) return ['Nothing due today', 'Enjoy the break.']
-  if (left === 0 && missed > 0) return ['All marked', 'Honest marks, every one. Tomorrow starts fresh.']
-  if (left === 0) return ['All done', 'Every habit is off red today. Nice work.']
-  return ['Keep it off red', `${left} ${left === 1 ? 'habit' : 'habits'} left today. Even the minimum counts.`]
-}
+import { TodaySummary } from './TodaySummaryView'
+import { todaySummary } from './todaySummary'
 
 /** Home: today's habits from the current week view, plus (desktop) the week grid and streaks. */
 export function TodayPage() {
@@ -52,11 +44,8 @@ export function TodayPage() {
 
   const data = week.data
   const items = todayItems(data)
-  const count = (color: Color) => items.filter(({ cell }) => cell.state === color).length
-  const marks = { green: count('GREEN'), yellow: count('YELLOW'), red: count('RED') }
-  const marked = items.filter(({ cell }) => isColor(cell.state)).length
-  const [headline, message] = encouragement(items.length, items.length - marked, marks.red)
   const streakFor = (habitId: number) => streaks.data?.find((s) => s.habitId === habitId)
+  const summary = todaySummary(items, now, (habitId) => streakFor(habitId)?.current)
 
   return (
     <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-8">
@@ -70,14 +59,7 @@ export function TodayPage() {
           </EmptyState>
         ) : (
           <>
-            <section aria-label="Today's progress"
-              className="mb-4 flex items-center gap-4 rounded-card border border-line bg-card px-4 py-3.5">
-              <ProgressRing {...marks} total={items.length} />
-              <div className="min-w-0">
-                <h2 className="text-[17px] font-bold text-fg">{headline}</h2>
-                <p className="mt-0.5 text-[14px] leading-snug text-muted">{message}</p>
-              </div>
-            </section>
+            <TodaySummary summary={summary} />
             <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
               {items.map((item) => {
                 const s = streakFor(item.habit.id)
