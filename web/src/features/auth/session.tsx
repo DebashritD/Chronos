@@ -4,8 +4,12 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from '
 import { useNavigate } from 'react-router'
 import { api, clearCsrf } from '../../api/client'
 import { ApiError } from '../../api/errors'
+import { clearPersistedCache } from '../../api/persist'
 import { setQueryErrorHandler } from '../../api/queryErrorBridge'
 import type { Me } from '../../api/types'
+import { clearStoredMe, readStoredMe, storeMe } from '../../lib/storedMe'
+import { authRestored } from '../checkin/authGate'
+import { discardCheckIns } from '../checkin/queue'
 
 interface SessionValue {
   me: Me | null
@@ -41,10 +45,13 @@ export function SessionProvider({ children, initialMe }: { children: ReactNode; 
     api
       .get<Me>('/api/auth/me')
       .then((result) => {
-        if (!cancelled) setMeState(result)
+        if (cancelled) return
+        storeMe(result)
+        setMeState(result)
       })
-      .catch(() => {
-        if (!cancelled) setMeState(null)
+      .catch((error: unknown) => {
+        // Offline (no ApiError): carry on as the saved user. A 401 still signs out.
+        if (!cancelled) setMeState(error instanceof ApiError ? null : readStoredMe())
       })
       .finally(() => {
         if (!cancelled) setChecking(false)
@@ -58,22 +65,27 @@ export function SessionProvider({ children, initialMe }: { children: ReactNode; 
     setQueryErrorHandler((err: unknown) => {
       if (err instanceof ApiError && err.status === 401) {
         setMeState(null)
-        queryClient.clear()
+        // Queries only: queued check-ins wait for the same user to sign back in.
+        queryClient.getQueryCache().clear()
       }
     })
     return () => setQueryErrorHandler(null)
   }, [queryClient])
 
-  async function login(username: string, password: string): Promise<void> {
-    const result = await api.post<Me>('/api/auth/login', { username, password })
-    queryClient.clear()
+  function signedIn(result: Me): void {
+    queryClient.getQueryCache().clear()
+    if (readStoredMe()?.username === result.username) authRestored()
+    else discardCheckIns(queryClient)
+    storeMe(result)
     setMeState(result)
   }
 
+  async function login(username: string, password: string): Promise<void> {
+    signedIn(await api.post<Me>('/api/auth/login', { username, password }))
+  }
+
   async function signup(username: string, password: string): Promise<void> {
-    const result = await api.post<Me>('/api/auth/signup', { username, password, timezone: browserTimezone() })
-    queryClient.clear()
-    setMeState(result)
+    signedIn(await api.post<Me>('/api/auth/signup', { username, password, timezone: browserTimezone() }))
   }
 
   async function logout(): Promise<void> {
@@ -83,14 +95,22 @@ export function SessionProvider({ children, initialMe }: { children: ReactNode; 
       // Sign out locally even if the request failed.
     } finally {
       clearCsrf()
+      discardCheckIns(queryClient)
       queryClient.clear()
+      clearStoredMe()
+      void clearPersistedCache()
       setMeState(null)
       navigate('/login')
     }
   }
 
+  function setMe(next: Me): void {
+    storeMe(next)
+    setMeState(next)
+  }
+
   return (
-    <SessionContext.Provider value={{ me, checking, login, signup, logout, setMe: setMeState }}>
+    <SessionContext.Provider value={{ me, checking, login, signup, logout, setMe }}>
       {children}
     </SessionContext.Provider>
   )
