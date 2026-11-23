@@ -1,4 +1,4 @@
-import { useQueryClient } from '@tanstack/react-query'
+import { useIsMutating, useQueryClient } from '@tanstack/react-query'
 import { LogOut } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
 import { api } from '../../api/client'
@@ -6,6 +6,7 @@ import { messageFor } from '../../api/errors'
 import type { Me } from '../../api/types'
 import { card, cardTitle, inputClass, pageTitle, primaryButton, secondaryButton } from '../../lib/ui'
 import { browserTimezone, useSession } from '../auth/session'
+import { CHECK_IN_KEY } from '../checkin/queue'
 
 type Feedback = { kind: 'ok' | 'error'; text: string } | null
 
@@ -21,8 +22,14 @@ function timezones(): string[] {
   return typeof Intl.supportedValuesOf === 'function' ? Intl.supportedValuesOf('timeZone') : []
 }
 
+export function unsyncedMarksCopy(count: number): string {
+  return count === 1 ? '1 mark hasn’t synced. Log out anyway?' : `${count} marks haven’t synced. Log out anyway?`
+}
+
 export function AccountPage() {
   const { me, setMe, logout } = useSession()
+  const unsynced = useIsMutating({ mutationKey: CHECK_IN_KEY })
+  const [confirmingLogout, setConfirmingLogout] = useState(false)
   const queryClient = useQueryClient()
   const [timezone, setTimezone] = useState(me?.timezone ?? '')
   const [tzFeedback, setTzFeedback] = useState<Feedback>(null)
@@ -125,11 +132,33 @@ export function AccountPage() {
         <button type="submit" className={primaryButton}>Change password</button>
         <FeedbackLine feedback={pwFeedback} />
       </form>
-      <button type="button" onClick={() => void logout()}
+      <button type="button" onClick={() => (unsynced > 0 ? setConfirmingLogout(true) : void logout())}
         className="flex w-full items-center justify-center gap-2 rounded-[14px] border border-line bg-card px-4 py-3 text-[15px] font-semibold text-cell-red">
         <LogOut size={18} aria-hidden="true" />
         Log out
       </button>
+      {confirmingLogout && (
+        <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/60 px-6 backdrop-blur-sm"
+          onKeyDown={(event) => {
+            if (event.key === 'Escape') setConfirmingLogout(false)
+          }}>
+          <div role="alertdialog" aria-modal="true" aria-labelledby="logout-unsynced"
+            className="w-full max-w-sm rounded-[28px] border border-line bg-card p-6 text-center">
+            <p id="logout-unsynced" className="text-[17px] font-semibold text-fg">{unsyncedMarksCopy(Math.max(unsynced, 1))}</p>
+            <div className="mt-5 flex gap-3">
+              <button type="button" autoFocus onClick={() => setConfirmingLogout(false)} className={`${secondaryButton} flex-1`}>
+                Cancel
+              </button>
+              <button type="button" onClick={() => {
+                setConfirmingLogout(false)
+                void logout()
+              }} className={`${primaryButton} flex-1`}>
+                Log out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </section>
   )
 }

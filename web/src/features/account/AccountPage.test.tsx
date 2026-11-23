@@ -1,11 +1,45 @@
-import { screen } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { MutationObserver, onlineManager } from '@tanstack/react-query'
+import { screen, within } from '@testing-library/react'
+import { afterEach, describe, expect, it } from 'vitest'
 import { browserTimezone } from '../auth/session'
+import type { CheckInVars } from '../checkin/patchWeek'
+import { CHECK_IN_KEY } from '../checkin/queue'
 import { jsonResponse, problemResponse, requests, stubApi } from '../../test/http'
 import { renderWithProviders } from '../../test/utils'
-import { AccountPage } from './AccountPage'
+import { AccountPage, unsyncedMarksCopy } from './AccountPage'
 
 describe('AccountPage', () => {
+  afterEach(() => {
+    onlineManager.setOnline(true)
+  })
+
+  it('words the unsynced-marks question', () => {
+    expect(unsyncedMarksCopy(1)).toBe('1 mark hasn’t synced. Log out anyway?')
+    expect(unsyncedMarksCopy(3)).toBe('3 marks haven’t synced. Log out anyway?')
+  })
+
+  it('asks before logging out with marks still waiting to sync', async () => {
+    const fetchMock = stubApi(({ url }) => (url === '/api/auth/logout' ? new Response(null, { status: 200 }) : undefined))
+    const { queryClient, user } = renderWithProviders(<AccountPage />, { route: '/settings' })
+    onlineManager.setOnline(false)
+    for (const periodStart of ['2026-11-17', '2026-11-18']) {
+      void new MutationObserver<void, Error, CheckInVars>(queryClient, { mutationKey: CHECK_IN_KEY })
+        .mutate({ op: 'save', habitId: 1, periodStart, color: 'GREEN', note: null }).catch(() => undefined)
+    }
+
+    await user.click(screen.getByRole('button', { name: 'Log out' }))
+    const dialog = await screen.findByRole('alertdialog')
+    expect(dialog).toHaveTextContent('2 marks haven’t synced. Log out anyway?')
+
+    await user.click(within(dialog).getByRole('button', { name: 'Cancel' }))
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+    expect(requests(fetchMock)).not.toContainEqual(expect.objectContaining({ url: '/api/auth/logout' }))
+
+    await user.click(screen.getByRole('button', { name: 'Log out' }))
+    await user.click(within(await screen.findByRole('alertdialog')).getByRole('button', { name: 'Log out' }))
+    expect(await screen.findByTestId('location-display')).toHaveTextContent('/login')
+  })
+
   it('shows the account', () => {
     stubApi(() => undefined)
     renderWithProviders(<AccountPage />, { route: '/settings' })
