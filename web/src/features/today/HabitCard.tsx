@@ -35,11 +35,13 @@ interface HabitCardProps {
   /** Current streak, once the streaks query has loaded. */
   streak: number | undefined
   now: Date
+  /** N while this habit is at its yellow limit. */
+  yellowLimit?: number
   onOpen(): void
 }
 
 /** One habit on Today: tap Target / Minimum / Missed to save at once (keeping any note); tap the name for the picker. */
-export function HabitCard({ habit, cell, streak, now, onOpen }: HabitCardProps) {
+export function HabitCard({ habit, cell, streak, now, yellowLimit, onOpen }: HabitCardProps) {
   const saveCheckIn = useSaveCheckIn()
   const titleId = useId()
   const [error, setError] = useState<string | null>(null)
@@ -107,15 +109,20 @@ export function HabitCard({ habit, cell, streak, now, onOpen }: HabitCardProps) 
         })}
       </div>
       <div className="mt-3 flex items-center justify-between gap-3">
-        {timeLeft ? (
-          <span data-tone={tone}
-            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-semibold ${TONE_CLASS[tone]}`}>
-            <Clock size={13} aria-hidden="true" />
-            {timeLeft}
-          </span>
-        ) : (
-          <span />
-        )}
+        <span className="flex flex-wrap items-center gap-1.5">
+          {timeLeft && (
+            <span data-tone={tone}
+              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-semibold ${TONE_CLASS[tone]}`}>
+              <Clock size={13} aria-hidden="true" />
+              {timeLeft}
+            </span>
+          )}
+          {yellowLimit !== undefined && (
+            <span className="rounded-full bg-cell-yellow/15 px-2.5 py-1 text-[12px] font-semibold text-cell-yellow">
+              {yellowLimit}/{yellowLimit} yellows
+            </span>
+          )}
+        </span>
         {habit.frequency === 'DAILY' && (
           <span className="flex gap-1 md:hidden" aria-hidden="true">
             {habit.cells.map((c) => (

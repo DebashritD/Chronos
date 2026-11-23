@@ -310,4 +310,28 @@ describe('TodayPage', () => {
 
     expect(await screen.findByRole('link', { name: 'Create your first habit' })).toHaveAttribute('href', '/habits')
   })
+
+  it('warns when a yellow uses up the limit and badges the card', async () => {
+    let readRun = 1
+    api((r) => {
+      if (r.method === 'PUT') {
+        readRun = 2
+        return jsonResponse({ periodStart: '2026-11-18', color: 'YELLOW', note: 'ch 3' })
+      }
+      if (r.url === '/api/stats/streaks')
+        return jsonResponse([{ habitId: 1, name: 'Read', current: 3, best: 9, yellowRun: readRun, yellowLimit: 2 }])
+      return undefined
+    })
+    const { user } = renderWithProviders(<TodayPage />)
+
+    const read = await screen.findByRole('article', { name: 'Read' })
+    expect(within(read).queryByText('2/2 yellows')).not.toBeInTheDocument()
+    await user.click(within(read).getByRole('button', { name: 'Minimum' }))
+
+    const dialog = await screen.findByRole('alertdialog', { name: 'Yellow limit reached' })
+    expect(dialog).toHaveTextContent("You've hit 2 yellows in a row on Read. Next time go green, or the streak starts over.")
+    await user.click(within(dialog).getByRole('button', { name: 'Got it' }))
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+    expect(within(read).getByText('2/2 yellows')).toBeInTheDocument()
+  })
 })

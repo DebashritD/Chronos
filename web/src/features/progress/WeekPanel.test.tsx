@@ -153,4 +153,24 @@ describe('WeekPanel', () => {
 
     expect(await screen.findByRole('link', { name: 'Create your first habit' })).toHaveAttribute('href', '/habits')
   })
+
+  it('warns when a yellow saved from the grid uses up the limit', async () => {
+    let run = 1
+    api((r) => {
+      if (r.method === 'PUT') {
+        run = 2
+        return jsonResponse({ periodStart: '2026-11-18', color: 'YELLOW', note: null })
+      }
+      if (r.url === '/api/stats/streaks')
+        return jsonResponse([{ habitId: 1, name: 'Read', current: 3, best: 9, yellowRun: run, yellowLimit: 2 }])
+      return undefined
+    })
+    const { user } = renderWithProviders(<WeekPanel />, { route: '/progress' })
+
+    await user.click(await screen.findByRole('button', { name: 'Read, Wed 18 Nov, Not marked yet' }))
+    await user.click(screen.getByRole('button', { name: /^Minimum done/ }))
+    await user.click(screen.getByRole('button', { name: 'Save' }))
+
+    expect(await screen.findByRole('alertdialog', { name: 'Yellow limit reached' })).toBeInTheDocument()
+  })
 })

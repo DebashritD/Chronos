@@ -5,6 +5,7 @@ import userEvent from '@testing-library/user-event'
 import type { ReactElement } from 'react'
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router'
 import { createQueryClient } from '../api/queryClient'
+import { YellowLimitProvider } from '../app/YellowLimitProvider'
 import type { Me } from '../api/types'
 import { SessionProvider } from '../features/auth/session'
 
@@ -32,10 +33,12 @@ export function renderWithProviders(ui: ReactElement, options: Options = {}) {
     <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={[route]}>
         <SessionProvider initialMe={me === 'fetch' ? undefined : me}>
-          <Routes>
-            <Route path={path} element={ui} />
-            {path !== '*' && <Route path="*" element={<LocationDisplay />} />}
-          </Routes>
+          <YellowLimitProvider>
+            <Routes>
+              <Route path={path} element={ui} />
+              {path !== '*' && <Route path="*" element={<LocationDisplay />} />}
+            </Routes>
+          </YellowLimitProvider>
         </SessionProvider>
       </MemoryRouter>
     </QueryClientProvider>,

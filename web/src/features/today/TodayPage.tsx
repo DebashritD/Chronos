@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router'
 import { isColor } from '../../lib/cells'
 import { formatLongDay } from '../../lib/dates'
+import { atYellowLimit } from '../../lib/yellowLimit'
 import { useNow } from '../../lib/useNow'
 import { EmptyState } from '../../app/EmptyState'
 import { card, cardTitle, emptyAction, eyebrow, pageTitle } from '../../lib/ui'
@@ -51,7 +52,7 @@ export function TodayPage() {
   const items = todayItems(data)
   const done = items.filter(({ cell }) => isColor(cell.state)).length
   const [headline, message] = encouragement(items.length, items.length - done)
-  const streakOf = (habitId: number) => streaks.data?.find((streak) => streak.habitId === habitId)?.current
+  const streakFor = (habitId: number) => streaks.data?.find((s) => s.habitId === habitId)
 
   return (
     <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-8">
@@ -73,10 +74,13 @@ export function TodayPage() {
               </div>
             </section>
             <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
-              {items.map((item) => (
-                <HabitCard key={item.habit.id} habit={item.habit} cell={item.cell} streak={streakOf(item.habit.id)}
-                  now={now} onOpen={() => setPicked(item)} />
-              ))}
+              {items.map((item) => {
+                const s = streakFor(item.habit.id)
+                return (
+                  <HabitCard key={item.habit.id} habit={item.habit} cell={item.cell} streak={s?.current}
+                    yellowLimit={atYellowLimit(s) ? s.yellowLimit : undefined} now={now} onOpen={() => setPicked(item)} />
+                )
+              })}
             </div>
           </>
         )}
