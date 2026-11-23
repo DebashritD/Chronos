@@ -104,15 +104,16 @@ export function SwipeTabs() {
   })
 
   // One wrapper structure in every mode, so crossing the breakpoint never remounts the page.
-  // On desktop the wrappers are `display: contents` and leave the layout alone.
+  // On desktop the wrappers are `display: contents` and leave the layout alone. On a phone the clip box spans
+  // the full screen (cancelling main's px-5), so the page and its neighbour are only cut at the screen edges.
   const peer = enabled && neighbour && neighbour.from === pathname ? neighbour : null
   return (
     <>
-      <div className="max-md:flex max-md:flex-1 max-md:flex-col max-md:overflow-x-clip md:contents">
-        <div ref={trackRef} className="relative max-md:flex-1 md:contents">
+      <div className="max-md:-mx-5 max-md:flex max-md:flex-1 max-md:flex-col max-md:overflow-x-clip md:contents">
+        <div ref={trackRef} className="relative max-md:flex-1 max-md:px-5 md:contents">
           <Outlet />
           {peer && (
-            <div aria-hidden="true" inert className="absolute w-full"
+            <div aria-hidden="true" inert className="absolute w-full px-5"
               style={{ top: peer.top, left: peer.dir * window.innerWidth }}>
               <NeighbourContext value={true}>{renderTabPage(TABS[index + peer.dir].to)}</NeighbourContext>
             </div>
