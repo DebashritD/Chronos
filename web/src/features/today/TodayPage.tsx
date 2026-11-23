@@ -6,11 +6,14 @@ import { atYellowLimit } from '../../lib/yellowLimit'
 import { useNow } from '../../lib/useNow'
 import { EmptyState } from '../../app/EmptyState'
 import { card, cardTitle, emptyAction, pageTitle } from '../../lib/ui'
+import { browserTimezone, useSession } from '../auth/session'
 import { CellPicker } from '../checkin/CellPicker'
+import { useHabits } from '../habits/api'
 import { WeekGrid } from '../progress/WeekGrid'
 import { useStreaks, useWeek } from '../stats/api'
 import { StreakList } from '../stats/StreakList'
 import { HabitCard } from './HabitCard'
+import { localTodayWeek } from './localTodayWeek'
 import { todayItems, type TodayItem } from './todayItems'
 import { TodaySummary } from './TodaySummaryView'
 import { todaySummary } from './todaySummary'
@@ -19,6 +22,8 @@ import { todaySummary } from './todaySummary'
 export function TodayPage() {
   const week = useWeek()
   const streaks = useStreaks()
+  const habits = useHabits()
+  const { me } = useSession()
   const now = useNow()
   const [picked, setPicked] = useState<TodayItem | null>(null)
   const queryClient = useQueryClient()
@@ -42,7 +47,8 @@ export function TodayPage() {
   if (week.isPending) return <p className="text-muted">Loading…</p>
   if (week.isError) return <p role="alert" className="text-cell-red">Couldn't load today.</p>
 
-  const data = week.data
+  // After midnight with no fresh week (offline), today's periods are derived on the device.
+  const data = localTodayWeek(week.data, habits.data, me?.timezone ?? browserTimezone(), now)
   const items = todayItems(data)
   const streakFor = (habitId: number) => streaks.data?.find((s) => s.habitId === habitId)
   const summary = todaySummary(items, now, (habitId) => streakFor(habitId)?.current)

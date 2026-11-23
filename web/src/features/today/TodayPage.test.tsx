@@ -1,6 +1,6 @@
 import { act, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { CurrentPeriod, Streak, WeekCell, WeekView } from '../../api/types'
+import type { CurrentPeriod, Habit, Streak, WeekCell, WeekView } from '../../api/types'
 import { jsonResponse, problemResponse, requests, stubApi, type ApiRequest } from '../../test/http'
 import { renderWithProviders } from '../../test/utils'
 import { TodayPage } from './TodayPage'
@@ -406,5 +406,24 @@ describe('TodayPage', () => {
 
     expect(await screen.findByText('Fresh start on Stretch: that was yellow 3 in a row, so the streak is back to 1.')).toBeInTheDocument()
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+  })
+
+  it('moves on to today’s periods on the device when the saved week is from yesterday', async () => {
+    vi.setSystemTime(new Date('2026-11-19T06:30:00Z'))
+    const habits: Habit[] = [
+      { id: 1, name: 'Read', minText: '1 page', targetText: '20 pages', frequency: 'DAILY', startDate: '2026-11-01',
+        status: 'ACTIVE', yellowCap: true },
+      { id: 4, name: 'Meditate', minText: '1 min', targetText: '10 min', frequency: 'DAILY', startDate: '2026-11-01',
+        status: 'PAUSED', yellowCap: true },
+    ]
+    api((r) => (r.url === '/api/habits' ? jsonResponse(habits) : undefined))
+    renderWithProviders(<TodayPage />)
+
+    expect(await screen.findByText('Thursday, 19 Nov')).toBeInTheDocument()
+    const names = screen.getAllByRole('article').map((article) => within(article).getByRole('heading').textContent)
+    expect(names).toEqual(['Read'])
+    const read = screen.getByRole('article', { name: 'Read' })
+    expect(within(read).getByRole('button', { name: 'Target' })).toHaveAttribute('aria-pressed', 'false')
+    expect(chip(read)).toHaveTextContent('12h left today')
   })
 })
