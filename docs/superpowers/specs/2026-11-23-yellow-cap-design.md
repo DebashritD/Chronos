@@ -28,14 +28,14 @@ Migration `V2__yellow_cap.sql`:
 ## API
 - `GET/PUT /api/auth/me`: `Me` gains `maxYellows`; PUT accepts optional `maxYellows` (1–7, validated); omitted keeps the current value.
 - `POST /api/habits` and `PUT /api/habits/{id}`: optional `yellowCap` (default true on create; omitted on update keeps the current value). `HabitResponse` gains `yellowCap`.
-- `GET /api/stats/streaks`: `StreakResponse` gains `yellowRun` and `yellowCap`.
+- `GET /api/stats/streaks`: `StreakResponse` gains `yellowRun` and `yellowLimit` (N when the habit's cap is on, otherwise null).
 
 ## Web
 - **Account**: "Streak rules" card: number input "Yellows allowed in a row" (1–7), saved via `PUT /api/auth/me`.
 - **HabitForm** (create + edit): checkbox "Limit yellows in a row", default checked, hint "Up to N in a row keep your streak".
 - **Habits tile**: small chip "≤N yellows" when `yellowCap`.
-- **YellowLimitDialog** (shared): text "You've hit N yellows in a row on <habit>. Next time go green, or the streak starts over." with an OK button. Shown after a YELLOW save (Today card or Progress cell) when the refreshed streak has `yellowCap && yellowRun === N`.
-- **Today HabitCard**: amber badge "N/N yellows" while `yellowCap && yellowRun >= N`.
+- **YellowLimitDialog** (shared): text "You've hit N yellows in a row on <habit>. Next time go green, or the streak starts over." with an OK button. Shown after a YELLOW save (Today card or Progress cell) when the refreshed streak has `yellowLimit != null && yellowRun >= yellowLimit` and `yellowRun` changed with this save (re-saving a note on a yellow does not re-show it).
+- **Today HabitCard**: amber badge "N/N yellows" while `yellowLimit != null && yellowRun >= yellowLimit`.
 
 ## Testing
 - `HabitTimeline` unit tests: cap off unchanged; run ≤ N keeps streak; (N+1)th yellow → streak 1; green resets run; red resets both; paused period skipped.
