@@ -1,1 +1,9 @@
+// Maven Central rate-limits shared build IPs (HTTP 429 on Render), so read from Google's mirror first.
+pluginManagement {
+    repositories {
+        maven { url = 'https://maven-central.storage-download.googleapis.com/maven2/' }
+        gradlePluginPortal()
+    }
+}
+
 rootProject.name = 'api'
