@@ -17,14 +17,14 @@ Only `web/src/features/progress/WeekTiles.tsx` and `WeekCellButton.tsx` change. 
 
 - **Tile:** `rounded-card border border-line bg-card px-4 py-3`, replacing `p-4`.
 - **Name row:** the name in 16px semibold. The frequency label from `subtitle(habit)` ("every 3 days", "weekly") follows on the same line as 12px `text-dim`, starting with a lowercase letter. The 🔥 streak stays on the right, shown only when above 0, with no change.
-- **Strip:** sits `mt-2` below the name row and uses the same `grid grid-cols-7 gap-1.5` columns and the same `weekSegments` layout as today. Every-N-days and weekly periods still span their days.
-  - **Hit area:** each segment is a 28px-tall (`h-7`) block. When the segment has a cell, that block is the `WeekCellButton`.
+- **Strip:** sits `mt-1 -mb-1` below the name row and uses the same `grid grid-cols-7 gap-1.5` columns and the same `weekSegments` layout as today. Every-N-days and weekly periods still span their days.
+  - **Hit area:** each segment is a 24px-tall (`h-6`) block. When the segment has a cell, that block is the `WeekCellButton`.
   - **Pill:** an 8px-tall (`h-2`), fully rounded, vertically centred child inside the block. It carries `cellClass(state)`:
     - not marked yet: outlined
     - not due: transparent
     - paused: striped
     - green, yellow or red: solid colour
-  - **Segments with no cell:** a non-interactive `aria-hidden` 28px block holding an empty, not-due pill.
+  - **Segments with no cell:** a non-interactive `aria-hidden` 24px block holding an empty, not-due pill.
 - **Button behaviour:** `WeekCellButton` is also used by `WeekGrid` on Today, which must not change. It gains an optional `pill?: boolean` prop (default `false`).
   - **When `pill` is true:** the button stays transparent, and the `cellClass(state)` fill and rounding move to an inner `aria-hidden` pill span. `shape` sets the button's size, as it does today.
   - **Unchanged:** the `aria-label`, `aria-current="date"`, `disabled` and dimming rules. The dimming and the press feedback (`active:scale-95`) apply to the button.

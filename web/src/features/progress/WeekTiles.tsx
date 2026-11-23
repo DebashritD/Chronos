@@ -7,7 +7,7 @@ import { subtitle, weekSegments } from './weekLayout'
 
 const tile = 'rounded-card border border-line bg-card px-4 py-3'
 const days = 'grid grid-cols-7 gap-1.5'
-const cellHeight = 'h-7'
+const cellHeight = 'h-6'
 
 interface WeekTilesProps {
   start: string
@@ -21,7 +21,7 @@ interface WeekTilesProps {
 export function WeekTiles({ start, today, habits, streakOf, onPick }: WeekTilesProps) {
   return (
     <div className="flex flex-col gap-3">
-      {/* Every cell's label already names its day, so the header is visual only. Padding matches the tile (p-4 + border) so columns line up. */}
+      {/* Every cell's label already names its day, so the header is visual only. Padding matches the tile (px-4 + border) so columns line up. */}
       <div aria-hidden="true" className={`${days} px-[17px] text-center`}>
         {WEEKDAYS.map((weekday, i) => {
           const date = addDays(start, i)
@@ -58,7 +58,7 @@ export function WeekTiles({ start, today, habits, streakOf, onPick }: WeekTilesP
                   </span>
                 )}
               </div>
-              <div className={`${days} mt-2`}>
+              <div className={`${days} mt-1 -mb-1`}>
                 {weekSegments(habit, start).map(({ col, span, cell, from, to }) => (
                   <div key={col} style={{ gridColumn: `${col + 1} / span ${span}` }}>
                     {cell ? (

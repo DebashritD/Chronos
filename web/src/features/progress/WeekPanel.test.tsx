@@ -91,7 +91,7 @@ describe('WeekPanel', () => {
     renderWithProviders(<WeekPanel />, { route: '/progress' })
 
     const cell = await screen.findByRole('button', { name: 'Read, Mon 16 Nov, Target hit' })
-    expect(cell).toHaveClass('h-7')
+    expect(cell).toHaveClass('h-6', 'flex', 'items-center')
     expect(cell).not.toHaveClass('bg-cell-green')
     expect(cell.querySelector('[data-pill]')).toHaveClass('h-2', 'rounded-full', 'bg-cell-green')
     expect(screen.getByRole('button', { name: /^Piano/ }).querySelector('[data-pill]')).toHaveClass('border-outline')

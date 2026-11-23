@@ -23,7 +23,7 @@ export function WeekCellButton({ habit, cell, isToday, shape, pill = false, onPi
       aria-current={isToday ? 'date' : undefined}
       disabled={!cell.editable}
       onClick={() => onPick(habit, cell)}
-      className={`block w-full ${shape} ${pill ? 'flex items-center' : `rounded-cell ${fill}`} ${cell.editable ? 'cursor-pointer transition-transform active:scale-95' : cell.state === 'NOT_DUE' ? '' : 'opacity-50'}`}
+      className={`${pill ? 'flex w-full items-center' : `block w-full rounded-cell ${fill}`} ${shape} ${cell.editable ? 'cursor-pointer transition-transform active:scale-95' : cell.state === 'NOT_DUE' ? '' : 'opacity-50'}`}
     >
       {pill && <span aria-hidden="true" data-pill="" className={`block h-2 w-full rounded-full ${fill}`} />}
     </button>

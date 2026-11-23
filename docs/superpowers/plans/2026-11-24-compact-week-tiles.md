@@ -4,7 +4,7 @@
 
 **Goal:** On Progress → Week, shrink each habit tile to about half its height by drawing its days as a thin strip of 8px pills instead of 40px squares.
 
-**Architecture:** `WeekCellButton` gains an opt-in `pill` prop that draws the state colour on an inner 8px pill inside a 28px transparent button. `WeekTiles` uses it, tightens the tile padding, and puts the frequency label inline after the name. `WeekGrid` on Today doesn't pass `pill`, so it is unchanged.
+**Architecture:** `WeekCellButton` gains an opt-in `pill` prop that draws the state colour on an inner 8px pill inside a 24px (`h-6`) transparent button. `WeekTiles` uses it, tightens the tile padding, and puts the frequency label inline after the name. `WeekGrid` on Today doesn't pass `pill`, so it is unchanged.
 
 **Tech Stack:** React 19, TypeScript, Tailwind v4, Vitest + Testing Library.
 
@@ -38,7 +38,7 @@
     renderWithProviders(<WeekPanel />, { route: '/progress' })
 
     const cell = await screen.findByRole('button', { name: 'Read, Mon 16 Nov, Target hit' })
-    expect(cell).toHaveClass('h-7')
+    expect(cell).toHaveClass('h-6', 'flex', 'items-center')
     expect(cell).not.toHaveClass('bg-cell-green')
     expect(cell.querySelector('[data-pill]')).toHaveClass('h-2', 'rounded-full', 'bg-cell-green')
     expect(screen.getByRole('button', { name: /^Piano/ }).querySelector('[data-pill]')).toHaveClass('border-outline')
@@ -78,7 +78,7 @@ export function WeekCellButton({ habit, cell, isToday, shape, pill = false, onPi
       aria-current={isToday ? 'date' : undefined}
       disabled={!cell.editable}
       onClick={() => onPick(habit, cell)}
-      className={`block w-full ${shape} ${pill ? 'flex items-center' : `rounded-cell ${fill}`} ${cell.editable ? 'cursor-pointer transition-transform active:scale-95' : cell.state === 'NOT_DUE' ? '' : 'opacity-50'}`}
+      className={`${pill ? 'flex w-full items-center' : `block w-full rounded-cell ${fill}`} ${shape} ${cell.editable ? 'cursor-pointer transition-transform active:scale-95' : cell.state === 'NOT_DUE' ? '' : 'opacity-50'}`}
     >
       {pill && <span aria-hidden="true" data-pill="" className={`block h-2 w-full rounded-full ${fill}`} />}
     </button>
@@ -94,7 +94,7 @@ export default WeekCellButton
 ```tsx
 const tile = 'rounded-card border border-line bg-card px-4 py-3'
 const days = 'grid grid-cols-7 gap-1.5'
-const cellHeight = 'h-7'
+const cellHeight = 'h-6'
 ```
 
   - Replace the `<li>` body (from `<div className="mb-3 flex items-start justify-between gap-3">` through the closing `</div>` of the `days` grid) with:
@@ -113,7 +113,7 @@ const cellHeight = 'h-7'
                   </span>
                 )}
               </div>
-              <div className={`${days} mt-2`}>
+              <div className={`${days} mt-1 -mb-1`}>
                 {weekSegments(habit, start).map(({ col, span, cell, from, to }) => (
                   <div key={col} style={{ gridColumn: `${col + 1} / span ${span}` }}>
                     {cell ? (
