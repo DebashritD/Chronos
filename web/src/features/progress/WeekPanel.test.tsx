@@ -1,5 +1,6 @@
+import { onlineManager } from '@tanstack/react-query'
 import { screen, waitFor, within } from '@testing-library/react'
-import { describe, expect, it, vi } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import type { Streak, WeekCell, WeekView } from '../../api/types'
 import { jsonResponse, problemResponse, requests, stubApi, type ApiRequest } from '../../test/http'
 import { subscribeSyncToast } from '../../lib/syncToast'
@@ -46,6 +47,18 @@ function api(overrides: (r: ApiRequest) => Response | undefined = () => undefine
 }
 
 describe('WeekPanel', () => {
+  afterEach(() => {
+    onlineManager.setOnline(true)
+  })
+
+  it('asks to connect for a week that was never loaded', async () => {
+    stubApi(() => undefined)
+    onlineManager.setOnline(false)
+    renderWithProviders(<WeekPanel />, { route: '/progress' })
+    expect(await screen.findByText('Connect to load this week.')).toBeInTheDocument()
+    expect(screen.queryByRole('alert')).not.toBeInTheDocument()
+  })
+
   it('shows the grid, distribution and streaks', async () => {
     api()
     renderWithProviders(<WeekPanel />, { route: '/progress' })

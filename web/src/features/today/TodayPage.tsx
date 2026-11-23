@@ -5,6 +5,7 @@ import { formatLongDay } from '../../lib/dates'
 import { atYellowLimit } from '../../lib/yellowLimit'
 import { useNow } from '../../lib/useNow'
 import { EmptyState } from '../../app/EmptyState'
+import { SyncStatus } from '../../app/SyncStatus'
 import { card, cardTitle, emptyAction, pageTitle } from '../../lib/ui'
 import { browserTimezone, useSession } from '../auth/session'
 import { CellPicker } from '../checkin/CellPicker'
@@ -58,6 +59,7 @@ export function TodayPage() {
       <div>
         <h1 className={pageTitle}>Today</h1>
         <p className="mt-0.5 mb-5 text-[15px] text-muted">{formatLongDay(data.today)}</p>
+        <SyncStatus />
         {data.habits.length === 0 ? (
           <EmptyState title="Start your first chain"
             action={<Link to="/habits" className={emptyAction}>Create your first habit</Link>}>

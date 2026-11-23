@@ -16,11 +16,14 @@ const iconButton = 'flex h-9 w-9 flex-none items-center justify-center rounded-f
 export function WeekPanel() {
   const [searchParams, setSearchParams] = useSearchParams()
   const start = searchParams.get('start') ?? undefined
-  const { data, isPending, isError } = useWeek(start)
+  const { data, isPending, isError, fetchStatus } = useWeek(start)
   const streaks = useStreaks()
   const [picked, setPicked] = useState<{ habit: WeekHabit; cell: WeekCell } | null>(null)
 
-  if (isPending) return <p className="text-muted">Loading…</p>
+  // Offline and never loaded: the query is paused, not failing.
+  if (isPending) {
+    return <p className="text-muted">{fetchStatus === 'paused' ? 'Connect to load this week.' : 'Loading…'}</p>
+  }
   if (isError) return <p role="alert" className="text-cell-red">Couldn't load this week.</p>
 
   const goTo = (weekStart: string) => setSearchParams({ start: weekStart })

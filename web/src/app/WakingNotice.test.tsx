@@ -1,3 +1,4 @@
+import { onlineManager } from '@tanstack/react-query'
 import { act, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import { trackPending } from '../api/pending'
@@ -68,5 +69,22 @@ describe('WakingNotice', () => {
     })
 
     expect(screen.queryByRole('status')).not.toBeInTheDocument()
+  })
+
+  it('stays hidden while offline', () => {
+    render(<WakingNotice />)
+    act(() => onlineManager.setOnline(false))
+
+    let resolvePending: () => void = () => {}
+    act(() => {
+      trackPending(new Promise<void>((resolve) => (resolvePending = resolve)))
+    })
+    act(() => {
+      vi.advanceTimersByTime(5000)
+    })
+
+    expect(screen.queryByRole('status')).not.toBeInTheDocument()
+    resolvePending()
+    act(() => onlineManager.setOnline(true))
   })
 })

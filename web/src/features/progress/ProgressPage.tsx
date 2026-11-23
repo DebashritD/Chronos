@@ -1,4 +1,5 @@
 import { useSearchParams } from 'react-router'
+import { SyncStatus } from '../../app/SyncStatus'
 import { pageTitle } from '../../lib/ui'
 import { MonthPanel } from './MonthPanel'
 import { WeekPanel } from './WeekPanel'
@@ -25,6 +26,7 @@ export function ProgressPage() {
             onClick={() => setSearchParams({ view: 'month' })}>Month</button>
         </div>
       </div>
+      <SyncStatus />
       {isMonth ? <MonthPanel /> : <WeekPanel />}
     </section>
   )

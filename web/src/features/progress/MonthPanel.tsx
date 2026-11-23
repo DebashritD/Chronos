@@ -20,9 +20,11 @@ function greenShare(habit: MonthHabit): number | null {
 export function MonthPanel() {
   const [searchParams, setSearchParams] = useSearchParams()
   const month = searchParams.get('month') ?? undefined
-  const { data, isPending, isError } = useMonth(month)
+  const { data, isPending, isError, fetchStatus } = useMonth(month)
 
-  if (isPending) return <p className="text-muted">Loading…</p>
+  if (isPending) {
+    return <p className="text-muted">{fetchStatus === 'paused' ? 'Connect to load this month.' : 'Loading…'}</p>
+  }
   if (isError) return <p role="alert" className="text-cell-red">Couldn't load this month.</p>
 
   const goTo = (target: string) => setSearchParams({ view: 'month', month: target })

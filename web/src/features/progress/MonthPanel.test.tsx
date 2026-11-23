@@ -1,5 +1,6 @@
+import { onlineManager } from '@tanstack/react-query'
 import { screen, within } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import type { CellState, MonthView } from '../../api/types'
 import { jsonResponse, requests, stubApi } from '../../test/http'
 import { renderWithProviders } from '../../test/utils'
@@ -23,6 +24,17 @@ function api() {
 }
 
 describe('MonthPanel', () => {
+  afterEach(() => {
+    onlineManager.setOnline(true)
+  })
+
+  it('asks to connect for a month that was never loaded', async () => {
+    stubApi(() => undefined)
+    onlineManager.setOnline(false)
+    renderWithProviders(<MonthPanel />, { route: '/progress?view=month' })
+    expect(await screen.findByText('Connect to load this month.')).toBeInTheDocument()
+  })
+
   it('colors the overview on a red → green scale, Monday first', async () => {
     api()
     renderWithProviders(<MonthPanel />, { route: '/progress?view=month' })

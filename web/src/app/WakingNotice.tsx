@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { subscribePending } from '../api/pending'
+import { useOnline } from '../lib/useOnline'
 
 const WAKE_DELAY_MS = 3000
 
@@ -9,6 +10,7 @@ const WAKE_DELAY_MS = 3000
  * settle.
  */
 export function WakingNotice() {
+  const online = useOnline()
   const [visible, setVisible] = useState(false)
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -30,7 +32,8 @@ export function WakingNotice() {
     })
   }, [])
 
-  if (!visible) {
+  // Offline nothing is waking; the SyncStatus line says "Offline" instead.
+  if (!visible || !online) {
     return null
   }
 
