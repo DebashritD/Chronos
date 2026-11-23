@@ -2,11 +2,12 @@ import { MutationObserver, onlineManager, type QueryClient } from '@tanstack/rea
 import { persistQueryClientRestore, persistQueryClientSave } from '@tanstack/react-query-persist-client'
 import { waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import { CACHE_KEY, createPersister, persistOptions, type KeyValueStorage } from '../../api/persist'
+import { CACHE_KEY, createPersister, persistOptions } from '../../api/persist'
 import { createQueryClient } from '../../api/queryClient'
 import type { WeekView } from '../../api/types'
 import { subscribeSyncToast } from '../../lib/syncToast'
 import { problemResponse, requests, stubApi } from '../../test/http'
+import { memoryStorage } from '../../test/storage'
 import { authRestored } from './authGate'
 import type { CheckInVars } from './patchWeek'
 import { CHECK_IN_KEY, discardCheckIns, pendingCheckIns, resumeCheckIns } from './queue'
@@ -27,19 +28,6 @@ function mark(vars: CheckInVars) {
 }
 const stateOf = () => queryClient.getQueryData<WeekView>(WEEK_KEY)?.habits[0].current?.state
 const writes = (fetchMock: ReturnType<typeof stubApi>) => requests(fetchMock).filter((r) => r.method !== 'GET')
-function memoryStorage(): { items: Map<string, string>; storage: KeyValueStorage } {
-  const items = new Map<string, string>()
-  const storage: KeyValueStorage = {
-    getItem: async (key) => items.get(key) ?? null,
-    setItem: async (key, value) => {
-      items.set(key, value)
-    },
-    removeItem: async (key) => {
-      items.delete(key)
-    },
-  }
-  return { items, storage }
-}
 
 describe('check-in queue', () => {
   beforeEach(() => {

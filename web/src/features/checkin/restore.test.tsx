@@ -5,6 +5,7 @@ import { afterEach, expect, it, vi } from 'vitest'
 import { CACHE_KEY, createPersister, persistOptions } from '../../api/persist'
 import { createQueryClient } from '../../api/queryClient'
 import { stubApi } from '../../test/http'
+import { memoryStorage } from '../../test/storage'
 import type { CheckInVars } from './patchWeek'
 import { CHECK_IN_KEY, pendingCheckIns, resumeCheckInsOnRestore } from './queue'
 
@@ -17,16 +18,8 @@ afterEach(() => {
 })
 
 it('finishes restoring offline even with a queued mark that cannot sync yet', async () => {
-  const items = new Map<string, string>()
-  const persister = createPersister({
-    getItem: async (key) => items.get(key) ?? null,
-    setItem: async (key, value) => {
-      items.set(key, value)
-    },
-    removeItem: async (key) => {
-      items.delete(key)
-    },
-  }, 0)
+  const { items, storage } = memoryStorage()
+  const persister = createPersister(storage, 0)
   stubApi(() => new Response(null, { status: 204 }))
   onlineManager.setOnline(false)
   const before = createQueryClient({ retry: false })

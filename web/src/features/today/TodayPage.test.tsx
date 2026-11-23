@@ -361,7 +361,7 @@ describe('TodayPage', () => {
 
   it('warns when a yellow uses up the limit and badges the card', async () => {
     let readRun = 1
-    api((r) => {
+    const fetchMock = api((r) => {
       if (r.method === 'PUT') {
         readRun = 2
         return jsonResponse({ periodStart: '2026-11-18', color: 'YELLOW', note: 'ch 3' })
@@ -374,9 +374,12 @@ describe('TodayPage', () => {
 
     const read = await screen.findByRole('article', { name: 'Read' })
     expect(within(read).queryByText('2/2 yellows')).not.toBeInTheDocument()
+    const streaksFetches = () => requests(fetchMock).filter((r) => r.url === '/api/stats/streaks').length
+    await waitFor(() => expect(streaksFetches()).toBe(1))
     await user.click(within(read).getByRole('button', { name: 'Minimum' }))
 
     const dialog = await screen.findByRole('alertdialog', { name: 'Yellow limit reached' })
+    expect(streaksFetches()).toBe(2)
     expect(dialog).toHaveTextContent("You've hit 2 yellows in a row on Read. Next time go green, or the streak starts over.")
     await user.click(within(dialog).getByRole('button', { name: 'Got it' }))
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()

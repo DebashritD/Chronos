@@ -46,10 +46,14 @@ export function useSaveCheckIn() {
     mutationKey: CHECK_IN_KEY,
     // Replaces the default onSuccess, so it must still run the drain-aware refresh first.
     onSuccess: async (_data, vars) => {
-      await checkInSynced(queryClient)
+      const refreshed = checkInSynced(queryClient)
+      await refreshed
       if (vars.color !== 'YELLOW') return
-      // Fresh streaks even mid-queue, where checkInSynced skips the refresh. A failed lookup only skips the dialog.
-      const streaks = await queryClient.fetchQuery({ ...streaksQuery, staleTime: 0 }).catch(() => undefined)
+      // Mid-queue checkInSynced skips the refresh, so force a fresh lookup; otherwise reuse (or finish) the refresh.
+      // A failed lookup only skips the dialog; the save itself succeeded.
+      const streaks = await queryClient
+        .fetchQuery(refreshed ? streaksQuery : { ...streaksQuery, staleTime: 0 })
+        .catch(() => undefined)
       const streak = streaks?.find((s) => s.habitId === vars.habitId)
       const before = streakBefore.get(vars)
       if (atYellowLimit(before) && streak && streak.current < before.current) {
