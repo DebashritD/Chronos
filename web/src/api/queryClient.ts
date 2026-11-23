@@ -1,5 +1,6 @@
 import { QueryCache, QueryClient, type QueryObserverOptions } from '@tanstack/react-query'
 import { ApiError } from './errors'
+import { PERSIST_MAX_AGE } from './persist'
 import { notifyQueryError } from './queryErrorBridge'
 
 /**
@@ -22,6 +23,8 @@ export function createQueryClient(
         // retry and a 401 should reach the bridge immediately.
         retry: (failureCount, error) =>
           failureCount < 1 && !(error instanceof ApiError && error.status < 500),
+        // Persisted data must outlive unmounted pages, or it is dropped before it is saved.
+        gcTime: PERSIST_MAX_AGE,
         ...queryDefaults,
       },
     },
