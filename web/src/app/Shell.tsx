@@ -3,6 +3,7 @@ import { useSession } from '../features/auth/session'
 import { Logo } from './Logo'
 import { AccountIcon, HabitsIcon, ProgressIcon, TodayIcon, type TabIcon } from './TabIcons'
 import { WakingNotice } from './WakingNotice'
+import { SyncToast } from './SyncToast'
 
 const NAV: { to: string; label: string; icon: TabIcon; end: boolean }[] = [
   { to: '/', label: 'Today', icon: TodayIcon, end: true },
@@ -56,6 +57,7 @@ export function Shell() {
         <Outlet />
       </main>
       <WakingNotice />
+      <SyncToast />
       <nav aria-label="Tabs"
         className="fixed inset-x-0 bottom-0 z-10 flex h-[calc(4rem+env(safe-area-inset-bottom))] border-t border-line bg-bg/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden">
         {NAV.map(({ to, label, icon: Icon, end }) => (
