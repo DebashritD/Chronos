@@ -1,6 +1,7 @@
 export interface Me {
   username: string
   timezone: string
+  maxYellows: number
 }
 
 export type Frequency = 'DAILY' | 'EVERY_N_DAYS' | 'WEEKLY'
@@ -18,6 +19,7 @@ export interface NewHabit extends HabitTexts {
   frequency: Frequency
   intervalDays?: number
   startDate?: string
+  yellowCap: boolean
 }
 
 export interface Habit extends HabitTexts {
@@ -26,7 +28,10 @@ export interface Habit extends HabitTexts {
   intervalDays?: number
   startDate: string
   status: HabitStatus
+  yellowCap: boolean
 }
+
+export type HabitUpdate = HabitTexts & { yellowCap: boolean }
 
 export interface Distribution {
   green: number
@@ -91,4 +96,7 @@ export interface Streak {
   name: string
   current: number
   best: number
+  yellowRun: number
+  /** N while this habit's yellow cap is on, else null. */
+  yellowLimit: number | null
 }

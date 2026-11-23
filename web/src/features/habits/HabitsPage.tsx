@@ -6,6 +6,7 @@ import { frequencyLabel } from '../../lib/cells'
 import { formatDay } from '../../lib/dates'
 import { EmptyState } from '../../app/EmptyState'
 import { card, emptyAction, eyebrow, pageTitle } from '../../lib/ui'
+import { useSession } from '../auth/session'
 import { useCreateHabit, useHabitAction, useHabits, useUpdateHabit, type HabitAction } from './api'
 import { HabitForm } from './HabitForm'
 
@@ -29,6 +30,7 @@ function Rule({ swatch, term, detail }: { swatch: string; term: string; detail: 
 }
 
 export function HabitsPage() {
+  const { me } = useSession()
   const current = useHabits()
   const archived = useHabits('ARCHIVED')
   const createHabit = useCreateHabit()
@@ -52,8 +54,8 @@ export function HabitsPage() {
       return (
         <li key={habit.id} aria-label={habit.name}>
           <HabitForm habit={habit} submitLabel="Save" onCancel={() => setEditingId(null)}
-            onSubmit={async ({ name, minText, targetText }) => {
-              await updateHabit.mutateAsync({ id: habit.id, name, minText, targetText })
+            onSubmit={async ({ name, minText, targetText, yellowCap }) => {
+              await updateHabit.mutateAsync({ id: habit.id, name, minText, targetText, yellowCap })
               setEditingId(null)
             }} />
         </li>
@@ -69,6 +71,11 @@ export function HabitsPage() {
             {isPaused && (
               <span className="rounded-full bg-surface px-2 py-0.5 text-[11px] font-semibold tracking-wide text-muted uppercase">
                 Paused
+              </span>
+            )}
+            {habit.yellowCap && (
+              <span className="rounded-full bg-cell-yellow/15 px-2 py-0.5 text-[11px] font-semibold text-cell-yellow">
+                ≤{me?.maxYellows ?? 2} yellows
               </span>
             )}
           </div>

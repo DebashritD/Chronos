@@ -67,11 +67,11 @@ const week: WeekView = {
 }
 
 const streaks: Streak[] = [
-  { habitId: 1, name: 'Read', current: 12, best: 20 },
-  { habitId: 2, name: 'Run', current: 0, best: 4 },
-  { habitId: 3, name: 'Piano', current: 2, best: 2 },
-  { habitId: 5, name: 'Stretch', current: 1, best: 3 },
-  { habitId: 6, name: 'Swim', current: 3, best: 3 },
+  { habitId: 1, name: 'Read', current: 12, best: 20, yellowRun: 0, yellowLimit: 2 },
+  { habitId: 2, name: 'Run', current: 0, best: 4, yellowRun: 0, yellowLimit: 2 },
+  { habitId: 3, name: 'Piano', current: 2, best: 2, yellowRun: 0, yellowLimit: 2 },
+  { habitId: 5, name: 'Stretch', current: 1, best: 3, yellowRun: 0, yellowLimit: 2 },
+  { habitId: 6, name: 'Swim', current: 3, best: 3, yellowRun: 0, yellowLimit: 2 },
 ]
 
 function api(overrides: (r: ApiRequest) => Response | undefined = () => undefined, data: WeekView = week) {

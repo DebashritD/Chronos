@@ -1,10 +1,11 @@
-import { useState, type FormEvent } from 'react'
+import { useId, useState, type FormEvent } from 'react'
 import { messageFor } from '../../api/errors'
 import type { Frequency, Habit, NewHabit } from '../../api/types'
 import { card, inputClass, primaryButton, secondaryButton } from '../../lib/ui'
+import { useSession } from '../auth/session'
 
 interface HabitFormProps {
-  /** When set, the form edits this habit's texts; schedule fields are hidden (they're immutable). */
+  /** When set, the form edits this habit's texts and yellow limit; schedule fields are hidden (they're immutable). */
   habit?: Habit
   submitLabel: string
   onSubmit(values: NewHabit): Promise<unknown>
@@ -12,12 +13,15 @@ interface HabitFormProps {
 }
 
 export function HabitForm({ habit, submitLabel, onSubmit, onCancel }: HabitFormProps) {
+  const { me } = useSession()
+  const yellowCapId = useId()
   const [name, setName] = useState(habit?.name ?? '')
   const [minText, setMinText] = useState(habit?.minText ?? '')
   const [targetText, setTargetText] = useState(habit?.targetText ?? '')
   const [frequency, setFrequency] = useState<Frequency>('DAILY')
   const [intervalDays, setIntervalDays] = useState('2')
   const [startDate, setStartDate] = useState('')
+  const [yellowCap, setYellowCap] = useState(habit?.yellowCap ?? true)
   const [error, setError] = useState<string | null>(null)
   const [submitting, setSubmitting] = useState(false)
 
@@ -33,6 +37,7 @@ export function HabitForm({ habit, submitLabel, onSubmit, onCancel }: HabitFormP
         frequency,
         intervalDays: frequency === 'EVERY_N_DAYS' ? Number(intervalDays) : undefined,
         startDate: startDate || undefined,
+        yellowCap,
       })
     } catch (err) {
       setError(messageFor(err))
@@ -85,6 +90,15 @@ export function HabitForm({ habit, submitLabel, onSubmit, onCancel }: HabitFormP
           </div>
         </>
       )}
+      <label className="mb-3 flex items-start gap-3 rounded-[14px] bg-surface px-3 py-2.5">
+        <input type="checkbox" aria-labelledby={yellowCapId} aria-describedby={`${yellowCapId}-hint`}
+          checked={yellowCap} onChange={(e) => setYellowCap(e.target.checked)}
+          className="mt-0.5 h-4 w-4 accent-cell-yellow" />
+        <span>
+          <span id={yellowCapId} className="block text-[14px] font-medium text-fg">Limit yellows in a row</span>
+          <span id={`${yellowCapId}-hint`} className="block text-[12px] text-muted">Up to {me?.maxYellows ?? 2} in a row keep your streak.</span>
+        </span>
+      </label>
       {error && <p role="alert" className="mb-3 text-sm text-cell-red">{error}</p>}
       <div className="mt-1 flex gap-2">
         <button type="submit" disabled={submitting} className={primaryButton}>{submitLabel}</button>

@@ -8,7 +8,7 @@ import { createQueryClient } from '../api/queryClient'
 import type { Me } from '../api/types'
 import { SessionProvider } from '../features/auth/session'
 
-export const BOB: Me = { username: 'bob', timezone: 'Asia/Kolkata' }
+export const BOB: Me = { username: 'bob', timezone: 'Asia/Kolkata', maxYellows: 2 }
 
 /** Renders the current pathname + search so tests can assert on navigation. */
 export function LocationDisplay() {

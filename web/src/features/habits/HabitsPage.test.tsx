@@ -6,11 +6,11 @@ import { renderWithProviders } from '../../test/utils'
 import { HabitsPage } from './HabitsPage'
 
 const read: Habit = { id: 1, name: 'Read', minText: '1 page', targetText: '20 pages', frequency: 'DAILY',
-  startDate: '2026-11-01', status: 'ACTIVE' }
+  startDate: '2026-11-01', status: 'ACTIVE', yellowCap: true }
 const run: Habit = { id: 2, name: 'Run', minText: '1 km', targetText: '5 km', frequency: 'EVERY_N_DAYS',
-  intervalDays: 3, startDate: '2026-11-02', status: 'PAUSED' }
+  intervalDays: 3, startDate: '2026-11-02', status: 'PAUSED', yellowCap: true }
 const piano: Habit = { id: 3, name: 'Piano', minText: '5 min', targetText: '30 min', frequency: 'WEEKLY',
-  startDate: '2026-10-01', status: 'ARCHIVED' }
+  startDate: '2026-10-01', status: 'ARCHIVED', yellowCap: true }
 
 function api(overrides: (r: ApiRequest) => Response | undefined = () => undefined) {
   return stubApi((r) => {
@@ -31,6 +31,7 @@ describe('HabitsPage', () => {
     expect(within(readRow).getByText('Daily · since Sun 1 Nov')).toBeInTheDocument()
     expect(within(readRow).getByText('Green').nextElementSibling).toHaveTextContent('20 pages')
     expect(within(readRow).getByText('Yellow').nextElementSibling).toHaveTextContent('1 page')
+    expect(within(screen.getByRole('listitem', { name: 'Read' })).getByText('≤2 yellows')).toBeInTheDocument()
     const runRow = screen.getByRole('listitem', { name: 'Run' })
     expect(within(runRow).getByText('Every 3 days · since Mon 2 Nov')).toBeInTheDocument()
     expect(within(runRow).getByText('Paused')).toBeInTheDocument()
@@ -56,7 +57,7 @@ describe('HabitsPage', () => {
     expect(requests(fetchMock).find((r) => r.method === 'POST')).toEqual({
       method: 'POST',
       url: '/api/habits',
-      body: { name: 'Run', minText: '1 km', targetText: '5 km', frequency: 'EVERY_N_DAYS', intervalDays: 3 },
+      body: { name: 'Run', minText: '1 km', targetText: '5 km', frequency: 'EVERY_N_DAYS', intervalDays: 3, yellowCap: true },
     })
   })
 
@@ -81,7 +82,7 @@ describe('HabitsPage', () => {
     expect(screen.getByLabelText('Every how many days?')).toBeInTheDocument()
   })
 
-  it('edits only the texts', async () => {
+  it('edits the texts and the yellow limit', async () => {
     const fetchMock = api((r) => (r.method === 'PUT' ? jsonResponse({ ...read, name: 'Read more' }) : undefined))
     const { user } = renderWithProviders(<HabitsPage />, { route: '/habits' })
 
@@ -89,13 +90,14 @@ describe('HabitsPage', () => {
     expect(screen.queryByLabelText('Frequency')).not.toBeInTheDocument()
     await user.clear(screen.getByLabelText('Name'))
     await user.type(screen.getByLabelText('Name'), 'Read more')
+    await user.click(screen.getByLabelText('Limit yellows in a row'))
     await user.click(screen.getByRole('button', { name: 'Save' }))
 
     expect(await screen.findByRole('button', { name: 'Edit Read' })).toBeInTheDocument()
     expect(requests(fetchMock).find((r) => r.method === 'PUT')).toEqual({
       method: 'PUT',
       url: '/api/habits/1',
-      body: { name: 'Read more', minText: '1 page', targetText: '20 pages' },
+      body: { name: 'Read more', minText: '1 page', targetText: '20 pages', yellowCap: false },
     })
   })
 

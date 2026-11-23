@@ -32,7 +32,7 @@ const week: WeekView = {
         closesAt: '2026-11-22T18:30:00Z' }] },
   ],
 }
-const streaks: Streak[] = [{ habitId: 1, name: 'Read', current: 0, best: 9 }]
+const streaks: Streak[] = [{ habitId: 1, name: 'Read', current: 0, best: 9, yellowRun: 0, yellowLimit: 2 }]
 
 function api(overrides: (r: ApiRequest) => Response | undefined = () => undefined) {
   return stubApi((r) => {

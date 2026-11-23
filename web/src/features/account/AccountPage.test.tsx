@@ -57,6 +57,22 @@ describe('AccountPage', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('currentPassword: is incorrect')
   })
 
+  it('saves how many yellows in a row keep a streak', async () => {
+    const fetchMock = stubApi(({ method }) =>
+      method === 'PUT' ? jsonResponse({ username: 'bob', timezone: 'Asia/Kolkata', maxYellows: 3 }) : undefined,
+    )
+    const { user } = renderWithProviders(<AccountPage />, { route: '/settings' })
+
+    const input = screen.getByLabelText('Yellows allowed in a row')
+    expect(input).toHaveValue(2)
+    await user.clear(input)
+    await user.type(input, '3')
+    await user.click(screen.getByRole('button', { name: 'Save streak rule' }))
+
+    expect(await screen.findByRole('status')).toHaveTextContent('Streak rule saved')
+    expect(requests(fetchMock)).toContainEqual({ method: 'PUT', url: '/api/auth/me', body: { maxYellows: 3 } })
+  })
+
   it('logs out', async () => {
     const fetchMock = stubApi(({ url }) => (url === '/api/auth/logout' ? new Response(null, { status: 200 }) : undefined))
     const { user } = renderWithProviders(<AccountPage />, { route: '/settings' })

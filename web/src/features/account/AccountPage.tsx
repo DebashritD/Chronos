@@ -26,6 +26,8 @@ export function AccountPage() {
   const queryClient = useQueryClient()
   const [timezone, setTimezone] = useState(me?.timezone ?? '')
   const [tzFeedback, setTzFeedback] = useState<Feedback>(null)
+  const [maxYellows, setMaxYellows] = useState(String(me?.maxYellows ?? 2))
+  const [ruleFeedback, setRuleFeedback] = useState<Feedback>(null)
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [pwFeedback, setPwFeedback] = useState<Feedback>(null)
@@ -40,6 +42,18 @@ export function AccountPage() {
       setTzFeedback({ kind: 'ok', text: 'Timezone saved' })
     } catch (err) {
       setTzFeedback({ kind: 'error', text: messageFor(err) })
+    }
+  }
+
+  async function saveStreakRule(event: FormEvent<HTMLFormElement>): Promise<void> {
+    event.preventDefault()
+    setRuleFeedback(null)
+    try {
+      setMe(await api.put<Me>('/api/auth/me', { maxYellows: Number(maxYellows) }))
+      await queryClient.invalidateQueries({ queryKey: ['stats'] })
+      setRuleFeedback({ kind: 'ok', text: 'Streak rule saved' })
+    } catch (err) {
+      setRuleFeedback({ kind: 'error', text: messageFor(err) })
     }
   }
 
@@ -86,6 +100,15 @@ export function AccountPage() {
           <button type="submit" className={primaryButton}>Save timezone</button>
         </div>
         <FeedbackLine feedback={tzFeedback} />
+      </form>
+      <form className={`${card} mb-4`} onSubmit={(event) => void saveStreakRule(event)}>
+        <h2 className={cardTitle}>Streak rules</h2>
+        <label htmlFor="max-yellows" className={label}>Yellows allowed in a row</label>
+        <input id="max-yellows" type="number" min={1} max={7} required value={maxYellows}
+          onChange={(e) => setMaxYellows(e.target.value)} className={inputClass} />
+        <p className="mt-2 text-xs text-dim">For habits with the limit on, one more yellow starts the streak over.</p>
+        <button type="submit" className={`${primaryButton} mt-4`}>Save streak rule</button>
+        <FeedbackLine feedback={ruleFeedback} />
       </form>
       <form className={`${card} mb-4`} onSubmit={(event) => void changePassword(event)}>
         <h2 className={cardTitle}>Change password</h2>

@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { api } from '../../api/client'
-import type { Habit, HabitStatus, HabitTexts, NewHabit } from '../../api/types'
+import type { Habit, HabitStatus, HabitUpdate, NewHabit } from '../../api/types'
 
 export type HabitAction = 'pause' | 'resume' | 'archive' | 'unarchive'
 
@@ -29,7 +29,7 @@ export function useCreateHabit() {
 export function useUpdateHabit() {
   const invalidate = useInvalidateHabits()
   return useMutation({
-    mutationFn: ({ id, ...texts }: HabitTexts & { id: number }) => api.put<Habit>(`/api/habits/${id}`, texts),
+    mutationFn: ({ id, ...body }: HabitUpdate & { id: number }) => api.put<Habit>(`/api/habits/${id}`, body),
     onSuccess: invalidate,
   })
 }
