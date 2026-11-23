@@ -11,6 +11,7 @@ async function touchDrag(page: Page, from: { x: number; y: number }, to: { x: nu
     })
   }
   await cdp.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] })
+  await cdp.detach()
 }
 
 test('swiping left on Today opens Progress, and right comes back', async ({ page }) => {
