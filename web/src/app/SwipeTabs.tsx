@@ -1,12 +1,14 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router'
 import { MOBILE_QUERY, REDUCED_MOTION_QUERY, useMediaQuery } from '../lib/useMediaQuery'
+import { PullToRefresh, type PullToRefreshHandle } from './PullToRefresh'
 import { renderTabPage } from './tabPages'
 import { TABS, tabIndex } from './tabs'
 import { dragOffset, releaseDecision, useTabSwipe } from './useTabSwipe'
 
 export const SETTLE_MS = 250
 export const FADE_MS = 150
+const PULL_PATHS = new Set(['/', '/progress'])
 
 interface Neighbour { from: string; dir: 1 | -1; top: number }
 
@@ -19,6 +21,8 @@ export function SwipeTabs() {
   const index = tabIndex(pathname)
   const enabled = mobile && index >= 0
   const trackRef = useRef<HTMLDivElement>(null)
+  const pullRef = useRef<PullToRefreshHandle>(null)
+  const pulls = enabled && PULL_PATHS.has(pathname)
   const [neighbour, setNeighbour] = useState<Neighbour | null>(null)
   const settling = useRef(false)
   const snapTimer = useRef<number | undefined>(undefined)
@@ -96,23 +100,28 @@ export function SwipeTabs() {
         navigate(to)
       }, reduced ? FADE_MS : SETTLE_MS)
     },
+    onPull: pulls ? (dy) => pullRef.current?.move(dy) : undefined,
+    onPullEnd: pulls ? (dy) => pullRef.current?.release(dy) : undefined,
   })
 
   if (!enabled) return <Outlet />
 
   const peer = neighbour && neighbour.from === pathname ? neighbour : null
   return (
-    <div className="overflow-x-clip">
-      <div ref={trackRef} className="relative">
-        <Outlet />
-        {peer && (
-          <div aria-hidden="true" inert className="absolute w-full"
-            style={{ top: peer.top, left: peer.dir * window.innerWidth }}>
-            {renderTabPage(TABS[index + peer.dir].to)}
-          </div>
-        )}
+    <>
+      <div className="overflow-x-clip">
+        <div ref={trackRef} className="relative">
+          <Outlet />
+          {peer && (
+            <div aria-hidden="true" inert className="absolute w-full"
+              style={{ top: peer.top, left: peer.dir * window.innerWidth }}>
+              {renderTabPage(TABS[index + peer.dir].to)}
+            </div>
+          )}
+        </div>
       </div>
-    </div>
+      {pulls && <PullToRefresh ref={pullRef} />}
+    </>
   )
 }
 

@@ -1,4 +1,4 @@
-import { QueryClientProvider } from '@tanstack/react-query'
+import { onlineManager, QueryClientProvider } from '@tanstack/react-query'
 import { fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { Link, MemoryRouter, Route, Routes } from 'react-router'
@@ -143,5 +143,51 @@ describe('tab swipe', () => {
     drag(screen.getByText('Today page'), [300, 400], [100, 400])
     expect(screen.queryByText('Neighbour /progress')).not.toBeInTheDocument()
     await waitFor(() => expect(location()).toHaveTextContent('/progress'))
+  })
+})
+
+describe('pull to refresh', () => {
+  afterEach(() => {
+    onlineManager.setOnline(true)
+  })
+
+  test('pulling past the threshold on Today refetches the page', async () => {
+    const { refetch } = renderTabs('/')
+    drag(screen.getByText('Today page'), [200, 100], [200, 300])
+    expect(refetch).toHaveBeenCalledWith({ type: 'active' })
+    expect(await screen.findByText('Refreshing')).toBeInTheDocument()
+  })
+
+  test('works on Progress too', () => {
+    const { refetch } = renderTabs('/progress')
+    drag(screen.getByText('Progress page'), [200, 100], [200, 300])
+    expect(refetch).toHaveBeenCalledTimes(1)
+  })
+
+  test('a short pull does nothing', () => {
+    const { refetch } = renderTabs('/')
+    drag(screen.getByText('Today page'), [200, 100], [200, 180])
+    expect(refetch).not.toHaveBeenCalled()
+  })
+
+  test('offline shows “Offline” and sends nothing', async () => {
+    onlineManager.setOnline(false)
+    const { refetch } = renderTabs('/')
+    drag(screen.getByText('Today page'), [200, 100], [200, 300])
+    expect(await screen.findByText('Offline')).toBeInTheDocument()
+    expect(refetch).not.toHaveBeenCalled()
+  })
+
+  test('not on Habits', () => {
+    const { refetch } = renderTabs('/habits')
+    drag(screen.getByText('Habits page'), [200, 100], [200, 300])
+    expect(refetch).not.toHaveBeenCalled()
+  })
+
+  test('not when the page is scrolled down', () => {
+    vi.stubGlobal('scrollY', 120)
+    const { refetch } = renderTabs('/')
+    drag(screen.getByText('Today page'), [200, 100], [200, 300])
+    expect(refetch).not.toHaveBeenCalled()
   })
 })
