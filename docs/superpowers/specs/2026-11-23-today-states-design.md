@@ -34,9 +34,9 @@ day's progress, and switch the app's heading font from Sora to Geist 600. Typica
 | 10 | all marked, all green | All green | `{total} of {total} on target today.` |
 | 11 | all marked otherwise | All done | `{green} on target, {yellow} at minimum. All off red.` |
 | 8 | late, an urgent open item has streak ≥ 7 (pick the longest; ties → card order) | `Keep the {n}-day streak` | `{name} is still open.` |
-| 9 | late, marked = 0 | There’s still time | `A minimum on each keeps all {total} off red.` |
+| 9 | late, marked = 0 | There’s still time | `A minimum on each keeps all {total} off red.` (1 habit: `A minimum keeps it off red.`) |
 | 7 | late | `{h} hours left` (`1 hour left`; under 1h: `{m} minutes left`) | names of urgent open items: 1 → `{A} is still open.`, 2 → `{A} and {B} are still open.`, 3+ → `{k} habits are still open.` |
-| 5 | open = 1 | `{name} is the last one` | Mark it to close the day. |
+| 5 | open = 1, marked > 0 | `{name} is the last one` | Mark it to close the day. |
 | 6 | red > 0 | Still in it | `{red} missed. The other {open} can stay off red.` |
 | 1 | marked = 0 | Let’s start | `{total} habits today. The minimum counts.` (`1 habit today…`) |
 | 3 | marked > total/2, yellow = 0 | Go green | `Almost there. {marked} of {total} on target.` |
