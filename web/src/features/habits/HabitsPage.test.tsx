@@ -1,5 +1,7 @@
 import { screen, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
+import { NeighbourContext } from '../../app/neighbour'
+import { stubMedia } from '../../test/touch'
 import type { Habit } from '../../api/types'
 import { jsonResponse, problemResponse, requests, stubApi, type ApiRequest } from '../../test/http'
 import { renderWithProviders } from '../../test/utils'
@@ -119,5 +121,23 @@ describe('HabitsPage', () => {
     await user.click(await screen.findByRole('button', { name: 'Pause Read' }))
 
     expect(await screen.findByRole('alert')).toHaveTextContent("That action isn't available")
+  })
+
+  it('on a phone, puts the New habit button on the body so a swiping track can’t move it', async () => {
+    stubMedia()
+    api()
+    renderWithProviders(<HabitsPage />, { route: '/habits' })
+
+    await screen.findByRole('listitem', { name: 'Read' })
+    expect(screen.getByRole('button', { name: 'New habit' }).parentElement).toBe(document.body)
+  })
+
+  it('draws no New habit button when shown as the swipe neighbour', async () => {
+    stubMedia()
+    api()
+    renderWithProviders(<NeighbourContext value={true}><HabitsPage /></NeighbourContext>, { route: '/habits' })
+
+    await screen.findByRole('listitem', { name: 'Read' })
+    expect(screen.queryByRole('button', { name: 'New habit' })).not.toBeInTheDocument()
   })
 })

@@ -1,6 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { Outlet, useLocation, useNavigate } from 'react-router'
 import { MOBILE_QUERY, REDUCED_MOTION_QUERY, useMediaQuery } from '../lib/useMediaQuery'
+import { NeighbourContext } from './neighbour'
 import { PullToRefresh, type PullToRefreshHandle } from './PullToRefresh'
 import { renderTabPage } from './tabPages'
 import { TABS, tabIndex } from './tabs'
@@ -115,7 +116,7 @@ export function SwipeTabs() {
           {peer && (
             <div aria-hidden="true" inert className="absolute w-full"
               style={{ top: peer.top, left: peer.dir * window.innerWidth }}>
-              {renderTabPage(TABS[index + peer.dir].to)}
+              <NeighbourContext value={true}>{renderTabPage(TABS[index + peer.dir].to)}</NeighbourContext>
             </div>
           )}
         </div>

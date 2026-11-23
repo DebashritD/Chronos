@@ -1,11 +1,14 @@
 import { ArchiveRestore, Pause, Pencil, Play, Plus, Square } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { messageFor } from '../../api/errors'
 import type { Habit } from '../../api/types'
 import { frequencyLabel } from '../../lib/cells'
 import { formatDay } from '../../lib/dates'
 import { EmptyState } from '../../app/EmptyState'
+import { useIsNeighbour } from '../../app/neighbour'
 import { card, emptyAction, eyebrow, pageTitle } from '../../lib/ui'
+import { MOBILE_QUERY, useMediaQuery } from '../../lib/useMediaQuery'
 import { useSession } from '../auth/session'
 import { useCreateHabit, useHabitAction, useHabits, useUpdateHabit, type HabitAction } from './api'
 import { HabitForm } from './HabitForm'
@@ -37,6 +40,8 @@ export function HabitsPage() {
   const updateHabit = useUpdateHabit()
   const habitAction = useHabitAction()
   const [creating, setCreating] = useState(false)
+  const mobile = useMediaQuery(MOBILE_QUERY)
+  const neighbour = useIsNeighbour()
   const [editingId, setEditingId] = useState<number | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -117,18 +122,21 @@ export function HabitsPage() {
   }
 
   const list = 'grid grid-cols-1 gap-3'
+  const newHabitButton = (
+    <button type="button" aria-label="New habit" onClick={() => setCreating(true)}
+      className="fixed right-5 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-10 flex h-14 w-14 items-center justify-center rounded-full bg-accent text-bg shadow-lg shadow-black/40 md:static md:h-auto md:w-auto md:gap-2 md:rounded-[14px] md:px-4 md:py-2.5 md:text-sm md:font-semibold md:shadow-none">
+      <Plus size={24} strokeWidth={2.5} aria-hidden="true" />
+      <span className="hidden md:inline">New habit</span>
+    </button>
+  )
   return (
     <section className="max-w-3xl pb-20 md:pb-0">
       <div className="mb-6 flex items-end justify-between">
         <h1 className={pageTitle}>Habits</h1>
-        {!creating && (
-          <button type="button" aria-label="New habit" onClick={() => setCreating(true)}
-            className="fixed right-5 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-10 flex h-14 w-14 items-center justify-center rounded-full bg-accent text-bg shadow-lg shadow-black/40 md:static md:h-auto md:w-auto md:gap-2 md:rounded-[14px] md:px-4 md:py-2.5 md:text-sm md:font-semibold md:shadow-none">
-            <Plus size={24} strokeWidth={2.5} aria-hidden="true" />
-            <span className="hidden md:inline">New habit</span>
-          </button>
-        )}
+        {!creating && !mobile && newHabitButton}
       </div>
+      {/* On a phone the button floats on the body: a swiping track's transform would otherwise carry it along. */}
+      {!creating && mobile && !neighbour && createPortal(newHabitButton, document.body)}
       {creating && (
         <HabitForm submitLabel="Create habit" onCancel={() => setCreating(false)}
           onSubmit={async (values) => {

@@ -7,7 +7,13 @@ import { drag, pause, stubMedia, useFakeSwipeClock } from '../test/touch'
 import { LocationDisplay } from '../test/utils'
 import { SETTLE_MS, SwipeTabs } from './SwipeTabs'
 
-vi.mock('./tabPages', () => ({ renderTabPage: (to: string) => <p>Neighbour {to}</p> }))
+vi.mock('./tabPages', async () => {
+  const { useIsNeighbour } = await import('./neighbour')
+  function Page({ to }: { to: string }) {
+    return <p>{useIsNeighbour() ? 'Neighbour' : 'Live page'} {to}</p>
+  }
+  return { renderTabPage: (to: string) => <Page to={to} /> }
+})
 
 function renderTabs(route = '/') {
   const queryClient = createQueryClient({ retry: false })
