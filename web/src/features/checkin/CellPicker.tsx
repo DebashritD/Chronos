@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { messageFor } from '../../api/errors'
 import type { Color, WeekCell, WeekHabit } from '../../api/types'
 import { cellClass, isColor, STATE_LABEL } from '../../lib/cells'
 import { inputClass, primaryButton, secondaryButton } from '../../lib/ui'
+import { MOBILE_QUERY, REDUCED_MOTION_QUERY, useMediaQuery } from '../../lib/useMediaQuery'
 import { useClearCheckIn, useSaveCheckIn } from '../stats/api'
 import { periodLabel } from './period'
+import { useSheetDrag } from './useSheetDrag'
 
 const CHOICES: { color: Color; hint(habit: WeekHabit): string }[] = [
   { color: 'GREEN', hint: (habit) => habit.targetText },
@@ -26,6 +28,10 @@ export function CellPicker({ habit, cell, onClose }: CellPickerProps) {
   const [color, setColor] = useState<Color | null>(isColor(cell.state) ? cell.state : null)
   const [note, setNote] = useState(cell.note ?? '')
   const [error, setError] = useState<string | null>(null)
+  const sheetRef = useRef<HTMLDivElement>(null)
+  const mobile = useMediaQuery(MOBILE_QUERY)
+  const reduced = useMediaQuery(REDUCED_MOTION_QUERY)
+  useSheetDrag(sheetRef, { enabled: mobile, reduced, onClose })
   const busy = saveCheckIn.isPending || clearCheckIn.isPending
   const key = { habitId: habit.id, periodStart: cell.periodStart ?? cell.date }
 
@@ -44,7 +50,7 @@ export function CellPicker({ habit, cell, onClose }: CellPickerProps) {
       onClick={(event) => {
         if (event.target === event.currentTarget) onClose()
       }}>
-      <div role="dialog" aria-modal="true" aria-label={`${habit.name}, ${periodLabel(habit, cell)}`}
+      <div ref={sheetRef} role="dialog" aria-modal="true" aria-label={`${habit.name}, ${periodLabel(habit, cell)}`}
         onKeyDown={(event) => {
           if (event.key === 'Escape') onClose()
         }}
