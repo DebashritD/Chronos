@@ -13,9 +13,17 @@ export function readStoredMe(): Me | null {
 }
 
 export function storeMe(me: Me): void {
-  localStorage.setItem(KEY, JSON.stringify(me))
+  try {
+    localStorage.setItem(KEY, JSON.stringify(me))
+  } catch {
+    // No storage (private mode, quota): the session just isn’t remembered.
+  }
 }
 
 export function clearStoredMe(): void {
-  localStorage.removeItem(KEY)
+  try {
+    localStorage.removeItem(KEY)
+  } catch {
+    // No storage (private mode, quota): the session just isn’t remembered.
+  }
 }

@@ -61,6 +61,13 @@ describe('session', () => {
     await waitFor(() => expect(who()).toHaveTextContent('bob'))
   })
 
+  it('uses the saved me when the server is briefly unavailable', async () => {
+    save(BOB)
+    stubApi((r) => (r.url === '/api/auth/me' ? problemResponse(503, 'UNAVAILABLE') : undefined))
+    renderWithProviders(<Probe />, { me: 'fetch' })
+    await waitFor(() => expect(who()).toHaveTextContent('bob'))
+  })
+
   it('signs out on a 401 even with a saved me', async () => {
     save(BOB)
     stubApi((r) => (r.url === '/api/auth/me' ? problemResponse(401, 'UNAUTHENTICATED') : undefined))

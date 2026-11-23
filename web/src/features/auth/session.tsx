@@ -50,8 +50,8 @@ export function SessionProvider({ children, initialMe }: { children: ReactNode; 
         setMeState(result)
       })
       .catch((error: unknown) => {
-        // Offline (no ApiError): carry on as the saved user. A 401 still signs out.
-        if (!cancelled) setMeState(error instanceof ApiError ? null : readStoredMe())
+        // Only a 401 signs out; offline or a server hiccup (e.g. 502/503 cold start) carries on as the saved user.
+        if (!cancelled) setMeState(error instanceof ApiError && error.status === 401 ? null : readStoredMe())
       })
       .finally(() => {
         if (!cancelled) setChecking(false)
