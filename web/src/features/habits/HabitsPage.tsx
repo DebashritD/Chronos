@@ -67,7 +67,7 @@ export function HabitsPage() {
       <li key={habit.id} aria-label={habit.name} className={`${card} ${isArchived || isPaused ? 'opacity-60' : ''}`}>
         <div>
           <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-[20px] font-bold break-words text-fg">{habit.name}</h2>
+            <h2 className="text-[20px] font-semibold break-words text-fg">{habit.name}</h2>
             {isPaused && (
               <span className="rounded-full bg-surface px-2 py-0.5 text-[11px] font-semibold tracking-wide text-muted uppercase">
                 Paused

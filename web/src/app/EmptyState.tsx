@@ -21,7 +21,7 @@ export function EmptyState({ title, children, action }: { title: string; childre
   return (
     <section aria-label={title} className={`${card} px-6 py-10 text-center`}>
       <ChainArt />
-      <h2 className="text-[20px] font-bold text-fg">{title}</h2>
+      <h2 className="text-[20px] font-semibold text-fg">{title}</h2>
       <p className="mx-auto mt-2 max-w-sm text-[14px] leading-relaxed text-muted">{children}</p>
       <div className="mt-6">{action}</div>
     </section>

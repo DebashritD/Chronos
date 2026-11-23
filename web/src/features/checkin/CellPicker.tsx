@@ -50,7 +50,7 @@ export function CellPicker({ habit, cell, onClose }: CellPickerProps) {
         }}
         className="w-full rounded-t-[28px] border border-line bg-card px-5 pt-3 pb-[calc(1.5rem+env(safe-area-inset-bottom))] md:max-w-md md:rounded-[28px] md:pt-6">
         <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-outline md:hidden" aria-hidden="true" />
-        <h2 className="text-[22px] font-extrabold text-fg">{habit.name}</h2>
+        <h2 className="text-[22px] font-semibold text-fg">{habit.name}</h2>
         <p className="mt-0.5 mb-4 text-[14px] text-muted">{periodLabel(habit, cell)}</p>
         <div className="flex flex-col gap-2">
           {CHOICES.map((choice) => (

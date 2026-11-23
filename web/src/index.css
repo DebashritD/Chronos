@@ -27,7 +27,7 @@
   --radius-card: 22px;
   --radius-cell: 10px;
   --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-display: 'Sora', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-display: 'Geist', 'Inter', ui-sans-serif, system-ui, sans-serif;
   --animate-pop: pop 320ms cubic-bezier(0.22, 1, 0.36, 1);
 
   @keyframes pop {
@@ -50,8 +50,10 @@ body {
   font-variant-numeric: tabular-nums;
 }
 
-h1, h2, h3 {
+h1, h2, h3, .font-display {
   font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.035em;
 }
 
 /* PAUSED cells: diagonal hatching */

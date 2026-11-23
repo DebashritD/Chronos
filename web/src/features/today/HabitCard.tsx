@@ -86,7 +86,7 @@ export function HabitCard({ habit, cell, streak, now, yellowLimit, onOpen }: Hab
     <article aria-labelledby={titleId} className={card}>
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
-          <h2 id={titleId} className="text-[18px] font-bold break-words text-fg">
+          <h2 id={titleId} className="text-[18px] font-semibold break-words text-fg">
             <button type="button" aria-haspopup="dialog" onClick={onOpen} className="text-left hover:underline">
               {habit.name}
             </button>
@@ -94,7 +94,7 @@ export function HabitCard({ habit, cell, streak, now, yellowLimit, onOpen }: Hab
           <p className="mt-0.5 text-[13px] break-words text-muted">{meta(habit)}</p>
         </div>
         {streak !== undefined && (
-          <span className="flex flex-none items-center gap-1 font-display text-[15px] font-bold text-fg">
+          <span className="flex flex-none items-center gap-1 font-display text-[15px] font-semibold text-fg">
             <Flame size={18} className={streak > 0 ? 'text-urgent' : 'text-dim'} aria-hidden="true" />
             <span className="sr-only">Current streak </span>
             {streak}

@@ -47,11 +47,11 @@ export function WeekTiles({ start, today, habits, streakOf, onPick }: WeekTilesP
             <li key={habit.id} aria-label={habit.name} className={tile}>
               <div className="mb-3 flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <h3 className="text-[16px] leading-snug font-bold break-words text-fg">{habit.name}</h3>
+                  <h3 className="text-[16px] leading-snug font-semibold break-words text-fg">{habit.name}</h3>
                   {sub && <p className="mt-0.5 text-[12px] text-dim first-letter:uppercase">{sub}</p>}
                 </div>
                 {streak !== undefined && streak > 0 && (
-                  <span className="flex flex-none items-center gap-1 font-display text-[14px] font-bold text-fg">
+                  <span className="flex flex-none items-center gap-1 font-display text-[14px] font-semibold text-fg">
                     <Flame size={16} className="text-urgent" aria-hidden="true" />
                     <span className="sr-only">Current streak </span>
                     {streak}

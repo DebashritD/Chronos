@@ -7,7 +7,7 @@ export function AuthLayout({ title, children }: { title: string; children: React
     <main className="flex min-h-screen items-center justify-center bg-bg px-6 py-10">
       <div className="w-full max-w-sm">
         <Logo size="lg" />
-        <h1 className="mt-7 text-[34px] leading-[1.1] font-extrabold tracking-tight text-fg">
+        <h1 className="mt-7 text-[34px] leading-[1.1] font-semibold text-fg">
           Keep it<br />off red.
         </h1>
         <p className="mt-2.5 mb-7 text-[15px] leading-normal text-muted">

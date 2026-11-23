@@ -73,7 +73,7 @@ export function MonthPanel() {
                 return (
                   <section key={habit.id} aria-label={habit.name}>
                     <div className="mb-2 flex items-baseline justify-between gap-3">
-                      <h3 className="min-w-0 text-[15px] leading-snug font-bold break-words text-fg">{habit.name}</h3>
+                      <h3 className="min-w-0 text-[15px] leading-snug font-semibold break-words text-fg">{habit.name}</h3>
                       <span className="flex-none text-[11px] text-muted">{share === null ? '–' : `${share}% green`}</span>
                     </div>
                     <CalendarGrid compact days={habit.cells.map(({ date, state }) => ({

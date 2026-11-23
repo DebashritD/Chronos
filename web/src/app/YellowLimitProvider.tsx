@@ -25,7 +25,7 @@ export function YellowLimitProvider({ children }: { children: ReactNode }) {
           <div role="alertdialog" aria-modal="true" aria-labelledby="yellow-limit-title" aria-describedby="yellow-limit-text"
             className="w-full max-w-sm rounded-[28px] border border-line bg-card p-6 text-center">
             <span className="mx-auto mb-3 block h-10 w-10 rounded-xl bg-cell-yellow" aria-hidden="true" />
-            <h2 id="yellow-limit-title" className="text-[20px] font-extrabold text-fg">Yellow limit reached</h2>
+            <h2 id="yellow-limit-title" className="text-[20px] font-semibold text-fg">Yellow limit reached</h2>
             <p id="yellow-limit-text" className="mt-2 text-[15px] text-muted">
               You've hit {hit.limit} yellows in a row on {hit.name}. Next time go green, or the streak starts over.
             </p>
