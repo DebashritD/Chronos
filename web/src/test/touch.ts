@@ -3,15 +3,31 @@ import { vi } from 'vitest'
 import { swipeClock } from '../app/useTabSwipe'
 import { MOBILE_QUERY, REDUCED_MOTION_QUERY } from '../lib/useMediaQuery'
 
-/** Phone-sized window with the given media features. `setup.ts` unstubs globals after each test. */
-export function stubMedia({ mobile = true, reduced = false }: { mobile?: boolean; reduced?: boolean } = {}): void {
+/**
+ * Phone-sized window with the given media features. Returns `setMobile` to flip the mobile query live.
+ * `setup.ts` unstubs globals after each test.
+ */
+export function stubMedia({ mobile = true, reduced = false }: { mobile?: boolean; reduced?: boolean } = {}) {
+  const listeners = new Set<() => void>()
   vi.stubGlobal('innerWidth', 390)
   vi.stubGlobal('matchMedia', (query: string) => ({
-    matches: query === MOBILE_QUERY ? mobile : query === REDUCED_MOTION_QUERY ? reduced : false,
+    get matches() {
+      return query === MOBILE_QUERY ? mobile : query === REDUCED_MOTION_QUERY ? reduced : false
+    },
     media: query,
-    addEventListener() {},
-    removeEventListener() {},
+    addEventListener(_type: string, listener: () => void) {
+      listeners.add(listener)
+    },
+    removeEventListener(_type: string, listener: () => void) {
+      listeners.delete(listener)
+    },
   }))
+  return {
+    setMobile(value: boolean): void {
+      mobile = value
+      listeners.forEach((listener) => listener())
+    },
+  }
 }
 
 let time = 0

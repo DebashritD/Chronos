@@ -1,5 +1,5 @@
 import { onlineManager, QueryClientProvider } from '@tanstack/react-query'
-import { fireEvent, render, screen, waitFor } from '@testing-library/react'
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, test, vi } from 'vitest'
 import { Link, MemoryRouter, Route, Routes } from 'react-router'
 import { createQueryClient } from '../api/queryClient'
@@ -128,6 +128,16 @@ describe('tab swipe', () => {
     drag(screen.getByText('Today page'), [300, 400], [100, 400])
     await pause(SETTLE_MS + 50)
     expect(location()).toHaveTextContent(/^\/$/)
+  })
+
+  test('crossing the mobile breakpoint keeps the page and what was typed', () => {
+    const media = stubMedia()
+    renderTabs('/progress')
+    fireEvent.change(screen.getByLabelText('Note'), { target: { value: 'half done' } })
+    act(() => media.setMobile(false))
+    expect(screen.getByLabelText('Note')).toHaveValue('half done')
+    act(() => media.setMobile(true))
+    expect(screen.getByLabelText('Note')).toHaveValue('half done')
   })
 
   test('non-tab routes render without swipe', async () => {

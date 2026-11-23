@@ -104,13 +104,13 @@ export function SwipeTabs() {
     onPullEnd: pulls ? (dy) => pullRef.current?.release(dy) : undefined,
   })
 
-  if (!enabled) return <Outlet />
-
-  const peer = neighbour && neighbour.from === pathname ? neighbour : null
+  // One wrapper structure in every mode, so crossing the breakpoint never remounts the page.
+  // On desktop the wrappers are `display: contents` and leave the layout alone.
+  const peer = enabled && neighbour && neighbour.from === pathname ? neighbour : null
   return (
     <>
-      <div className="flex flex-1 flex-col overflow-x-clip">
-        <div ref={trackRef} className="relative flex-1">
+      <div className="max-md:flex max-md:flex-1 max-md:flex-col max-md:overflow-x-clip md:contents">
+        <div ref={trackRef} className="relative max-md:flex-1 md:contents">
           <Outlet />
           {peer && (
             <div aria-hidden="true" inert className="absolute w-full"
