@@ -21,18 +21,20 @@ interface WeekTilesProps {
 export function WeekTiles({ start, today, habits, streakOf, onPick }: WeekTilesProps) {
   return (
     <div className="flex flex-col gap-3">
-      {/* Every cell's label already names its day, so the header is visual only. */}
-      <div aria-hidden="true" className={`${tile} ${days} py-3 text-center text-[11px] font-medium text-muted`}>
+      {/* Every cell's label already names its day, so the header is visual only. Padding matches the tile (p-4 + border) so columns line up. */}
+      <div aria-hidden="true" className={`${days} px-[17px] text-center`}>
         {WEEKDAYS.map((weekday, i) => {
           const date = addDays(start, i)
+          const isToday = date === today
           return (
-            <span key={weekday}>
-              {weekday}
-              <span className={`mx-auto mt-1 flex h-6 w-6 items-center justify-center rounded-full text-[12px] font-semibold ${
-                date === today ? 'bg-accent text-bg' : 'text-fg'
+            <span key={weekday} className="flex flex-col items-center">
+              <span className="text-[11px] font-medium text-dim">{weekday}</span>
+              <span className={`mt-1 text-[15px] font-semibold ${
+                isToday ? 'text-accent' : date > today ? 'text-dim' : 'text-fg'
               }`}>
                 {dayOfMonth(date)}
               </span>
+              <span className={`mt-1 h-1 w-1 rounded-full ${isToday ? 'bg-accent' : ''}`} />
             </span>
           )
         })}
