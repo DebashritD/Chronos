@@ -74,7 +74,9 @@ h1, h2, h3, .font-display {
   }
 }
 
-/* Our own pull to refresh replaces Chrome's pull-to-reload. */
-html {
-  overscroll-behavior-y: contain;
+/* Our own pull to refresh replaces Chrome's pull-to-reload on phones. Matches MOBILE_QUERY. */
+@media (max-width: 767.98px) {
+  html {
+    overscroll-behavior-y: contain;
+  }
 }

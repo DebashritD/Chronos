@@ -47,7 +47,7 @@ export function Shell() {
           </span>
         </div>
       </aside>
-      <main className="mx-auto flex min-h-dvh w-full max-w-6xl flex-1 flex-col px-5 pt-6 pb-[calc(5.5rem+env(safe-area-inset-bottom))] md:px-10 md:pt-10 md:pb-10">
+      <main className="mx-auto w-full max-w-6xl flex-1 px-5 pt-6 pb-[calc(5.5rem+env(safe-area-inset-bottom))] max-md:flex max-md:min-h-dvh max-md:flex-col md:px-10 md:pt-10 md:pb-10">
         <SwipeTabs />
       </main>
       <WakingNotice />
