@@ -1,7 +1,8 @@
 import { screen, waitFor, within } from '@testing-library/react'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
 import type { Streak, WeekCell, WeekView } from '../../api/types'
 import { jsonResponse, problemResponse, requests, stubApi, type ApiRequest } from '../../test/http'
+import { subscribeSyncToast } from '../../lib/syncToast'
 import { renderWithProviders } from '../../test/utils'
 import { WeekPanel } from './WeekPanel'
 
@@ -121,17 +122,19 @@ describe('WeekPanel', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
-  it('shows save errors in the picker', async () => {
+  it('closes the picker at once and reports a rejected save in a toast', async () => {
     api((r) => (r.method === 'PUT' ? problemResponse(422, 'CHECK_IN_NOT_ALLOWED') : undefined))
+    const toast = vi.fn()
+    const unsubscribe = subscribeSyncToast(toast)
     const { user } = renderWithProviders(<WeekPanel />, { route: '/progress' })
 
     await user.click(await screen.findByRole('button', { name: 'Read, Tue 17 Nov, Missed' }))
     await user.click(screen.getByRole('button', { name: /^Minimum done/ }))
     await user.click(screen.getByRole('button', { name: 'Save' }))
 
-    expect(await within(screen.getByRole('dialog')).findByRole('alert')).toHaveTextContent(
-      'That period can no longer be changed',
-    )
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    await waitFor(() => expect(toast).toHaveBeenCalledWith('Couldn’t sync Read. Refreshed.'))
+    unsubscribe()
   })
 
   it('moves between weeks', async () => {

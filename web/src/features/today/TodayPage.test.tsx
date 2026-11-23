@@ -1,7 +1,9 @@
+import { onlineManager } from '@tanstack/react-query'
 import { act, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { CurrentPeriod, Habit, Streak, WeekCell, WeekView } from '../../api/types'
 import { jsonResponse, problemResponse, requests, stubApi, type ApiRequest } from '../../test/http'
+import { subscribeSyncToast } from '../../lib/syncToast'
 import { renderWithProviders } from '../../test/utils'
 import { TodayPage } from './TodayPage'
 
@@ -96,6 +98,7 @@ describe('TodayPage', () => {
 
   afterEach(() => {
     vi.useRealTimers()
+    onlineManager.setOnline(true)
   })
 
   it("shows the date, today's progress and one card per habit due today", async () => {
@@ -285,14 +288,33 @@ describe('TodayPage', () => {
     expect(within(dialog).getByLabelText('Note (optional)')).toHaveValue('ch 3')
   })
 
-  it('shows save errors on the card', async () => {
+  it('drops a mark the server rejects and says so in a toast', async () => {
     api((r) => (r.method === 'PUT' ? problemResponse(422, 'CHECK_IN_NOT_ALLOWED') : undefined))
+    const toast = vi.fn()
+    const unsubscribe = subscribeSyncToast(toast)
     const { user } = renderWithProviders(<TodayPage />)
 
     const stretch = await screen.findByRole('article', { name: 'Stretch' })
     await user.click(within(stretch).getByRole('button', { name: 'Minimum' }))
 
-    expect(await within(stretch).findByRole('alert')).toHaveTextContent('That period can no longer be changed')
+    await waitFor(() => expect(toast).toHaveBeenCalledWith('Couldn’t sync Stretch. Refreshed.'))
+    expect(within(stretch).queryByRole('alert')).not.toBeInTheDocument()
+    unsubscribe()
+  })
+
+  it('marks offline at once and sends nothing until back online', async () => {
+    const fetchMock = api((r) => (r.method === 'PUT' ? new Response(null, { status: 204 }) : undefined))
+    const { user } = renderWithProviders(<TodayPage />)
+    const stretch = await screen.findByRole('article', { name: 'Stretch' })
+
+    act(() => onlineManager.setOnline(false))
+    await user.click(within(stretch).getByRole('button', { name: 'Minimum' }))
+
+    await waitFor(() => expect(within(stretch).getByRole('button', { name: 'Minimum' })).toHaveAttribute('aria-pressed', 'true'))
+    expect(requests(fetchMock).some((r) => r.method === 'PUT')).toBe(false)
+
+    act(() => onlineManager.setOnline(true))
+    await waitFor(() => expect(requests(fetchMock).some((r) => r.method === 'PUT')).toBe(true))
   })
 
   it('celebrates when everything is marked', async () => {

@@ -1,9 +1,9 @@
-import type { QueryClient } from '@tanstack/react-query'
+import type { Mutation, QueryClient } from '@tanstack/react-query'
 import { api } from '../../api/client'
 import { ApiError } from '../../api/errors'
 import type { Habit, WeekView } from '../../api/types'
 import { showSyncToast } from '../../lib/syncToast'
-import { AuthDiscardedError, waitForAuth } from './authGate'
+import { AuthDiscardedError, authDiscarded, waitForAuth } from './authGate'
 import { patchWeek, type CheckInVars } from './patchWeek'
 
 export const CHECK_IN_KEY = ['checkIn'] as const
@@ -34,7 +34,7 @@ export function pendingCheckIns(queryClient: QueryClient): number {
 }
 
 /** Refresh stats once, after the last queued mark (the settling one still counts as pending here). */
-function invalidateWhenDrained(queryClient: QueryClient): Promise<void> | undefined {
+export function checkInSynced(queryClient: QueryClient): Promise<void> | undefined {
   if (pendingCheckIns(queryClient) > 1) return undefined
   return queryClient.invalidateQueries({ queryKey: ['stats'] })
 }
@@ -50,13 +50,30 @@ export function registerCheckInDefaults(queryClient: QueryClient): void {
       await queryClient.cancelQueries({ queryKey: ['stats', 'week'] })
       queryClient.setQueriesData<WeekView>({ queryKey: ['stats', 'week'] }, (week) => week && patchWeek(week, vars))
     },
-    onSuccess: () => invalidateWhenDrained(queryClient),
+    onSuccess: () => checkInSynced(queryClient),
     onError: (error, vars: CheckInVars) => {
       if (error instanceof ApiError && error.status < 500) {
         showSyncToast(`Couldn’t sync ${habitName(queryClient, vars.habitId)}. Refreshed.`)
         return queryClient.invalidateQueries({ queryKey: ['stats'] })
       }
-      return invalidateWhenDrained(queryClient)
+      return checkInSynced(queryClient)
     },
   })
+}
+
+export function isCheckIn(mutation: Mutation): boolean {
+  return mutation.options.mutationKey?.[0] === CHECK_IN_KEY[0]
+}
+
+/** Restored marks may be paused (offline) or were waiting for sign-in; continue them all, in scope order. */
+export async function resumeCheckIns(queryClient: QueryClient): Promise<void> {
+  const pending = queryClient.getMutationCache().findAll({ mutationKey: CHECK_IN_KEY, status: 'pending' })
+  await Promise.all(pending.map((mutation) => mutation.continue().catch(() => undefined)))
+}
+
+/** Removes the marks before rejecting the gate, so none queued behind it can run under a different user. */
+export function discardCheckIns(queryClient: QueryClient): void {
+  const cache = queryClient.getMutationCache()
+  for (const mutation of cache.findAll({ mutationKey: CHECK_IN_KEY })) cache.remove(mutation)
+  authDiscarded()
 }

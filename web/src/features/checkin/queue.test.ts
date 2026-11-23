@@ -1,13 +1,15 @@
 import { MutationObserver, onlineManager, type QueryClient } from '@tanstack/react-query'
+import { persistQueryClientRestore, persistQueryClientSave } from '@tanstack/react-query-persist-client'
 import { waitFor } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { CACHE_KEY, createPersister, persistOptions, type KeyValueStorage } from '../../api/persist'
 import { createQueryClient } from '../../api/queryClient'
 import type { WeekView } from '../../api/types'
 import { subscribeSyncToast } from '../../lib/syncToast'
 import { problemResponse, requests, stubApi } from '../../test/http'
 import { authRestored } from './authGate'
 import type { CheckInVars } from './patchWeek'
-import { CHECK_IN_KEY, pendingCheckIns } from './queue'
+import { CHECK_IN_KEY, discardCheckIns, pendingCheckIns, resumeCheckIns } from './queue'
 
 const WEEK_KEY = ['stats', 'week', 'current']
 const week: WeekView = {
@@ -25,6 +27,19 @@ function mark(vars: CheckInVars) {
 }
 const stateOf = () => queryClient.getQueryData<WeekView>(WEEK_KEY)?.habits[0].current?.state
 const writes = (fetchMock: ReturnType<typeof stubApi>) => requests(fetchMock).filter((r) => r.method !== 'GET')
+function memoryStorage(): { items: Map<string, string>; storage: KeyValueStorage } {
+  const items = new Map<string, string>()
+  const storage: KeyValueStorage = {
+    getItem: async (key) => items.get(key) ?? null,
+    setItem: async (key, value) => {
+      items.set(key, value)
+    },
+    removeItem: async (key) => {
+      items.delete(key)
+    },
+  }
+  return { items, storage }
+}
 
 describe('check-in queue', () => {
   beforeEach(() => {
@@ -92,5 +107,60 @@ describe('check-in queue', () => {
     authRestored()
     await waitFor(() => expect(pendingCheckIns(queryClient)).toBe(0))
     expect(writes(fetchMock)).toHaveLength(2)
+  })
+  it('saves a queued mark with the cache and syncs it after a reload', async () => {
+    const items = new Map<string, string>()
+    const storage: KeyValueStorage = {
+      getItem: async (key) => items.get(key) ?? null,
+      setItem: async (key, value) => {
+        items.set(key, value)
+      },
+      removeItem: async (key) => {
+        items.delete(key)
+      },
+    }
+    const persister = createPersister(storage, 0)
+    const fetchMock = stubApi(() => noContent())
+    onlineManager.setOnline(false)
+    mark(GREEN)
+    await waitFor(() => expect(stateOf()).toBe('GREEN'))
+    await persistQueryClientSave({ queryClient, ...persistOptions(persister) })
+    await vi.waitFor(() => expect(items.get(CACHE_KEY)).toContain('"checkIn"'))
+
+    const reloaded = createQueryClient({ retry: false })
+    reloaded.mount()
+    await persistQueryClientRestore({ queryClient: reloaded, ...persistOptions(persister) })
+    expect(reloaded.getQueryData<WeekView>(WEEK_KEY)?.habits[0].current?.state).toBe('GREEN')
+    onlineManager.setOnline(true)
+    await resumeCheckIns(reloaded)
+
+    await waitFor(() => expect(pendingCheckIns(reloaded)).toBe(0))
+    expect(writes(fetchMock).filter((r) => r.method === 'PUT')).not.toHaveLength(0)
+    reloaded.unmount()
+  })
+
+  it('saves a mark waiting for sign-in with the cache and resends it after a reload', async () => {
+    const { items, storage } = memoryStorage()
+    const persister = createPersister(storage, 0)
+    let signedIn = false
+    const fetchMock = stubApi(() => (signedIn ? noContent() : problemResponse(401, 'UNAUTHENTICATED')))
+    mark(GREEN)
+    await waitFor(() => expect(writes(fetchMock)).toHaveLength(1))
+    expect(queryClient.getMutationCache().getAll()[0].state.isPaused).toBe(false)
+    await persistQueryClientSave({ queryClient, ...persistOptions(persister) })
+    await vi.waitFor(() => expect(items.get(CACHE_KEY)).toContain('"checkIn"'))
+
+    // The old page goes away; this also releases the shared auth gate.
+    discardCheckIns(queryClient)
+    signedIn = true
+    const reloaded = createQueryClient({ retry: false })
+    reloaded.mount()
+    await persistQueryClientRestore({ queryClient: reloaded, ...persistOptions(persister) })
+    expect(pendingCheckIns(reloaded)).toBe(1)
+    await resumeCheckIns(reloaded)
+
+    await waitFor(() => expect(pendingCheckIns(reloaded)).toBe(0))
+    expect(writes(fetchMock)).toHaveLength(2)
+    reloaded.unmount()
   })
 })
