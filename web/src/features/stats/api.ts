@@ -48,8 +48,8 @@ export function useSaveCheckIn() {
     onSuccess: async (_data, vars) => {
       await checkInSynced(queryClient)
       if (vars.color !== 'YELLOW') return
-      // A failed streaks lookup only skips the dialog; the save itself succeeded.
-      const streaks = await queryClient.ensureQueryData(streaksQuery).catch(() => undefined)
+      // Fresh streaks even mid-queue, where checkInSynced skips the refresh. A failed lookup only skips the dialog.
+      const streaks = await queryClient.fetchQuery({ ...streaksQuery, staleTime: 0 }).catch(() => undefined)
       const streak = streaks?.find((s) => s.habitId === vars.habitId)
       const before = streakBefore.get(vars)
       if (atYellowLimit(before) && streak && streak.current < before.current) {

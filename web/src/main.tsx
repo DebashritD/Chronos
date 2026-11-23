@@ -8,7 +8,7 @@ import { createPersister, persistOptions } from './api/persist'
 import { createQueryClient } from './api/queryClient'
 import { YellowLimitProvider } from './app/YellowLimitProvider'
 import { SessionProvider } from './features/auth/session'
-import { resumeCheckIns } from './features/checkin/queue'
+import { resumeCheckInsOnRestore } from './features/checkin/queue'
 import '@fontsource/inter/400.css'
 import '@fontsource/inter/500.css'
 import '@fontsource/inter/600.css'
@@ -26,7 +26,7 @@ const persister = createPersister()
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <PersistQueryClientProvider client={queryClient} persistOptions={persistOptions(persister)}
-      onSuccess={() => resumeCheckIns(queryClient)}>
+      onSuccess={() => resumeCheckInsOnRestore(queryClient)}>
       <BrowserRouter>
         <SessionProvider>
           <YellowLimitProvider>

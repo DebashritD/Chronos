@@ -71,6 +71,11 @@ export async function resumeCheckIns(queryClient: QueryClient): Promise<void> {
   await Promise.all(pending.map((mutation) => mutation.continue().catch(() => undefined)))
 }
 
+/** For the persist provider's onSuccess, which it awaits before it stops restoring: resume in the background. */
+export function resumeCheckInsOnRestore(queryClient: QueryClient): void {
+  void resumeCheckIns(queryClient)
+}
+
 /** Removes the marks before rejecting the gate, so none queued behind it can run under a different user. */
 export function discardCheckIns(queryClient: QueryClient): void {
   const cache = queryClient.getMutationCache()

@@ -109,16 +109,7 @@ describe('check-in queue', () => {
     expect(writes(fetchMock)).toHaveLength(2)
   })
   it('saves a queued mark with the cache and syncs it after a reload', async () => {
-    const items = new Map<string, string>()
-    const storage: KeyValueStorage = {
-      getItem: async (key) => items.get(key) ?? null,
-      setItem: async (key, value) => {
-        items.set(key, value)
-      },
-      removeItem: async (key) => {
-        items.delete(key)
-      },
-    }
+    const { items, storage } = memoryStorage()
     const persister = createPersister(storage, 0)
     const fetchMock = stubApi(() => noContent())
     onlineManager.setOnline(false)

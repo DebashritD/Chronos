@@ -383,6 +383,30 @@ describe('TodayPage', () => {
     expect(within(read).getByText('2/2 yellows')).toBeInTheDocument()
   })
 
+  it('still warns when the yellow syncs while another mark is queued behind it', async () => {
+    let readRun = 1
+    api((r) => {
+      if (r.method === 'PUT') {
+        if (r.url.startsWith('/api/habits/1/')) readRun = 2
+        return new Response(null, { status: 204 })
+      }
+      if (r.url === '/api/stats/streaks')
+        return jsonResponse([{ habitId: 1, name: 'Read', current: 3, best: 9, yellowRun: readRun, yellowLimit: 2 }])
+      return undefined
+    })
+    const { user, queryClient } = renderWithProviders(<TodayPage />)
+    const read = await screen.findByRole('article', { name: 'Read' })
+    const stretch = screen.getByRole('article', { name: 'Stretch' })
+    await waitFor(() => expect(queryClient.getQueryData(['stats', 'streaks'])).toBeDefined())
+
+    act(() => onlineManager.setOnline(false))
+    await user.click(within(read).getByRole('button', { name: 'Minimum' }))
+    await user.click(within(stretch).getByRole('button', { name: 'Minimum' }))
+    act(() => onlineManager.setOnline(true))
+
+    expect(await screen.findByRole('alertdialog', { name: 'Yellow limit reached' })).toHaveTextContent('on Read')
+  })
+
   it('does not warn again when a yellow is re-saved on a habit already at the limit', async () => {
     const fetchMock = api((r) => {
       if (r.method === 'PUT') return jsonResponse({ periodStart: '2026-11-18', color: 'YELLOW', note: 'ch 3' })
