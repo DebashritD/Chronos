@@ -334,4 +334,29 @@ describe('TodayPage', () => {
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
     expect(within(read).getByText('2/2 yellows')).toBeInTheDocument()
   })
+
+  it('does not warn again when a yellow is re-saved on a habit already at the limit', async () => {
+    const fetchMock = api((r) => {
+      if (r.method === 'PUT') return jsonResponse({ periodStart: '2026-11-18', color: 'YELLOW', note: 'ch 3' })
+      if (r.url === '/api/stats/streaks')
+        return jsonResponse([{ habitId: 1, name: 'Read', current: 3, best: 9, yellowRun: 2, yellowLimit: 2 }])
+      return undefined
+    })
+    const { user } = renderWithProviders(<TodayPage />)
+
+    const read = await screen.findByRole('article', { name: 'Read' })
+    await within(read).findByText('2/2 yellows')
+    await user.click(within(read).getByRole('button', { name: 'Minimum' }))
+
+    await waitFor(() => {
+      const all = requests(fetchMock)
+      const put = all.findIndex((r) => r.method === 'PUT')
+      expect(put).toBeGreaterThanOrEqual(0)
+      expect(all.slice(put + 1).some((r) => r.url === '/api/stats/streaks')).toBe(true)
+    })
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50))
+    })
+    expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
+  })
 })

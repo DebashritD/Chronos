@@ -34,7 +34,7 @@ Migration `V2__yellow_cap.sql`:
 - **Account**: "Streak rules" card: number input "Yellows allowed in a row" (1–7), saved via `PUT /api/auth/me`.
 - **HabitForm** (create + edit): checkbox "Limit yellows in a row", default checked, hint "Up to N in a row keep your streak".
 - **Habits tile**: small chip "≤N yellows" when `yellowCap`.
-- **YellowLimitDialog** (shared): text "You've hit N yellows in a row on <habit>. Next time go green, or the streak starts over." with an OK button. Shown after a YELLOW save (Today card or Progress cell) when the refreshed streak has `yellowLimit != null && yellowRun >= yellowLimit` and `yellowRun` changed with this save (re-saving a note on a yellow does not re-show it).
+- **YellowLimitDialog** (shared): text "You've hit N yellows in a row on <habit>. Next time go green, or the streak starts over." with a "Got it" button. Shown after a YELLOW save (Today card or Progress cell) when the refreshed streak has `yellowLimit != null && yellowRun >= yellowLimit` and `yellowRun` changed with this save (re-saving a note on a yellow does not re-show it).
 - **Today HabitCard**: amber badge "N/N yellows" while `yellowLimit != null && yellowRun >= yellowLimit`.
 
 ## Testing

@@ -48,7 +48,9 @@ export function useSaveCheckIn() {
     onSuccess: async (_data, { habitId, color }, context) => {
       await queryClient.invalidateQueries({ queryKey: ['stats'] })
       if (color !== 'YELLOW') return
-      const streak = (await queryClient.ensureQueryData(streaksQuery)).find((s) => s.habitId === habitId)
+      // A failed streaks lookup only skips the dialog; the save itself succeeded.
+      const streaks = await queryClient.ensureQueryData(streaksQuery).catch(() => undefined)
+      const streak = streaks?.find((s) => s.habitId === habitId)
       if (atYellowLimit(streak) && streak.yellowRun !== context?.runBefore) {
         notifyYellowLimit({ name: streak.name, limit: streak.yellowLimit })
       }
