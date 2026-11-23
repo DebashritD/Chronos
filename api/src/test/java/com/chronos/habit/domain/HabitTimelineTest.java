@@ -82,7 +82,7 @@ class HabitTimelineTest {
                 nov(13), Color.GREEN, nov(14), Color.GREEN, nov(15), Color.YELLOW,
                 nov(17), Color.GREEN), List.of());
 
-        assertThat(timeline.streak()).isEqualTo(new Streak(1, 3));
+        assertThat(timeline.streak(null)).isEqualTo(new Streak(1, 3, 0));
     }
 
     @Test
@@ -90,7 +90,39 @@ class HabitTimelineTest {
         var timeline = daily(nov(14), Map.of(nov(14), Color.GREEN, nov(17), Color.GREEN, TODAY, Color.YELLOW),
                 List.of(new DateRange(nov(15), nov(16))));
 
-        assertThat(timeline.streak()).isEqualTo(new Streak(3, 3));
+        assertThat(timeline.streak(null)).isEqualTo(new Streak(3, 3, 1));
+    }
+
+    @Test
+    void yellowCapAllowsNYellowsInARowAndGreenClearsTheRun() {
+        var timeline = daily(nov(14), Map.of(nov(14), Color.GREEN, nov(15), Color.YELLOW, nov(16), Color.YELLOW,
+                nov(17), Color.GREEN, TODAY, Color.YELLOW), List.of());
+
+        assertThat(timeline.streak(2)).isEqualTo(new Streak(5, 5, 1));
+    }
+
+    @Test
+    void yellowBeyondTheCapStartsANewStreakAtOne() {
+        var colors = Map.of(nov(14), Color.GREEN, nov(15), Color.YELLOW, nov(16), Color.YELLOW, nov(17), Color.YELLOW);
+
+        assertThat(daily(nov(14), colors, List.of()).streak(2)).isEqualTo(new Streak(1, 3, 1));
+        assertThat(daily(nov(14), colors, List.of()).streak(null)).isEqualTo(new Streak(4, 4, 3));
+    }
+
+    @Test
+    void redClearsTheYellowRun() {
+        var timeline = daily(nov(14), Map.of(nov(14), Color.YELLOW, nov(15), Color.YELLOW, nov(16), Color.RED,
+                nov(17), Color.YELLOW, TODAY, Color.YELLOW), List.of());
+
+        assertThat(timeline.streak(2)).isEqualTo(new Streak(2, 2, 2));
+    }
+
+    @Test
+    void pausedPeriodsNeitherExtendNorClearTheYellowRun() {
+        var timeline = daily(nov(14), Map.of(nov(14), Color.YELLOW, nov(16), Color.YELLOW, nov(17), Color.YELLOW),
+                List.of(new DateRange(nov(15), nov(15))));
+
+        assertThat(timeline.streak(2)).isEqualTo(new Streak(1, 2, 1));
     }
 
     @Test

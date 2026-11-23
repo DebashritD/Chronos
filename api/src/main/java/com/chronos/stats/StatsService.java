@@ -119,7 +119,7 @@ public class StatsService {
         Map<Long, HabitTimeline> byId = timelines.load(habits, today);
         return habits.stream()
                 .map(h -> {
-                    var streak = byId.get(h.id()).streak();
+                    var streak = byId.get(h.id()).streak(null);
                     return new StreakResponse(h.id(), h.name(), streak.current(), streak.best());
                 })
                 .toList();

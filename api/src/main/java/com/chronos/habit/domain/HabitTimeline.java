@@ -62,21 +62,36 @@ public final class HabitTimeline {
         return schedule.isPeriodStart(date) ? Optional.of(date) : Optional.empty();
     }
 
-    public Streak streak() {
+    /** {@code maxYellows} caps consecutive yellows: one more starts a new streak at 1. Null means no cap. */
+    public Streak streak(Integer maxYellows) {
         int current = 0;
         int best = 0;
+        int yellowRun = 0;
         for (LocalDate start : schedule.periodStartsBetween(schedule.firstPeriodStart(), today)) {
             switch (stateOf(start)) {
-                case GREEN, YELLOW -> {
+                case GREEN -> {
                     current++;
-                    best = Math.max(best, current);
+                    yellowRun = 0;
                 }
-                case RED, GREY -> current = 0;
+                case YELLOW -> {
+                    yellowRun++;
+                    if (maxYellows != null && yellowRun > maxYellows) {
+                        current = 1;
+                        yellowRun = 1;
+                    } else {
+                        current++;
+                    }
+                }
+                case RED, GREY -> {
+                    current = 0;
+                    yellowRun = 0;
+                }
                 case PAUSED, PENDING, NOT_DUE -> {
                 }
             }
+            best = Math.max(best, current);
         }
-        return new Streak(current, best);
+        return new Streak(current, best, yellowRun);
     }
 
     public Distribution distribution(LocalDate from, LocalDate to) {
