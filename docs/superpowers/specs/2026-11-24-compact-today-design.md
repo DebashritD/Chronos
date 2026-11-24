@@ -33,3 +33,24 @@ Update `TodayPage.test.tsx`:
   preview; clicking it opens the picker dialog.
 - Marking an unmarked habit moves it into Done and shows the "That's honest" preview after Missed.
 - Remove/replace the inline note-editing tests (notes are now covered via the picker test).
+
+---
+
+# Part 2 — Progress week in one card (mockup option B)
+
+## Problem
+Progress → Week draws one bordered tile per habit with gaps between them, wasting vertical space.
+
+## Decisions
+1. All habits sit inside **one card** (`rounded-card border border-line bg-card px-4 py-3`), mobile and desktop alike.
+2. The Mon–Sun day header moves **inside** that card, at its top, so its columns align with the strips with no
+   border-offset padding. A divider (`border-b border-line`) separates it from the first habit, with `pb-2`.
+3. Each habit is a row inside the card: unchanged content (name + subtitle inline, streak right, pill strip below),
+   with `py-2.5` and a `border-t border-line` divider between rows (none above the first row).
+4. Rows stay `<li aria-label={habit.name}>` with the `h3` name, so the name ↔ strip association is the same as now
+   (each cell button's accessible name already starts with the habit name).
+5. Month view, `WeekGrid` (Today desktop) and `WeekCellButton` are unchanged.
+
+## Testing
+`WeekPanel.test.tsx`: the list's items share one card container (no per-item card class); the header sits inside the
+same card as the list. Existing tests on names, streaks, pills and picking keep passing.
