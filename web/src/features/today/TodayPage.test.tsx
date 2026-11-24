@@ -244,6 +244,7 @@ describe('TodayPage', () => {
     await waitFor(() => expect(within(stretch).queryByRole('button', { name: 'Target' })).not.toBeInTheDocument())
     expect(stretch).toHaveTextContent('Target hit')
     expect(stretch.querySelector('[data-pop]')).not.toBeNull()
+    expect(within(stretch).getByRole('button', { name: 'Stretch' })).toHaveFocus()
     const names = screen.getAllByRole('article').map((article) => within(article).getByRole('heading').textContent)
     expect(names).toEqual(['Run', 'Piano', 'Swim', 'Read', 'Stretch'])
   })

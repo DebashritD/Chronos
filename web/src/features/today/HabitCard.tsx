@@ -1,5 +1,5 @@
 import { Clock, Flame, NotebookPen } from 'lucide-react'
-import { useId, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { messageFor } from '../../api/errors'
 import type { Color, WeekCell, WeekHabit } from '../../api/types'
 import { cellClass, isColor, STATE_LABEL } from '../../lib/cells'
@@ -64,12 +64,24 @@ export function HabitCard({ habit, cell, streak, now, yellowLimit, onOpen }: Hab
   const [error, setError] = useState<string | null>(null)
   const [popped, setPopped] = useState<Color | null>(null)
   const [missedJustNow, setMissedJustNow] = useState(false)
+  const articleRef = useRef<HTMLElement>(null)
+  const rowButtonRef = useRef<HTMLButtonElement>(null)
   const marked = isColor(cell.state)
   // At the limit, one more yellow restarts the streak (re-tapping today's own yellow changes nothing).
   const yellowResets = yellowLimit !== undefined && cell.state !== 'YELLOW'
   const timeLeft = cell.closesAt ? formatTimeLeft(cell.closesAt, now, habit.frequency) : null
   const tone: Tone = marked ? 'done' : cell.closesAt && isUrgent(cell.closesAt, now) ? 'urgent' : 'normal'
   const freq = frequencyChip(habit)
+  const collapsedJustNow = cell.state === 'GREEN' && popped === 'GREEN'
+
+  // Collapsing unmounts the pressed Target button; hand focus to the row's button unless it has moved elsewhere.
+  useEffect(() => {
+    if (!collapsedJustNow) return
+    const active = document.activeElement
+    if (active === null || active === document.body || articleRef.current?.contains(active)) {
+      rowButtonRef.current?.focus()
+    }
+  }, [collapsedJustNow])
 
   async function mark(color: Color): Promise<void> {
     if (cell.state === color) return
@@ -96,14 +108,14 @@ export function HabitCard({ habit, cell, streak, now, yellowLimit, onOpen }: Hab
 
   if (cell.state === 'GREEN') {
     return (
-      <article aria-labelledby={titleId}
+      <article ref={articleRef} aria-labelledby={titleId}
         className="relative flex items-center gap-3 rounded-[18px] border border-line bg-card px-4 py-3">
         <span aria-hidden="true" data-pop={popped === 'GREEN' ? '' : undefined} onAnimationEnd={() => setPopped(null)}
           className={`h-[22px] w-[22px] flex-none rounded-[7px] data-pop:animate-pop ${cellClass(cell.state)}`} />
         <div className="min-w-0 flex-1">
           <h2 id={titleId} className="text-[15px] font-semibold break-words text-fg">
             {/* The ::after stretches the tap target over the whole row. */}
-            <button type="button" aria-haspopup="dialog" onClick={onOpen}
+            <button ref={rowButtonRef} type="button" aria-haspopup="dialog" onClick={onOpen}
               className="text-left after:absolute after:inset-0 after:rounded-[18px]">
               {habit.name}
             </button>
@@ -118,7 +130,7 @@ export function HabitCard({ habit, cell, streak, now, yellowLimit, onOpen }: Hab
   }
 
   return (
-    <article aria-labelledby={titleId} className={card}>
+    <article ref={articleRef} aria-labelledby={titleId} className={card}>
       <div className="flex items-start justify-between gap-3">
         <h2 id={titleId} className="min-w-0 text-[18px] font-semibold break-words text-fg">
           <button type="button" aria-haspopup="dialog" onClick={onOpen} className="text-left hover:underline">

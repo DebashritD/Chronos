@@ -42,13 +42,16 @@ test('marks a habit offline, survives a reload and syncs when back online', asyn
   await context.setOffline(true)
   await expect(page.getByText('Offline', { exact: true })).toBeVisible()
   await card.getByRole('button', { name: 'Target', exact: true }).click()
-  await expect(card.getByRole('button', { name: 'Target', exact: true })).toHaveAttribute('aria-pressed', 'true')
+  await expect(card.getByRole('button', { name: 'Target', exact: true })).toHaveCount(0)
+  await expect(card).toContainText('Target hit')
   await expect(page.getByText('Offline · 1 waiting to sync')).toBeVisible()
   await expect.poll(() => savedCache(page)).toContain('"checkIn"')
 
   await page.reload()
   const reloaded = page.getByRole('article', { name: 'Read' })
-  await expect(reloaded.getByRole('button', { name: 'Target', exact: true })).toHaveAttribute('aria-pressed', 'true')
+  await expect(reloaded).toBeVisible()
+  await expect(reloaded.getByRole('button', { name: 'Target', exact: true })).toHaveCount(0)
+  await expect(reloaded).toContainText('Target hit')
   await expect(page.getByText('Offline · 1 waiting to sync')).toBeVisible()
 
   await context.setOffline(false)
