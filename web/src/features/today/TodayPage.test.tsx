@@ -90,6 +90,16 @@ function chip(article: HTMLElement): HTMLElement | null {
   return article.querySelector('[data-tone]')
 }
 
+/** The week with one habit's current period (18 Nov) set to `state`; `only` drops the other habits. */
+function weekWith(habitId: number, state: WeekCell['state'], only = false): WeekView {
+  const habits = week.habits.map((habit) => {
+    if (habit.id !== habitId || !habit.current) return habit
+    const cells = habit.cells.map((cell) => (cell.date === '2026-11-18' ? { ...cell, state } : cell))
+    return { ...habit, current: { ...habit.current, state }, cells }
+  })
+  return { ...week, habits: only ? habits.filter((habit) => habit.id === habitId) : habits }
+}
+
 describe('TodayPage', () => {
   beforeEach(() => {
     vi.useFakeTimers({ toFake: ['Date'] })
@@ -113,31 +123,36 @@ describe('TodayPage', () => {
     expect(within(progress).getByText('12h left')).toBeInTheDocument()
     expect(within(progress).getByRole('img', { name: '1 of 5 marked: 1 target' })).toBeInTheDocument()
     const names = screen.getAllByRole('article').map((article) => within(article).getByRole('heading').textContent)
-    expect(names).toEqual(['Read', 'Run', 'Piano', 'Stretch', 'Swim'])
+    expect(names).toEqual(['Run', 'Piano', 'Stretch', 'Swim', 'Read'])
+    expect(screen.getByRole('heading', { level: 2, name: 'Done' })).toBeInTheDocument()
 
+    // Read is green: a one-line row with its colour, note and streak, no mark buttons or countdown.
     const read = screen.getByRole('article', { name: 'Read' })
-    expect(within(read).getByRole('button', { name: 'Target' })).toHaveAttribute('aria-pressed', 'true')
-    expect(within(read).getByRole('button', { name: 'Minimum' })).toHaveAttribute('aria-pressed', 'false')
-    expect(within(read).getByRole('button', { name: 'Missed' })).toHaveAttribute('aria-pressed', 'false')
-    expect(read).toHaveTextContent('Min 1 page · Target 20 pages')
+    expect(within(read).queryByRole('button', { name: /^(Target|Minimum|Missed)$/ })).not.toBeInTheDocument()
+    expect(read).toHaveTextContent('Target hit')
+    expect(read).toHaveTextContent('ch 3')
+    expect(read).not.toHaveTextContent('20 pages')
     await waitFor(() => expect(read).toHaveTextContent('Current streak 12'))
-    expect(chip(read)).toHaveTextContent('12h left today')
-    expect(chip(read)).toHaveAttribute('data-tone', 'done')
+    expect(chip(read)).toBeNull()
 
     const run = screen.getByRole('article', { name: 'Run' })
-    expect(run).toHaveTextContent('Every 3 days · Min 1 km · Target 5 km')
+    expect(run).not.toHaveTextContent('5 km')
+    expect(within(run).getByText('Every 3 days')).toBeInTheDocument()
     // Mid-period: the 17–19 Nov period still shows on the 18th.
     expect(chip(run)).toHaveTextContent('1d 12h left in this period')
     expect(chip(run)).toHaveAttribute('data-tone', 'normal')
 
     const piano = screen.getByRole('article', { name: 'Piano' })
-    expect(piano).toHaveTextContent('This week · Min 5 min · Target 30 min')
+    expect(within(piano).getByText('This week')).toBeInTheDocument()
     expect(chip(piano)).toHaveTextContent('4d 12h left this week')
 
-    expect(chip(screen.getByRole('article', { name: 'Stretch' }))).toHaveTextContent('12h left today')
+    const stretch = screen.getByRole('article', { name: 'Stretch' })
+    expect(stretch).not.toHaveTextContent('1 pose')
+    expect(within(stretch).queryByText(/^(Every \d+ days|This week)$/)).not.toBeInTheDocument()
+    expect(chip(stretch)).toHaveTextContent('12h left today')
 
     const swim = screen.getByRole('article', { name: 'Swim' })
-    expect(swim).toHaveTextContent('Every 7 days · Min 1 lap · Target 20 laps')
+    expect(within(swim).getByText('Every 7 days')).toBeInTheDocument()
     expect(chip(swim)).toHaveTextContent('3d 12h left in this period')
   })
 
@@ -149,7 +164,6 @@ describe('TodayPage', () => {
     const stretch = await screen.findByRole('article', { name: 'Stretch' })
     expect(chip(stretch)).toHaveTextContent('2h 40m left')
     expect(chip(stretch)).toHaveAttribute('data-tone', 'urgent')
-    expect(chip(screen.getByRole('article', { name: 'Read' }))).toHaveAttribute('data-tone', 'done')
   })
 
   it('hides the countdown once the period has closed', async () => {
@@ -178,75 +192,70 @@ describe('TodayPage', () => {
   })
 
   it('marks with one tap, keeping the existing note', async () => {
-    const fetchMock = api((r) => (r.method === 'PUT' ? jsonResponse({ periodStart: '2026-11-18', color: 'RED', note: 'ch 3' }) : undefined))
+    const red = weekWith(5, 'RED')
+    red.habits = red.habits.map((habit) => habit.id === 5 && habit.current
+      ? { ...habit, current: { ...habit.current, note: 'sore' } } : habit)
+    const fetchMock = api((r) => (r.method === 'PUT' ? jsonResponse({ periodStart: '2026-11-18', color: 'YELLOW', note: 'sore' }) : undefined), red)
     const { user } = renderWithProviders(<TodayPage />)
 
-    const read = await screen.findByRole('article', { name: 'Read' })
-    await user.click(within(read).getByRole('button', { name: 'Missed' }))
+    const stretch = await screen.findByRole('article', { name: 'Stretch' })
+    expect(within(stretch).getByRole('button', { name: 'Missed' })).toHaveAttribute('aria-pressed', 'true')
+    expect(stretch).toHaveTextContent('sore')
+    await user.click(within(stretch).getByRole('button', { name: 'Minimum' }))
 
     await waitFor(() =>
       expect(requests(fetchMock).find((r) => r.method === 'PUT')).toEqual({
         method: 'PUT',
-        url: '/api/habits/1/check-ins/2026-11-18',
-        body: { color: 'RED', note: 'ch 3' },
+        url: '/api/habits/5/check-ins/2026-11-18',
+        body: { color: 'YELLOW', note: 'sore' },
       }),
-    )
-    await waitFor(() =>
-      expect(requests(fetchMock).filter((r) => r.url.startsWith('/api/stats/week')).length).toBeGreaterThan(1),
     )
   })
 
   it('vibrates on a tap and pops the button once saved', async () => {
     const vibrate = vi.fn(() => true)
     Object.defineProperty(navigator, 'vibrate', { value: vibrate, configurable: true })
-    api((r) => (r.method === 'PUT' ? jsonResponse({ periodStart: '2026-11-18', color: 'YELLOW', note: 'ch 3' }) : undefined))
-    const { user } = renderWithProviders(<TodayPage />)
-
-    const read = await screen.findByRole('article', { name: 'Read' })
-    await user.click(within(read).getByRole('button', { name: 'Minimum' }))
-
-    expect(vibrate).toHaveBeenCalledWith(14)
-    await waitFor(() => expect(within(read).getByRole('button', { name: 'Minimum' })).toHaveAttribute('data-pop'))
-    delete (navigator as { vibrate?: unknown }).vibrate
-  })
-
-  it('shows the saved note and edits it in place', async () => {
-    const fetchMock = api((r) => (r.method === 'PUT' ? jsonResponse({ periodStart: '2026-11-18', color: 'GREEN', note: 'ch 4' }) : undefined))
-    const { user } = renderWithProviders(<TodayPage />)
-
-    const read = await screen.findByRole('article', { name: 'Read' })
-    await user.click(within(read).getByRole('button', { name: 'Edit note for Read' }))
-    const field = within(read).getByRole('textbox', { name: 'Note for Read' })
-    expect(field).toHaveValue('ch 3')
-    await user.clear(field)
-    await user.type(field, '  ch 4  ')
-    await user.click(within(read).getByRole('button', { name: 'Save note' }))
-
-    await waitFor(() =>
-      expect(requests(fetchMock).find((r) => r.method === 'PUT')).toEqual({
-        method: 'PUT',
-        url: '/api/habits/1/check-ins/2026-11-18',
-        body: { color: 'GREEN', note: 'ch 4' },
-      }),
-    )
-    await waitFor(() => expect(within(read).queryByRole('textbox')).not.toBeInTheDocument())
-  })
-
-  it('offers a note only once the habit is marked, and Cancel discards the draft', async () => {
-    const fetchMock = api()
+    api((r) => (r.method === 'PUT' ? jsonResponse({ periodStart: '2026-11-18', color: 'YELLOW', note: null }) : undefined))
     const { user } = renderWithProviders(<TodayPage />)
 
     const stretch = await screen.findByRole('article', { name: 'Stretch' })
-    expect(within(stretch).queryByRole('button', { name: /note/i })).not.toBeInTheDocument()
+    await user.click(within(stretch).getByRole('button', { name: 'Minimum' }))
 
-    const read = screen.getByRole('article', { name: 'Read' })
-    expect(read).toHaveTextContent('ch 3')
-    await user.click(within(read).getByRole('button', { name: 'Edit note for Read' }))
-    await user.type(within(read).getByRole('textbox', { name: 'Note for Read' }), ' more')
-    await user.click(within(read).getByRole('button', { name: 'Cancel' }))
-    expect(within(read).queryByRole('textbox')).not.toBeInTheDocument()
-    expect(read).toHaveTextContent('ch 3')
-    expect(requests(fetchMock).some((r) => r.method === 'PUT')).toBe(false)
+    expect(vibrate).toHaveBeenCalledWith(14)
+    await waitFor(() => expect(within(stretch).getByRole('button', { name: 'Minimum' })).toHaveAttribute('data-pop'))
+    delete (navigator as { vibrate?: unknown }).vibrate
+  })
+
+  it('collapses a habit into Done once it is green, popping the row', async () => {
+    let after = false
+    api((r) => {
+      if (r.method === 'PUT') {
+        after = true
+        return jsonResponse({ periodStart: '2026-11-18', color: 'GREEN', note: null })
+      }
+      if (r.url.startsWith('/api/stats/week')) return jsonResponse(after ? weekWith(5, 'GREEN') : week)
+      return undefined
+    })
+    const { user } = renderWithProviders(<TodayPage />)
+
+    const stretch = await screen.findByRole('article', { name: 'Stretch' })
+    await user.click(within(stretch).getByRole('button', { name: 'Target' }))
+
+    await waitFor(() => expect(within(stretch).queryByRole('button', { name: 'Target' })).not.toBeInTheDocument())
+    expect(stretch).toHaveTextContent('Target hit')
+    expect(stretch.querySelector('[data-pop]')).not.toBeNull()
+    const names = screen.getAllByRole('article').map((article) => within(article).getByRole('heading').textContent)
+    expect(names).toEqual(['Run', 'Piano', 'Swim', 'Read', 'Stretch'])
+  })
+
+  it('edits notes only in the picker, not on the card', async () => {
+    api(undefined, weekWith(5, 'YELLOW'))
+    renderWithProviders(<TodayPage />)
+
+    const stretch = await screen.findByRole('article', { name: 'Stretch' })
+    expect(within(stretch).getByRole('button', { name: 'Minimum' })).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.queryByRole('button', { name: /note/i })).not.toBeInTheDocument()
+    expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
   })
 
   it('marks the current period of multi-day habits, even one that began last week', async () => {
@@ -267,16 +276,16 @@ describe('TodayPage', () => {
   })
 
   it('does nothing when the selected button is tapped again', async () => {
-    const fetchMock = api()
+    const fetchMock = api(undefined, weekWith(5, 'YELLOW'))
     const { user } = renderWithProviders(<TodayPage />)
 
-    const read = await screen.findByRole('article', { name: 'Read' })
-    await user.click(within(read).getByRole('button', { name: 'Target' }))
+    const stretch = await screen.findByRole('article', { name: 'Stretch' })
+    await user.click(within(stretch).getByRole('button', { name: 'Minimum' }))
 
     expect(requests(fetchMock).filter((r) => r.method === 'PUT')).toEqual([])
   })
 
-  it('opens the picker from the habit name to add a note', async () => {
+  it('opens the picker from a done row to edit its note', async () => {
     api()
     const { user } = renderWithProviders(<TodayPage />)
 
@@ -338,25 +347,22 @@ describe('TodayPage', () => {
   })
 
   it('answers a miss with a kind word instead of the pop', async () => {
-    let readState: WeekCell['state'] = 'GREEN'
+    let state: WeekCell['state'] = 'PENDING'
     api((r) => {
       if (r.method === 'PUT') {
-        readState = 'RED'
-        return jsonResponse({ periodStart: '2026-11-18', color: 'RED', note: 'ch 3' })
+        state = 'RED'
+        return jsonResponse({ periodStart: '2026-11-18', color: 'RED', note: null })
       }
-      if (r.url.startsWith('/api/stats/week')) {
-        const cells = readCells.map((cell) => (cell.date === '2026-11-18' ? { ...cell, state: readState } : cell))
-        return jsonResponse({ ...week, habits: [{ ...week.habits[0], current: currentOf(cells[2]), cells }] })
-      }
+      if (r.url.startsWith('/api/stats/week')) return jsonResponse(weekWith(5, state, true))
       return undefined
     })
     const { user } = renderWithProviders(<TodayPage />)
 
-    const read = await screen.findByRole('article', { name: 'Read' })
-    await user.click(within(read).getByRole('button', { name: 'Missed' }))
+    const stretch = await screen.findByRole('article', { name: 'Stretch' })
+    await user.click(within(stretch).getByRole('button', { name: 'Missed' }))
 
-    expect(await within(read).findByRole('status')).toHaveTextContent("That's honest. Tomorrow is a fresh start.")
-    expect(within(read).getByRole('button', { name: 'Missed' })).not.toHaveAttribute('data-pop')
+    expect(await within(stretch).findByRole('status')).toHaveTextContent("That's honest. Tomorrow is a fresh start.")
+    expect(within(stretch).getByRole('button', { name: 'Missed' })).not.toHaveAttribute('data-pop')
     expect(screen.getByRole('heading', { name: 'All marked' })).toBeInTheDocument()
   })
 
@@ -368,54 +374,55 @@ describe('TodayPage', () => {
   })
 
   it('warns when a yellow uses up the limit and badges the card', async () => {
-    let readRun = 1
+    let stretchRun = 1
     const fetchMock = api((r) => {
       if (r.method === 'PUT') {
-        readRun = 2
-        return jsonResponse({ periodStart: '2026-11-18', color: 'YELLOW', note: 'ch 3' })
+        stretchRun = 2
+        return jsonResponse({ periodStart: '2026-11-18', color: 'YELLOW', note: null })
       }
+      if (r.url.startsWith('/api/stats/week')) return jsonResponse(stretchRun === 2 ? weekWith(5, 'YELLOW') : week)
       if (r.url === '/api/stats/streaks')
-        return jsonResponse([{ habitId: 1, name: 'Read', current: 3, best: 9, yellowRun: readRun, yellowLimit: 2 }])
+        return jsonResponse([{ habitId: 5, name: 'Stretch', current: 3, best: 9, yellowRun: stretchRun, yellowLimit: 2 }])
       return undefined
     })
     const { user } = renderWithProviders(<TodayPage />)
 
-    const read = await screen.findByRole('article', { name: 'Read' })
-    expect(within(read).queryByText('2/2 yellows')).not.toBeInTheDocument()
+    const stretch = await screen.findByRole('article', { name: 'Stretch' })
+    expect(within(stretch).queryByText('2/2 yellows')).not.toBeInTheDocument()
     const streaksFetches = () => requests(fetchMock).filter((r) => r.url === '/api/stats/streaks').length
     await waitFor(() => expect(streaksFetches()).toBe(1))
-    await user.click(within(read).getByRole('button', { name: 'Minimum' }))
+    await user.click(within(stretch).getByRole('button', { name: 'Minimum' }))
 
     const dialog = await screen.findByRole('alertdialog', { name: 'Yellow limit reached' })
     expect(streaksFetches()).toBe(2)
-    expect(dialog).toHaveTextContent("You've hit 2 yellows in a row on Read. Next time go green, or the streak starts over.")
+    expect(dialog).toHaveTextContent("You've hit 2 yellows in a row on Stretch. Next time go green, or the streak starts over.")
     await user.click(within(dialog).getByRole('button', { name: 'Got it' }))
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
-    expect(within(read).getByText('2/2 yellows')).toBeInTheDocument()
+    expect(within(stretch).getByText('2/2 yellows')).toBeInTheDocument()
   })
 
   it('still warns when the yellow syncs while another mark is queued behind it', async () => {
-    let readRun = 1
+    let runRun = 1
     api((r) => {
       if (r.method === 'PUT') {
-        if (r.url.startsWith('/api/habits/1/')) readRun = 2
+        if (r.url.startsWith('/api/habits/2/')) runRun = 2
         return new Response(null, { status: 204 })
       }
       if (r.url === '/api/stats/streaks')
-        return jsonResponse([{ habitId: 1, name: 'Read', current: 3, best: 9, yellowRun: readRun, yellowLimit: 2 }])
+        return jsonResponse([{ habitId: 2, name: 'Run', current: 3, best: 9, yellowRun: runRun, yellowLimit: 2 }])
       return undefined
     })
     const { user, queryClient } = renderWithProviders(<TodayPage />)
-    const read = await screen.findByRole('article', { name: 'Read' })
+    const run = await screen.findByRole('article', { name: 'Run' })
     const stretch = screen.getByRole('article', { name: 'Stretch' })
     await waitFor(() => expect(queryClient.getQueryData(['stats', 'streaks'])).toBeDefined())
 
     act(() => onlineManager.setOnline(false))
-    await user.click(within(read).getByRole('button', { name: 'Minimum' }))
+    await user.click(within(run).getByRole('button', { name: 'Minimum' }))
     await user.click(within(stretch).getByRole('button', { name: 'Minimum' }))
     act(() => onlineManager.setOnline(true))
 
-    expect(await screen.findByRole('alertdialog', { name: 'Yellow limit reached' })).toHaveTextContent('on Read')
+    expect(await screen.findByRole('alertdialog', { name: 'Yellow limit reached' })).toHaveTextContent('on Run')
   })
 
   it('does not warn again when a yellow is re-saved on a habit already at the limit', async () => {
@@ -428,8 +435,9 @@ describe('TodayPage', () => {
     const { user } = renderWithProviders(<TodayPage />)
 
     const read = await screen.findByRole('article', { name: 'Read' })
-    await within(read).findByText('2/2 yellows')
-    await user.click(within(read).getByRole('button', { name: 'Minimum' }))
+    await user.click(within(read).getByRole('button', { name: 'Read' }))
+    await user.click(screen.getByRole('button', { name: /^Minimum done/ }))
+    await user.click(screen.getByRole('button', { name: 'Save' }))
 
     await waitFor(() => {
       const all = requests(fetchMock)

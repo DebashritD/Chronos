@@ -22,8 +22,8 @@ test('sign up, create a habit, mark it on Today and see it in Progress', async (
   const card = page.getByRole('article', { name: 'Read' })
   await expect(card.locator('[data-tone]')).toBeVisible()
   await card.getByRole('button', { name: 'Target', exact: true }).click()
-  await expect(card.getByRole('button', { name: 'Target', exact: true })).toHaveAttribute('aria-pressed', 'true')
-  await expect(card.locator('[data-tone]')).toHaveAttribute('data-tone', 'done')
+  await expect(card.getByRole('button', { name: 'Target', exact: true })).toHaveCount(0)
+  await expect(card).toContainText('Target hit')
   await expect(page.getByRole('img', { name: '1 of 1 marked: 1 target' })).toBeVisible()
 
   await tabs.getByRole('link', { name: 'Progress' }).click()

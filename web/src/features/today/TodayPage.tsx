@@ -60,6 +60,9 @@ export function TodayPage() {
   const items = todayItems(data)
   const streakFor = (habitId: number) => streaks.data?.find((s) => s.habitId === habitId)
   const summary = todaySummary(items, now, (habitId) => streakFor(habitId)?.current)
+  const isDone = (item: TodayItem) => item.cell.state === 'GREEN'
+  const ordered = [...items.filter((item) => !isDone(item)), ...items.filter(isDone)]
+  const firstDone = ordered.findIndex(isDone)
 
   return (
     <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-8">
@@ -76,12 +79,16 @@ export function TodayPage() {
           <>
             <TodaySummary summary={summary} />
             <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
-              {items.map((item) => {
+              {/* One flat keyed list, so a card that moves into Done keeps its state. */}
+              {ordered.flatMap((item, i) => {
                 const s = streakFor(item.habit.id)
-                return (
+                const habitCard = (
                   <HabitCard key={item.habit.id} habit={item.habit} cell={item.cell} streak={s?.current}
                     yellowLimit={atYellowLimit(s) ? s.yellowLimit : undefined} now={now} onOpen={() => setPicked(item)} />
                 )
+                return i === firstDone
+                  ? [<h2 key="done" className="col-span-full mt-2 px-1 text-[12px] font-semibold tracking-[0.06em] text-muted uppercase">Done</h2>, habitCard]
+                  : [habitCard]
               })}
             </div>
           </>

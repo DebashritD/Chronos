@@ -2,10 +2,10 @@ import { Clock, Flame, NotebookPen } from 'lucide-react'
 import { useId, useState } from 'react'
 import { messageFor } from '../../api/errors'
 import type { Color, WeekCell, WeekHabit } from '../../api/types'
-import { cellClass, isColor } from '../../lib/cells'
+import { cellClass, isColor, STATE_LABEL } from '../../lib/cells'
 import { hapticMark } from '../../lib/haptics'
 import { formatTimeLeft, isUrgent } from '../../lib/timeLeft'
-import { card, pillButton } from '../../lib/ui'
+import { card } from '../../lib/ui'
 import { useSaveCheckIn } from '../stats/api'
 
 /** Each choice wears its colour before it's pressed (dot + tinted edge) and fills with it once selected. */
@@ -26,11 +26,21 @@ const TONE_CLASS: Record<Tone, string> = {
   done: 'bg-cell-green/15 text-cell-green',
 }
 
-function meta(habit: WeekHabit): string {
-  const texts = `Min ${habit.minText} · Target ${habit.targetText}`
-  if (habit.frequency === 'EVERY_N_DAYS') return `Every ${habit.intervalDays} days · ${texts}`
-  if (habit.frequency === 'WEEKLY') return `This week · ${texts}`
-  return texts
+const chipBase = 'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-semibold'
+
+function frequencyChip(habit: WeekHabit): string | null {
+  if (habit.frequency === 'EVERY_N_DAYS') return `Every ${habit.intervalDays} days`
+  if (habit.frequency === 'WEEKLY') return 'This week'
+  return null
+}
+
+function NotePreview({ note, className = '' }: { note: string; className?: string }) {
+  return (
+    <p className={`flex items-center gap-1 text-[12px] text-muted ${className}`}>
+      <NotebookPen size={12} className="flex-none" aria-hidden="true" />
+      <span className="truncate">{note}</span>
+    </p>
+  )
 }
 
 interface HabitCardProps {
@@ -44,12 +54,14 @@ interface HabitCardProps {
   onOpen(): void
 }
 
-/** One habit on Today: tap Target / Minimum / Missed to save at once (keeping any note); tap the name for the picker. */
+/**
+ * One habit on Today. Until it's green: a card with one-tap Target / Minimum / Missed. Green: a one-line row that
+ * opens the picker. Both share the <article> root so the node (and this state) survives the switch.
+ */
 export function HabitCard({ habit, cell, streak, now, yellowLimit, onOpen }: HabitCardProps) {
   const saveCheckIn = useSaveCheckIn()
   const titleId = useId()
   const [error, setError] = useState<string | null>(null)
-  const [draft, setDraft] = useState<string | null>(null)
   const [popped, setPopped] = useState<Color | null>(null)
   const [missedJustNow, setMissedJustNow] = useState(false)
   const marked = isColor(cell.state)
@@ -57,6 +69,7 @@ export function HabitCard({ habit, cell, streak, now, yellowLimit, onOpen }: Hab
   const yellowResets = yellowLimit !== undefined && cell.state !== 'YELLOW'
   const timeLeft = cell.closesAt ? formatTimeLeft(cell.closesAt, now, habit.frequency) : null
   const tone: Tone = marked ? 'done' : cell.closesAt && isUrgent(cell.closesAt, now) ? 'urgent' : 'normal'
+  const freq = frequencyChip(habit)
 
   async function mark(color: Color): Promise<void> {
     if (cell.state === color) return
@@ -72,34 +85,47 @@ export function HabitCard({ habit, cell, streak, now, yellowLimit, onOpen }: Hab
     }
   }
 
-  async function saveNote(color: Color, text: string): Promise<void> {
-    setError(null)
-    try {
-      await saveCheckIn.mutateAsync({ habitId: habit.id, periodStart: cell.periodStart ?? cell.date, color, note: text.trim() || null })
-      setDraft(null)
-    } catch (err) {
-      setError(messageFor(err))
-    }
+  const streakBadge = streak !== undefined && (
+    <span className="flex flex-none items-center gap-1 font-display text-[15px] font-semibold text-fg">
+      <Flame size={18} className={streak > 0 ? 'text-urgent' : 'text-dim'} aria-hidden="true" />
+      <span className="sr-only">Current streak </span>
+      {streak}
+    </span>
+  )
+  const errorLine = error && <p role="alert" className="mt-2 text-sm text-cell-red">{error}</p>
+
+  if (cell.state === 'GREEN') {
+    return (
+      <article aria-labelledby={titleId}
+        className="relative flex items-center gap-3 rounded-[18px] border border-line bg-card px-4 py-3">
+        <span aria-hidden="true" data-pop={popped === 'GREEN' ? '' : undefined} onAnimationEnd={() => setPopped(null)}
+          className={`h-[22px] w-[22px] flex-none rounded-[7px] data-pop:animate-pop ${cellClass(cell.state)}`} />
+        <div className="min-w-0 flex-1">
+          <h2 id={titleId} className="text-[15px] font-semibold break-words text-fg">
+            {/* The ::after stretches the tap target over the whole row. */}
+            <button type="button" aria-haspopup="dialog" onClick={onOpen}
+              className="text-left after:absolute after:inset-0 after:rounded-[18px]">
+              {habit.name}
+            </button>
+          </h2>
+          <p className="sr-only">{STATE_LABEL[cell.state]}</p>
+          {cell.note && <NotePreview note={cell.note} />}
+          {errorLine}
+        </div>
+        {streakBadge}
+      </article>
+    )
   }
 
   return (
     <article aria-labelledby={titleId} className={card}>
       <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <h2 id={titleId} className="text-[18px] font-semibold break-words text-fg">
-            <button type="button" aria-haspopup="dialog" onClick={onOpen} className="text-left hover:underline">
-              {habit.name}
-            </button>
-          </h2>
-          <p className="mt-0.5 text-[13px] break-words text-muted">{meta(habit)}</p>
-        </div>
-        {streak !== undefined && (
-          <span className="flex flex-none items-center gap-1 font-display text-[15px] font-semibold text-fg">
-            <Flame size={18} className={streak > 0 ? 'text-urgent' : 'text-dim'} aria-hidden="true" />
-            <span className="sr-only">Current streak </span>
-            {streak}
-          </span>
-        )}
+        <h2 id={titleId} className="min-w-0 text-[18px] font-semibold break-words text-fg">
+          <button type="button" aria-haspopup="dialog" onClick={onOpen} className="text-left hover:underline">
+            {habit.name}
+          </button>
+        </h2>
+        {streakBadge}
       </div>
       <div className="mt-4 grid grid-cols-3 gap-2">
         {BUTTONS.map(({ color, label, idle, dot, selected }) => {
@@ -134,16 +160,14 @@ export function HabitCard({ habit, cell, streak, now, yellowLimit, onOpen }: Hab
       <div className="mt-3 flex items-center justify-between gap-3">
         <span className="flex flex-wrap items-center gap-1.5">
           {timeLeft && (
-            <span data-tone={tone}
-              className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-semibold ${TONE_CLASS[tone]}`}>
+            <span data-tone={tone} className={`${chipBase} ${TONE_CLASS[tone]}`}>
               <Clock size={13} aria-hidden="true" />
               {timeLeft}
             </span>
           )}
+          {freq && <span className={`${chipBase} bg-surface text-muted`}>{freq}</span>}
           {yellowLimit !== undefined && (
-            <span className="rounded-full bg-cell-yellow/15 px-2.5 py-1 text-[12px] font-semibold text-cell-yellow">
-              {yellowLimit}/{yellowLimit} yellows
-            </span>
+            <span className={`${chipBase} bg-cell-yellow/15 text-cell-yellow`}>{yellowLimit}/{yellowLimit} yellows</span>
           )}
         </span>
         {habit.frequency === 'DAILY' && (
@@ -156,31 +180,8 @@ export function HabitCard({ habit, cell, streak, now, yellowLimit, onOpen }: Hab
           </span>
         )}
       </div>
-      {marked && draft === null && (
-        <button type="button" onClick={() => setDraft(cell.note ?? '')}
-          aria-label={`${cell.note ? 'Edit' : 'Add'} note for ${habit.name}`}
-          className="mt-3 flex w-full items-start gap-2 rounded-[14px] bg-surface px-3 py-2.5 text-left text-[14px]">
-          <NotebookPen size={16} className="mt-0.5 flex-none text-muted" aria-hidden="true" />
-          {cell.note
-            ? <span className="min-w-0 break-words whitespace-pre-wrap text-fg">{cell.note}</span>
-            : <span className="text-muted">Add a note</span>}
-        </button>
-      )}
-      {marked && draft !== null && (
-        <form className="mt-3" onSubmit={(e) => { e.preventDefault(); void saveNote(cell.state as Color, draft) }}>
-          <label htmlFor={`${titleId}-note`} className="sr-only">Note for {habit.name}</label>
-          <textarea id={`${titleId}-note`} rows={2} maxLength={500} autoFocus value={draft}
-            onChange={(e) => setDraft(e.target.value)} placeholder="How did it go?"
-            className="w-full rounded-[14px] border border-line bg-surface px-3 py-2.5 text-[14px] text-fg placeholder:text-dim focus:border-accent focus:outline-none" />
-          <div className="mt-2 flex justify-end gap-2">
-            <button type="button" onClick={() => setDraft(null)}
-              className={pillButton}>Cancel</button>
-            <button type="submit" disabled={saveCheckIn.isPending}
-              className="rounded-full bg-accent px-3 py-1.5 text-[13px] font-semibold text-bg disabled:opacity-50">Save note</button>
-          </div>
-        </form>
-      )}
-      {error && <p role="alert" className="mt-2 text-sm text-cell-red">{error}</p>}
+      {marked && cell.note && <NotePreview note={cell.note} className="mt-3" />}
+      {errorLine}
     </article>
   )
 }
