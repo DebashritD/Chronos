@@ -1,11 +1,11 @@
 import { useIsMutating, useQueryClient } from '@tanstack/react-query'
-import { LogOut } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
+import { Stepper } from '../../app/Stepper'
 import { api } from '../../api/client'
 import { messageFor } from '../../api/errors'
 import type { Me } from '../../api/types'
 import { useOnline } from '../../lib/useOnline'
-import { card, cardTitle, inputClass, pageTitle, primaryButton, secondaryButton } from '../../lib/ui'
+import { eyebrow, inkButton, outlineButton, section, underlineInput } from '../../lib/ui'
 import { browserTimezone, useSession } from '../auth/session'
 import { CHECK_IN_KEY } from '../checkin/queue'
 
@@ -36,7 +36,7 @@ export function AccountPage() {
   const queryClient = useQueryClient()
   const [timezone, setTimezone] = useState(me?.timezone ?? '')
   const [tzFeedback, setTzFeedback] = useState<Feedback>(null)
-  const [maxYellows, setMaxYellows] = useState(String(me?.maxYellows ?? 2))
+  const [maxYellows, setMaxYellows] = useState(me?.maxYellows ?? 2)
   const [ruleFeedback, setRuleFeedback] = useState<Feedback>(null)
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
@@ -59,7 +59,7 @@ export function AccountPage() {
     event.preventDefault()
     setRuleFeedback(null)
     try {
-      setMe(await api.put<Me>('/api/auth/me', { maxYellows: Number(maxYellows) }))
+      setMe(await api.put<Me>('/api/auth/me', { maxYellows: maxYellows }))
       await queryClient.invalidateQueries({ queryKey: ['stats'] })
       setRuleFeedback({ kind: 'ok', text: 'Streak rule saved' })
     } catch (err) {
@@ -80,83 +80,82 @@ export function AccountPage() {
     }
   }
 
-  const label = 'mb-1.5 block text-[13px] font-medium text-muted'
+  const label = 'block text-[13px] font-medium text-muted'
   return (
     <section className="max-w-lg">
-      <h1 className={`${pageTitle} mb-5`}>Account</h1>
-      <div className={`${card} mb-4 flex items-center gap-4`}>
-        <span aria-hidden="true"
-          className="flex h-12 w-12 flex-none items-center justify-center rounded-full bg-accent text-lg font-bold text-bg">
+      <h1 className={eyebrow}>Account</h1>
+      <div className="mt-4 flex items-center gap-4">
+        <span aria-hidden="true" className="flex h-14 w-14 flex-none items-center justify-center rounded-full border-2 border-accent font-serif text-[28px] text-accent shadow-[inset_0_0_0_3px_var(--color-paper),inset_0_0_0_4.5px_var(--color-accent)]">
           {me?.username.charAt(0).toUpperCase()}
         </span>
         <div className="min-w-0">
-          <p className="truncate text-[17px] font-semibold text-fg">{me?.username}</p>
-          <p className="truncate text-[13px] text-muted">{me?.timezone}</p>
+          <p className="truncate font-serif text-[30px] leading-tight text-ink">{me?.username}</p>
+          <p className="truncate font-mono text-[12px] text-muted">{me?.timezone} · day ends 00:00</p>
         </div>
       </div>
-      <form className={`${card} mb-4`} onSubmit={(event) => void saveTimezone(event)}>
-        <h2 className={cardTitle}>Timezone</h2>
+      <form className={section} onSubmit={(event) => void saveTimezone(event)}>
+        <h2 className={eyebrow}>Timezone</h2>
         <label htmlFor="timezone" className="sr-only">Timezone</label>
         <input id="timezone" list="timezones" required value={timezone}
-          onChange={(e) => setTimezone(e.target.value)} className={inputClass} />
+          onChange={(e) => setTimezone(e.target.value)} className={`${underlineInput} mt-3`} />
         <datalist id="timezones">
           {timezones().map((zone) => <option key={zone} value={zone} />)}
         </datalist>
-        <p className="mt-2 text-xs text-dim">Days (and countdowns) end at midnight in this timezone.</p>
+        <p className="mt-2 text-[12px] text-muted">Days (and countdowns) end at midnight in this timezone.</p>
         <div className="mt-4 flex gap-2">
-          <button type="button" onClick={() => setTimezone(browserTimezone())} className={secondaryButton}>
+          <button type="button" onClick={() => setTimezone(browserTimezone())} className={outlineButton}>
             Use this device
           </button>
-          <button type="submit" className={primaryButton}>Save timezone</button>
+          <button type="submit" className={inkButton}>Save timezone</button>
         </div>
         <FeedbackLine feedback={tzFeedback} />
       </form>
-      <form className={`${card} mb-4`} onSubmit={(event) => void saveStreakRule(event)}>
-        <h2 className={cardTitle}>Streak rules</h2>
-        <label htmlFor="max-yellows" className={label}>Yellows allowed in a row</label>
-        <input id="max-yellows" type="number" min={1} max={7} required value={maxYellows}
-          onChange={(e) => setMaxYellows(e.target.value)} className={inputClass} />
-        <p className="mt-2 text-xs text-dim">For habits with the limit on, one more yellow starts the streak over.</p>
-        <button type="submit" className={`${primaryButton} mt-4`}>Save streak rule</button>
+      <form className={section} onSubmit={(event) => void saveStreakRule(event)}>
+        <h2 className={eyebrow}>Streak rule</h2>
+        <p id="max-yellows-label" className="mt-3 font-serif text-[22px] text-ink">Minimums allowed in a row</p>
+        <div className="mt-3"><Stepper value={maxYellows} min={1} max={7} labelledBy="max-yellows-label" onChange={setMaxYellows} /></div>
+        <p className="mt-2 text-[12px] text-muted">For habits with the limit on, one more minimum starts the streak over.</p>
+        <button type="submit" className={`${inkButton} mt-4`}>Save streak rule</button>
         <FeedbackLine feedback={ruleFeedback} />
       </form>
-      <form className={`${card} mb-4`} onSubmit={(event) => void changePassword(event)}>
-        <h2 className={cardTitle}>Change password</h2>
-        <div className="mb-3">
+      <form className={section} onSubmit={(event) => void changePassword(event)}>
+        <h2 className={eyebrow}>Change password</h2>
+        <div className="mt-3">
           <label htmlFor="current-password" className={label}>Current password</label>
           <input id="current-password" type="password" autoComplete="current-password" required
-            value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className={inputClass} />
+            value={currentPassword} onChange={(e) => setCurrentPassword(e.target.value)} className={underlineInput} />
         </div>
-        <div className="mb-4">
+        <div className="mb-4 mt-3">
           <label htmlFor="new-password" className={label}>New password</label>
           <input id="new-password" type="password" autoComplete="new-password" required minLength={8} maxLength={72}
-            value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className={inputClass} />
+            value={newPassword} onChange={(e) => setNewPassword(e.target.value)} className={underlineInput} />
         </div>
-        <button type="submit" className={primaryButton}>Change password</button>
+        <button type="submit" className={inkButton}>Change password</button>
         <FeedbackLine feedback={pwFeedback} />
       </form>
-      <button type="button" disabled={!online} onClick={() => (unsynced > 0 ? setConfirmingLogout(true) : void logout())}
-        className="flex w-full items-center justify-center gap-2 rounded-[14px] border border-line bg-card px-4 py-3 text-[15px] font-semibold text-cell-red disabled:opacity-50">
-        <LogOut size={18} aria-hidden="true" />
-        Log out
-      </button>
-      {!online && <p className="mt-2 text-center text-[13px] text-dim">Connect to log out.</p>}
+      <div className="mt-8 border-t border-dashed border-rule-2 pt-5">
+        <button type="button" disabled={!online} onClick={() => (unsynced > 0 ? setConfirmingLogout(true) : void logout())}
+          className="inline-flex min-h-11 items-center gap-2 text-[15px] font-semibold text-accent disabled:opacity-50">
+          <span aria-hidden="true">↩</span>Log out
+        </button>
+        {!online && <p className="mt-1 text-[13px] text-muted">Connect to log out.</p>}
+      </div>
       {confirmingLogout && (
-        <div className="fixed inset-0 z-30 flex items-center justify-center bg-black/60 px-6 backdrop-blur-sm"
+        <div className="fixed inset-0 z-30 flex items-center justify-center bg-binding/45 px-6"
           onKeyDown={(event) => {
             if (event.key === 'Escape') setConfirmingLogout(false)
           }}>
           <div role="alertdialog" aria-modal="true" aria-labelledby="logout-unsynced"
-            className="w-full max-w-sm rounded-[28px] border border-line bg-card p-6 text-center">
-            <p id="logout-unsynced" className="text-[17px] font-semibold text-fg">{unsyncedMarksCopy(Math.max(unsynced, 1))}</p>
+            className="w-full max-w-sm rounded-[12px] border border-rule-2 bg-paper p-6 text-center shadow-[0_20px_50px_rgb(29_27_24/0.25)]">
+            <p id="logout-unsynced" className="font-serif text-[22px] text-ink">{unsyncedMarksCopy(Math.max(unsynced, 1))}</p>
             <div className="mt-5 flex gap-3">
-              <button type="button" autoFocus onClick={() => setConfirmingLogout(false)} className={`${secondaryButton} flex-1`}>
+              <button type="button" autoFocus onClick={() => setConfirmingLogout(false)} className={`${outlineButton} flex-1`}>
                 Cancel
               </button>
               <button type="button" disabled={!online} onClick={() => {
                 setConfirmingLogout(false)
                 void logout()
-              }} className={`${primaryButton} flex-1`}>
+              }} className={`${inkButton} flex-1`}>
                 Log out
               </button>
             </div>

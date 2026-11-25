@@ -89,7 +89,7 @@ describe('AccountPage', () => {
     expect(screen.getByLabelText('Timezone')).toHaveValue(browserTimezone())
     await user.click(screen.getByRole('button', { name: 'Save timezone' }))
 
-    expect(await screen.findByRole('status')).toHaveTextContent('Timezone saved')
+    expect(await screen.findByText('Timezone saved')).toBeInTheDocument()
     expect(requests(fetchMock)).toEqual([
       { method: 'PUT', url: '/api/auth/me', body: { timezone: browserTimezone() } },
     ])
@@ -105,7 +105,7 @@ describe('AccountPage', () => {
     await user.type(screen.getByLabelText('New password'), 'new-password')
     await user.click(screen.getByRole('button', { name: 'Change password' }))
 
-    expect(await screen.findByRole('status')).toHaveTextContent('Password changed')
+    expect(await screen.findByText('Password changed')).toBeInTheDocument()
     expect(screen.getByLabelText('Current password')).toHaveValue('')
     expect(requests(fetchMock)[0].body).toEqual({ currentPassword: 'old-password', newPassword: 'new-password' })
   })
@@ -121,20 +121,29 @@ describe('AccountPage', () => {
     expect(await screen.findByRole('alert')).toHaveTextContent('Current password is incorrect.')
   })
 
-  it('saves how many yellows in a row keep a streak', async () => {
+  it('saves how many minimums in a row keep a streak', async () => {
     const fetchMock = stubApi(({ method }) =>
       method === 'PUT' ? jsonResponse({ username: 'bob', timezone: 'Asia/Kolkata', maxYellows: 3 }) : undefined,
     )
     const { user } = renderWithProviders(<AccountPage />, { route: '/settings' })
 
-    const input = screen.getByLabelText('Yellows allowed in a row')
-    expect(input).toHaveValue(2)
-    await user.clear(input)
-    await user.type(input, '3')
+    expect(screen.getByText('Minimums allowed in a row')).toBeInTheDocument()
+    expect(screen.getByRole('status', { name: 'Minimums allowed in a row' })).toHaveTextContent('2')
+    await user.click(screen.getByRole('button', { name: 'More' }))
     await user.click(screen.getByRole('button', { name: 'Save streak rule' }))
 
-    expect(await screen.findByRole('status')).toHaveTextContent('Streak rule saved')
+    expect(await screen.findByText('Streak rule saved')).toBeInTheDocument()
     expect(requests(fetchMock)).toContainEqual({ method: 'PUT', url: '/api/auth/me', body: { maxYellows: 3 } })
+  })
+
+  it('stops the stepper at 1 and 7', async () => {
+    stubApi(() => undefined)
+    const { user } = renderWithProviders(<AccountPage />, { route: '/settings' })
+
+    await user.click(screen.getByRole('button', { name: 'Fewer' }))
+    expect(screen.getByRole('button', { name: 'Fewer' })).toBeDisabled()
+    for (let i = 0; i < 6; i++) await user.click(screen.getByRole('button', { name: 'More' }))
+    expect(screen.getByRole('button', { name: 'More' })).toBeDisabled()
   })
 
   it('logs out', async () => {
