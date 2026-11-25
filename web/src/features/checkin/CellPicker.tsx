@@ -125,7 +125,7 @@ export function CellPicker({ habit, cell, streak, yellowLimit, now, onClose }: C
         {saved && (
           <div className="mt-5 flex items-center gap-2">
             <button type="button" disabled={busy}
-              className={`${textButton} text-cell-red`}
+              className={`${textButton} text-cell-red!`}
               onClick={() => void run(() => clearCheckIn.mutateAsync(key))}>Clear</button>
             {noteChanged && (
               <button type="button" disabled={busy} className={`${inkButton} ml-auto`}
