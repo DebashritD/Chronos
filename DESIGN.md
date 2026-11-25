@@ -178,7 +178,7 @@ Warm off-white paper and near-black ink, with mark colours that look like stamp-
 - **Binding Board** (binding): the top strip and PWA theme colour; at 45% it is the backdrop behind sheets and dialogs.
 - **Ink** (ink): primary text, filled buttons, focus outlines.
 - **Pencil** (muted): secondary text, notes, inactive tabs, meta lines.
-- **Faint Pencil** (faint): decorative only, for dashed dividers between Today's choice buttons and the paused dash.
+- **Faint Pencil** (faint): decorative only, never text: dashed dividers between Today's choice buttons, the paused dash, and the month calendar's unmarked-day ring.
 - **Ring** (ring): the open-today circle.
 - **Rule** (rule): row separators.
 - **Rule Heavy** (rule-2): section separators, input underlines, outline-button borders, future-day circles, the hatched unmarked share.
@@ -202,7 +202,7 @@ Warm off-white paper and near-black ink, with mark colours that look like stamp-
 - **Title** (serif 400, 22–30 px, tight): habit names (27 px on Today, 19–22 px in grids and lists), the summary headline (24 px), week and month navigation, streak numbers.
 - **Body** (Plex Sans 400–600, 14–16 px): sentences, notes, buttons (15 px, 600 for ink buttons), choice buttons (14 px, 500). Inputs are 16 px.
 - **Meta** (Plex Mono 400–500, 11–13 px): streak lines, frequencies, countdowns, counts, legends and stamps (13 px, 0.14em, capitals).
-- **Label** (Plex Sans 600, 10–11 px, uppercase, 0.14–0.22em): the heading of a ruled section ("Streaks", "Daily score", "Timezone"), in accent; weekday letters over grid columns, in muted.
+- **Label / eyebrow** (Plex Sans 600, 10–11 px, uppercase, 0.14–0.22em): used both above a page title ("Your pad", "Progress", "Account", Today's weekday) and as the heading of a ruled section ("Streaks", "Daily score", "Timezone"), in accent; weekday letters over grid columns, in muted.
 
 ### Named Rules
 **The One Weight Serif Rule.** Instrument Serif has only 400. Never bold it or set it at 600+; emphasis comes from size.
@@ -219,15 +219,18 @@ Grids are seven columns, Monday first. Every tappable thing is at least 44 px ta
 
 ## Elevation & Depth
 
-Flat. Depth is told through paper, not light: the sheet sits on `paper-2`, its stacked edges are five hard 2 px offset bands below it, and its top edge is perforated against the binding. Nothing on the sheet casts a shadow. Overlays (dialogs, the cell picker) are another paper sheet over a 45% binding wash.
+Flat. Depth is told through paper, not light: the sheet sits on `paper-2`, its stacked edges are five hard 2 px offset bands below it, and its top edge is perforated against the binding. Nothing on the sheet itself casts a shadow. Overlays (dialogs, the cell picker) are another paper sheet over a 45% binding wash; dialogs and the small floating notices that sit above the sheet carry a soft shadow so they read as lifted.
 
 ### Shadow Vocabulary
 - **Sheet stack** (`box-shadow: 0 2px 0 #ddd5c4, 0 4px 0 #f1ebdf, 0 6px 0 #d8cfbe, 0 8px 0 #efe8da, 0 10px 0 #d3c9b6`): only under the main sheet, to show the pad's remaining pages.
 - **Stamp double rule** (`box-shadow: inset 0 0 0 2px paper, inset 0 0 0 3.5px currentColor`): the inner rule of every rubber stamp; not depth.
-- **Floating pill** (`box-shadow: 0 6px 18px rgb(29 27 24 / 0.25)`): only the phone "+ New habit" pill, which floats above the tab bar; removed from `md` up.
+- **Floating pill** (`box-shadow: 0 6px 18px rgb(29 27 24 / 0.25)`): the phone "+ New habit" pill, which floats above the tab bar; removed from `md` up.
+- **Dialog lift** (`box-shadow: 0 20px 50px rgb(29 27 24 / 0.25)`): the yellow-limit dialog and the Account confirm dialog.
+- **Notice lift** (`box-shadow: 0 8px 24px rgb(29 27 24 / 0.3)`): the sync toast and the waking notice, both ink pills over the sheet.
+- **Refresh chip** (`box-shadow: 0 6px 18px rgb(29 27 24 / 0.18)`): the pull-to-refresh indicator.
 
 ### Named Rules
-**The Paper Not Light Rule.** Depth comes from paper layers, perforations and stacked edges. No glows, no blur, no soft card shadows on the sheet.
+**The Paper Not Light Rule.** Depth comes from paper layers, perforations and stacked edges. No glows, no blur, no soft card shadows on the sheet; soft shadows are reserved for things floating above it.
 
 ## Shapes
 
@@ -242,7 +245,7 @@ Plain and pressable, like a pen on paper.
 - **Outline:** a 1.5 px `rule-2` border with ink text, 500 weight. For the secondary choice beside an ink button ("Use this device").
 - **Text:** ink text with a 2 px `rule-2` underline offset 6 px, turning ink on hover. For low-key actions and empty-state links.
 - **Icon:** 44 px circle, ink line icon, `paper-2` fill on hover and press.
-- **Focus:** every control shows a 2 px ink outline with a 2 px offset.
+- **Focus:** buttons and links show a 2 px ink outline with a 2 px offset. Underline inputs and the frequency select drop the outline (`focus:outline-none`) and show focus by their underline turning ink.
 - **Disabled:** 50% opacity (icon buttons 40%).
 
 ### Inputs / Fields
@@ -253,7 +256,7 @@ Plain and pressable, like a pen on paper.
 ### Navigation
 - **Phone:** a `paper-2` bar with four text tabs (Today, Progress, Habits, Me) in 13 px Plex Sans 600, no icons. Inactive tabs are muted; the active one is ink with a 2 px accent underline.
 - **Desktop:** the same four tabs in the binding, paper at 65% when inactive and full paper with an accent underline when active.
-- **View toggles** (Week / Month, habit frequency) use the same text-and-underline pattern.
+- **View toggles** (Week / Month) use the same text-and-underline pattern. Habit frequency is a native `<select>` on an underline with a chevron (`.select-chevron`), not a toggle.
 
 ### Marks
 The pad's alphabet, drawn as 16 px SVG and always paired with a text label.
@@ -295,4 +298,3 @@ A seven-column wall calendar of 34 px circles with 16 px serif numerals in their
 - **Don't** use "yellow" or "green" in copy; "red" appears only in "No red" / "off red".
 - **Don't** bold Instrument Serif.
 - **Don't** add a dark theme or a second accent colour.
-- **Don't** add a small uppercase label above a page title; the uppercase label is the heading of a ruled section, not a decoration over a headline.

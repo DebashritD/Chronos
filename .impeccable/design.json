@@ -19,7 +19,7 @@
       "binding": { "role": "neutral", "displayName": "Binding Board", "canonical": "#2c2a27", "tonalRamp": ["#282725", "#42403d", "#5e5a55", "#79746c", "#9a958e", "#b6b3af", "#d3d1cf", "#f3f2f2"] },
       "ink": { "role": "neutral", "displayName": "Ink", "canonical": "#1d1b18", "tonalRamp": ["#282724", "#44413c", "#605b52", "#7d7569", "#9d968b", "#b8b4ad", "#d4d2ce", "#f3f2f2"] },
       "muted": { "role": "neutral", "displayName": "Pencil", "canonical": "#665e53", "tonalRamp": ["#292724", "#44403b", "#615a52", "#7e7468", "#9e958a", "#b8b3ad", "#d4d2ce", "#f3f2f2"] },
-      "faint": { "role": "neutral", "displayName": "Faint Pencil (decorative only)", "canonical": "#a89f8f", "tonalRamp": ["#292723", "#45413a", "#625c50", "#807765", "#a09788", "#bab5ab", "#d5d2ce", "#f3f2f2"] },
+      "faint": { "role": "neutral", "displayName": "Faint Pencil (decorative only, never text)", "canonical": "#a89f8f", "tonalRamp": ["#292723", "#45413a", "#625c50", "#807765", "#a09788", "#bab5ab", "#d5d2ce", "#f3f2f2"] },
       "ring": { "role": "neutral", "displayName": "Ring", "canonical": "#857d70", "tonalRamp": ["#282724", "#44413c", "#605b53", "#7c756a", "#9c968c", "#b7b4ae", "#d4d2cf", "#f3f2f2"] },
       "rule": { "role": "neutral", "displayName": "Rule", "canonical": "#e3dbcb", "tonalRamp": ["#2d2820", "#4d4432", "#6f6143", "#937e52", "#b19e77", "#c4b8a1", "#dad4c9", "#f4f3f0"] },
       "rule-2": { "role": "neutral", "displayName": "Rule Heavy", "canonical": "#d6ccb9", "tonalRamp": ["#2c2820", "#4b4334", "#6c5f46", "#8f7b57", "#ad9c7b", "#c2b7a3", "#d8d3ca", "#f4f3f1"] }
@@ -33,12 +33,15 @@
       "control": { "displayName": "Control", "purpose": "Text tabs, text buttons, view toggles." },
       "meta": { "displayName": "Meta", "purpose": "Streak lines, frequencies, countdowns, counts, legends." },
       "stamp": { "displayName": "Stamp", "purpose": "Rubber-stamp capitals on done rows." },
-      "label": { "displayName": "Section label", "purpose": "Uppercase heading of a ruled section, in accent." }
+      "label": { "displayName": "Section label", "purpose": "Uppercase accent eyebrow: above page titles (Your pad, Progress, Account, Today's weekday) and as the heading of a ruled section." }
     },
     "shadows": [
       { "name": "sheet-stack", "value": "0 2px 0 #ddd5c4, 0 4px 0 #f1ebdf, 0 6px 0 #d8cfbe, 0 8px 0 #efe8da, 0 10px 0 #d3c9b6", "purpose": "Stacked pad pages under the main sheet only." },
       { "name": "stamp-double-rule", "value": "inset 0 0 0 2px var(--color-paper), inset 0 0 0 3.5px currentColor", "purpose": "Inner rule of every rubber stamp." },
-      { "name": "floating-pill", "value": "0 6px 18px rgb(29 27 24 / 0.25)", "purpose": "The phone '+ New habit' pill only; removed from md up." }
+      { "name": "floating-pill", "value": "0 6px 18px rgb(29 27 24 / 0.25)", "purpose": "The phone '+ New habit' pill; removed from md up." },
+      { "name": "dialog-lift", "value": "0 20px 50px rgb(29 27 24 / 0.25)", "purpose": "The yellow-limit dialog and the Account confirm dialog." },
+      { "name": "notice-lift", "value": "0 8px 24px rgb(29 27 24 / 0.3)", "purpose": "Sync toast and waking notice." },
+      { "name": "refresh-chip", "value": "0 6px 18px rgb(29 27 24 / 0.18)", "purpose": "Pull-to-refresh indicator." }
     ],
     "motion": [
       { "name": "stamp-press", "value": "stamp 240ms cubic-bezier(0.2, 0.9, 0.3, 1.25) both", "purpose": "Marking Target or Minimum: scale 1.18 → 1 while ink fades in. Off under reduced motion." },
@@ -130,7 +133,7 @@
       { "name": "The Colour Belongs to Marks Rule", "body": "Green, mustard and red appear only on marks, stamps, counts and the score scale. Chrome and surfaces stay paper, ink and rules.", "section": "colors" },
       { "name": "The One Weight Serif Rule", "body": "Instrument Serif has only 400. Never bold it or set it at 600+; emphasis comes from size.", "section": "typography" },
       { "name": "The Mono Means Measured Rule", "body": "Anything counted, timed or stamped is mono. Names and prose are never mono.", "section": "typography" },
-      { "name": "The Paper Not Light Rule", "body": "Depth comes from paper layers, perforations and stacked edges. No glows, no blur, no soft card shadows on the sheet.", "section": "elevation" }
+      { "name": "The Paper Not Light Rule", "body": "Depth comes from paper layers, perforations and stacked edges. No glows, no blur, no soft card shadows on the sheet; soft shadows are reserved for things floating above it.", "section": "elevation" }
     ],
     "dos": [
       "**Do** put each screen on one paper sheet under the binding, with sections divided by `rule-2` lines and rows by `rule` lines.",
@@ -145,8 +148,7 @@
       "**Don't** use cell-yellow or faint for text; Minimum text is yellow-ink.",
       "**Don't** use \"yellow\" or \"green\" in copy; \"red\" appears only in \"No red\" / \"off red\".",
       "**Don't** bold Instrument Serif.",
-      "**Don't** add a dark theme or a second accent colour.",
-      "**Don't** add a small uppercase label above a page title; the uppercase label is the heading of a ruled section, not a decoration over a headline."
+      "**Don't** add a dark theme or a second accent colour."
     ]
   }
 }
