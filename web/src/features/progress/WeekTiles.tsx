@@ -1,81 +1,100 @@
-import { Flame } from 'lucide-react'
-import type { WeekCell, WeekHabit } from '../../api/types'
-import { cellClass } from '../../lib/cells'
+import type { CellState, WeekCell, WeekHabit } from '../../api/types'
+import { Mark } from '../../app/Mark'
+import { brightness } from '../../lib/brightness'
+import { markKind } from '../../lib/cells'
 import { addDays, dayOfMonth, WEEKDAYS } from '../../lib/dates'
 import { WeekCellButton } from './WeekCellButton'
-import { subtitle, weekSegments } from './weekLayout'
+import { frequencyText, weekSegments, type Segment } from './weekLayout'
 
-const weekCard = 'rounded-card border border-line bg-card px-4 py-3'
-const days = 'grid grid-cols-7 gap-1.5'
-const cellHeight = 'h-6'
+const NAME_COL = '6.5rem'
+const GRID = 'grid grid-cols-[6.5rem_repeat(7,minmax(0,1fr))]'
+const inRun = (state: CellState | undefined) => state === 'GREEN' || state === 'YELLOW'
+const TONE: Partial<Record<CellState, string>> = { GREEN: 'text-cell-green', YELLOW: 'text-cell-yellow', RED: 'text-cell-red' }
 
 interface WeekTilesProps {
   start: string
   today: string
   habits: WeekHabit[]
-  streakOf(habitId: number): number | undefined
   onPick(habit: WeekHabit, cell: WeekCell): void
 }
 
-/** Progress week: one card with a Mon–Sun header, then a row per habit, its name above a thin strip of day pills. */
-export function WeekTiles({ start, today, habits, streakOf, onPick }: WeekTilesProps) {
+/** A period longer than a day: a line with end ticks across it, its dot centred on the same line. */
+function Bracket({ state, future, dim }: { state: CellState; future: boolean; dim: boolean }) {
+  const tone = TONE[state] ?? (future ? 'text-rule-2' : 'text-ring')
   return (
-    <div className={weekCard}>
-      {/* Every cell's label already names its day, so the header is visual only. It shares the card's padding, so columns line up. */}
-      <div aria-hidden="true" className={`${days} border-b border-line pb-2 text-center`}>
+    <span aria-hidden="true" className={`absolute inset-x-2 top-1/2 h-2.5 -translate-y-1/2 ${tone} ${dim ? 'opacity-30' : TONE[state] ? 'opacity-60' : ''}`}>
+      <span className="absolute inset-x-0 top-1/2 h-[1.5px] -translate-y-1/2 bg-current" />
+      <span className="absolute inset-y-0 left-0 w-[1.5px] bg-current" />
+      <span className="absolute inset-y-0 right-0 w-[1.5px] bg-current" />
+    </span>
+  )
+}
+
+function HabitMarks({ habit, start, today, onPick }: { habit: WeekHabit; start: string; today: string; onPick: WeekTilesProps['onPick'] }) {
+  const segments = weekSegments(habit, start)
+  const bright = brightness(segments.map((segment) => segment.cell?.state ?? 'NOT_DUE'))
+  const daily = habit.frequency === 'DAILY'
+  return segments.map(({ col, span, cell, from, to }: Segment, i) => {
+    const style = { gridColumn: `${col + 2} / span ${span}` }
+    if (!cell) return <span key={col} style={style} aria-hidden="true" />
+    const future = from > today
+    const kind = markKind(cell.state, future)
+    const dim = !bright[i]
+    const joined = daily && i > 0 && inRun(segments[i - 1].cell?.state) && inRun(cell.state)
+    return (
+      <div key={col} style={style} className="relative flex h-14 items-center">
+        {joined && (
+          <span aria-hidden="true" className={`absolute top-1/2 right-1/2 left-[-50%] h-[1.5px] -translate-y-1/2 ${
+            cell.state === 'GREEN' ? 'bg-cell-green' : 'bg-cell-yellow'} ${dim ? 'opacity-30' : 'opacity-60'}`} />
+        )}
+        {!daily && <Bracket state={cell.state} future={future} dim={dim} />}
+        <WeekCellButton habit={habit} cell={cell} isToday={from <= today && today <= to} onPick={onPick}>
+          {kind && <Mark kind={kind} dim={dim && kind !== 'RED'} />}
+        </WeekCellButton>
+      </div>
+    )
+  })
+}
+
+/** Progress week: Monday-first columns, one ruled row per habit with dot marks; today's column is tinted. */
+export function WeekTiles({ start, today, habits, onPick }: WeekTilesProps) {
+  const todayCol = WEEKDAYS.findIndex((_, i) => addDays(start, i) === today)
+  return (
+    <div className="relative">
+      {todayCol >= 0 && (
+        <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 rounded-full bg-accent/[0.06]"
+          style={{ left: `calc(${NAME_COL} + (100% - ${NAME_COL}) * ${todayCol} / 7)`, width: `calc((100% - ${NAME_COL}) / 7)` }} />
+      )}
+      {/* Every cell's label already names its day, so the header is visual only. */}
+      <div aria-hidden="true" className={`${GRID} pb-2 text-center`}>
+        <span />
         {WEEKDAYS.map((weekday, i) => {
           const date = addDays(start, i)
-          const isToday = date === today
           return (
             <span key={weekday} className="flex flex-col items-center">
-              <span className="text-[11px] font-medium text-dim">{weekday}</span>
-              <span className={`mt-1 text-[15px] font-semibold ${
-                isToday ? 'text-accent' : date > today ? 'text-dim' : 'text-fg'
-              }`}>
-                {dayOfMonth(date)}
+              <span className={`text-[10px] font-semibold tracking-[0.14em] ${date === today ? 'text-accent' : 'text-muted'}`}>
+                {weekday.charAt(0)}
               </span>
-              <span className={`mt-1 h-1 w-1 rounded-full ${isToday ? 'bg-accent' : ''}`} />
+              <span className={`font-serif text-[17px] leading-tight ${date > today ? 'text-faint' : 'text-ink'}`}>{dayOfMonth(date)}</span>
             </span>
           )
         })}
       </div>
       <ul>
-        {habits.map((habit) => {
-          const sub = subtitle(habit)
-          const streak = streakOf(habit.id)
-          return (
-            <li key={habit.id} aria-label={habit.name} className="border-t border-line py-2.5 first:border-t-0">
-              <div className="flex items-baseline justify-between gap-3">
-                <div className="min-w-0 break-words">
-                  <h3 className="inline text-[16px] leading-snug font-semibold text-fg">{habit.name}</h3>
-                  {sub && <span className="ml-1.5 text-[12px] text-dim">{sub}</span>}
-                </div>
-                {streak !== undefined && streak > 0 && (
-                  <span className="flex flex-none items-center gap-1 font-display text-[14px] font-semibold text-fg">
-                    <Flame size={16} className="text-urgent" aria-hidden="true" />
-                    <span className="sr-only">Current streak </span>
-                    {streak}
-                  </span>
-                )}
-              </div>
-              <div className={`${days} mt-1 -mb-1`}>
-                {weekSegments(habit, start).map(({ col, span, cell, from, to }) => (
-                  <div key={col} style={{ gridColumn: `${col + 1} / span ${span}` }}>
-                    {cell ? (
-                      <WeekCellButton habit={habit} cell={cell} isToday={from <= today && today <= to} onPick={onPick}
-                        shape={cellHeight} pill />
-                    ) : (
-                      <span aria-hidden="true" className={`flex items-center ${cellHeight}`}>
-                        <span className={`block h-2 w-full rounded-full ${cellClass('NOT_DUE')}`} />
-                      </span>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </li>
-          )
-        })}
+        {habits.map((habit) => (
+          <li key={habit.id} aria-label={habit.name} className={`${GRID} items-center border-t border-rule`}>
+            <div className="min-w-0 py-2 pr-2">
+              <h3 className="font-serif text-[20px] leading-tight break-words text-ink">{habit.name}</h3>
+              <p className="font-mono text-[11px] text-muted">{frequencyText(habit)}</p>
+            </div>
+            <HabitMarks habit={habit} start={start} today={today} onPick={onPick} />
+          </li>
+        ))}
       </ul>
+      <p className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1 font-mono text-[11px] text-muted">
+        <span className="flex items-center gap-1.5"><Mark kind="GREEN" size={10} /> bright: current run</span>
+        <span className="flex items-center gap-1.5"><Mark kind="GREEN" size={10} dim /> dim: before the last miss</span>
+      </p>
     </div>
   )
 }

@@ -54,14 +54,14 @@ describe('WeekPanel', () => {
   it('asks to connect for a week that was never loaded', async () => {
     stubApi(() => undefined)
     onlineManager.setOnline(false)
-    renderWithProviders(<WeekPanel />, { route: '/progress' })
+    renderWithProviders(<WeekPanel toggle={null} />, { route: '/progress' })
     expect(await screen.findByText('Connect to load this week.')).toBeInTheDocument()
     expect(screen.queryByRole('alert')).not.toBeInTheDocument()
   })
 
   it('shows the grid, distribution and streaks', async () => {
     api()
-    renderWithProviders(<WeekPanel />, { route: '/progress' })
+    renderWithProviders(<WeekPanel toggle={null} />, { route: '/progress' })
 
     expect(await screen.findByRole('heading', { name: '16 – 22 Nov 2026' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Read, Mon 16 Nov, Target hit' })).toBeEnabled()
@@ -72,7 +72,6 @@ describe('WeekPanel', () => {
       screen.getByRole('button', { name: 'Read, Mon 16 Nov, Target hit' }))
     const list = screen.getByRole('heading', { level: 3, name: 'Read' }).closest('ul')!
     const weekCard = list.parentElement!
-    expect(weekCard).toHaveClass('rounded-card')
     expect(list.querySelector('.rounded-card')).toBeNull()
     expect(weekCard.firstElementChild).toHaveAttribute('aria-hidden', 'true')
     const distribution = screen.getByRole('region', { name: 'This week' })
@@ -84,27 +83,47 @@ describe('WeekPanel', () => {
 
   it("marks today's cells", async () => {
     api()
-    renderWithProviders(<WeekPanel />, { route: '/progress' })
+    renderWithProviders(<WeekPanel toggle={null} />, { route: '/progress' })
 
     expect(await screen.findByRole('button', { name: 'Read, Wed 18 Nov, Not marked yet' })).toHaveAttribute('aria-current', 'date')
     expect(screen.getByRole('button', { name: /^Piano/ })).toHaveAttribute('aria-current', 'date')
     expect(screen.getByRole('button', { name: /^Read, Tue/ })).not.toHaveAttribute('aria-current')
   })
 
-  it('draws each day as a thin pill inside a tappable cell', async () => {
+  it('draws each period as a shape inside a tappable cell', async () => {
     api()
-    renderWithProviders(<WeekPanel />, { route: '/progress' })
+    renderWithProviders(<WeekPanel toggle={null} />, { route: '/progress' })
 
     const cell = await screen.findByRole('button', { name: 'Read, Mon 16 Nov, Target hit' })
-    expect(cell).toHaveClass('h-6', 'flex', 'items-center')
-    expect(cell).not.toHaveClass('bg-cell-green')
-    expect(cell.querySelector('[data-pill]')).toHaveClass('h-2', 'rounded-full', 'bg-cell-green')
-    expect(screen.getByRole('button', { name: /^Piano/ }).querySelector('[data-pill]')).toHaveClass('border-outline')
+    expect(cell.querySelector('[data-mark]')).toHaveAttribute('data-mark', 'GREEN')
+    expect(screen.getByRole('button', { name: /^Piano/ }).querySelector('[data-mark]')).toHaveAttribute('data-mark', 'OPEN')
+  })
+
+  it('dims marks before the last miss and keeps later ones bright', async () => {
+    const habits = [{ ...week.habits[0], cells: daily(['GREEN', 'RED', 'GREEN', 'PENDING', 'PENDING', 'PENDING', 'PENDING']) }]
+    api((r) => (r.url.startsWith('/api/stats/week') ? jsonResponse({ ...week, habits }) : undefined))
+    renderWithProviders(<WeekPanel toggle={null} />, { route: '/progress' })
+
+    const mark = async (name: string) => (await screen.findByRole('button', { name })).querySelector('[data-mark]')
+    expect(await mark('Read, Mon 16 Nov, Target hit')).toHaveAttribute('data-dim')
+    expect(await mark('Read, Wed 18 Nov, Target hit')).not.toHaveAttribute('data-dim')
+  })
+
+  it('heads the week with whether it has a miss', async () => {
+    api()
+    const { unmount } = renderWithProviders(<WeekPanel toggle={null} />, { route: '/progress' })
+    expect(await screen.findByText('This week', { selector: 'p' })).toBeInTheDocument()
+    unmount()
+
+    const habits = [{ ...week.habits[0], cells: daily(['GREEN', 'YELLOW', 'PENDING', 'PENDING', 'PENDING', 'PENDING', 'PENDING']) }]
+    api((r) => (r.url.startsWith('/api/stats/week') ? jsonResponse({ ...week, habits }) : undefined))
+    renderWithProviders(<WeekPanel toggle={null} />, { route: '/progress' })
+    expect(await screen.findByText('No red this week')).toBeInTheDocument()
   })
 
   it('saves on a single tap, with a note added first', async () => {
     const fetchMock = api((r) => (r.method === 'PUT' ? jsonResponse({ periodStart: '2026-11-18', color: 'GREEN', note: 'ch 4' }) : undefined))
-    const { user } = renderWithProviders(<WeekPanel />, { route: '/progress' })
+    const { user } = renderWithProviders(<WeekPanel toggle={null} />, { route: '/progress' })
 
     await user.click(await screen.findByRole('button', { name: 'Read, Wed 18 Nov, Not marked yet' }))
     const dialog = screen.getByRole('dialog', { name: 'Read, Wed 18 Nov' })
@@ -131,7 +150,7 @@ describe('WeekPanel', () => {
 
   it('opens with the current color and note, and clears', async () => {
     const fetchMock = api((r) => (r.method === 'DELETE' ? new Response(null, { status: 204 }) : undefined))
-    const { user } = renderWithProviders(<WeekPanel />, { route: '/progress' })
+    const { user } = renderWithProviders(<WeekPanel toggle={null} />, { route: '/progress' })
 
     await user.click(await screen.findByRole('button', { name: 'Read, Mon 16 Nov, Target hit' }))
     const dialog = screen.getByRole('dialog')
@@ -149,7 +168,7 @@ describe('WeekPanel', () => {
 
   it('saves only the note of a marked day with Save note', async () => {
     const fetchMock = api((r) => (r.method === 'PUT' ? jsonResponse({ periodStart: '2026-11-16', color: 'GREEN', note: 'great run' }) : undefined))
-    const { user } = renderWithProviders(<WeekPanel />, { route: '/progress' })
+    const { user } = renderWithProviders(<WeekPanel toggle={null} />, { route: '/progress' })
 
     await user.click(await screen.findByRole('button', { name: 'Read, Mon 16 Nov, Target hit' }))
     const dialog = screen.getByRole('dialog')
@@ -166,7 +185,7 @@ describe('WeekPanel', () => {
 
   it('shows the streak, without a countdown for a past day', async () => {
     api()
-    const { user } = renderWithProviders(<WeekPanel />, { route: '/progress' })
+    const { user } = renderWithProviders(<WeekPanel toggle={null} />, { route: '/progress' })
 
     await user.click(await screen.findByRole('button', { name: 'Read, Mon 16 Nov, Target hit' }))
     const dialog = screen.getByRole('dialog')
@@ -176,7 +195,7 @@ describe('WeekPanel', () => {
 
   it('has no Clear for an unmarked weekly period and closes on a backdrop tap', async () => {
     api()
-    const { user } = renderWithProviders(<WeekPanel />, { route: '/progress' })
+    const { user } = renderWithProviders(<WeekPanel toggle={null} />, { route: '/progress' })
 
     await user.click(await screen.findByRole('button', { name: /^Piano/ }))
     const dialog = screen.getByRole('dialog', { name: 'Piano, week of Mon 16 Nov' })
@@ -189,7 +208,7 @@ describe('WeekPanel', () => {
 
   it('closes on Escape right after opening and returns focus to the cell', async () => {
     api()
-    const { user } = renderWithProviders(<WeekPanel />, { route: '/progress' })
+    const { user } = renderWithProviders(<WeekPanel toggle={null} />, { route: '/progress' })
 
     const opener = await screen.findByRole('button', { name: 'Read, Wed 18 Nov, Not marked yet' })
     await user.click(opener)
@@ -208,7 +227,7 @@ describe('WeekPanel', () => {
         return jsonResponse([{ habitId: 1, name: 'Read', current: 3, best: 9, yellowRun: 2, yellowLimit: 2 }])
       return undefined
     })
-    const { user } = renderWithProviders(<WeekPanel />, { route: '/progress' })
+    const { user } = renderWithProviders(<WeekPanel toggle={null} />, { route: '/progress' })
 
     await within(await screen.findByRole('region', { name: 'Streaks' })).findByRole('listitem', { name: 'Read' })
     await user.click(screen.getByRole('button', { name: 'Read, Wed 18 Nov, Not marked yet' }))
@@ -227,7 +246,7 @@ describe('WeekPanel', () => {
     api((r) => (r.method === 'PUT' ? problemResponse(422, 'CHECK_IN_NOT_ALLOWED') : undefined))
     const toast = vi.fn()
     const unsubscribe = subscribeSyncToast(toast)
-    const { user } = renderWithProviders(<WeekPanel />, { route: '/progress' })
+    const { user } = renderWithProviders(<WeekPanel toggle={null} />, { route: '/progress' })
 
     await user.click(await screen.findByRole('button', { name: 'Read, Tue 17 Nov, Missed' }))
     await user.click(screen.getByRole('button', { name: /^Minimum done/ }))
@@ -239,7 +258,7 @@ describe('WeekPanel', () => {
 
   it('moves between weeks', async () => {
     const fetchMock = api()
-    const { user } = renderWithProviders(<WeekPanel />, { route: '/progress' })
+    const { user } = renderWithProviders(<WeekPanel toggle={null} />, { route: '/progress' })
 
     expect(await screen.findByRole('region', { name: 'This week' })).toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'This week' })).not.toBeInTheDocument()
@@ -252,7 +271,7 @@ describe('WeekPanel', () => {
 
   it('points to the habits page when there are none', async () => {
     api((r) => (r.url.startsWith('/api/stats/week') ? jsonResponse({ ...week, habits: [], distribution: { green: 0, yellow: 0, red: 0, grey: 0, total: 0 } }) : undefined))
-    renderWithProviders(<WeekPanel />, { route: '/progress' })
+    renderWithProviders(<WeekPanel toggle={null} />, { route: '/progress' })
 
     expect(await screen.findByRole('link', { name: 'Create your first habit' })).toHaveAttribute('href', '/habits')
   })
@@ -268,7 +287,7 @@ describe('WeekPanel', () => {
         return jsonResponse([{ habitId: 1, name: 'Read', current: 3, best: 9, yellowRun: run, yellowLimit: 2 }])
       return undefined
     })
-    const { user } = renderWithProviders(<WeekPanel />, { route: '/progress' })
+    const { user } = renderWithProviders(<WeekPanel toggle={null} />, { route: '/progress' })
 
     await user.click(await screen.findByRole('button', { name: 'Read, Wed 18 Nov, Not marked yet' }))
     await user.click(screen.getByRole('button', { name: /^Minimum done/ }))

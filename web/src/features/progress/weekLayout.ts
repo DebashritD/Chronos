@@ -1,10 +1,10 @@
 import type { WeekCell, WeekHabit } from '../../api/types'
 import { addDays } from '../../lib/dates'
 
-export function subtitle(habit: WeekHabit): string | null {
+export function frequencyText(habit: WeekHabit): string {
   if (habit.frequency === 'WEEKLY') return 'weekly'
   if (habit.frequency === 'EVERY_N_DAYS') return `every ${habit.intervalDays} days`
-  return null
+  return 'daily'
 }
 
 /** A run of `span` week columns from `col` (0 = Monday); `cell` is null for days we have no period for. */

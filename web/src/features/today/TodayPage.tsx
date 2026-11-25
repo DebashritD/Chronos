@@ -10,7 +10,7 @@ import { emptyAction, eyebrow } from '../../lib/ui'
 import { browserTimezone, useSession } from '../auth/session'
 import { CellPicker } from '../checkin/CellPicker'
 import { useHabits } from '../habits/api'
-import { WeekGrid } from '../progress/WeekGrid'
+import { WeekTiles } from '../progress/WeekTiles'
 import { useStreaks, useWeek } from '../stats/api'
 import { StreakList } from '../stats/StreakList'
 import { HabitCard } from './HabitCard'
@@ -114,7 +114,7 @@ export function TodayPage() {
         {data.habits.length > 0 && (
           <div>
             <h2 className={eyebrow}>This week</h2>
-            <WeekGrid start={data.start} today={data.today} habits={data.habits}
+            <WeekTiles start={data.start} today={data.today} habits={data.habits}
               onPick={(habit, cell) => setPicked({ habit, cell })} />
           </div>
         )}

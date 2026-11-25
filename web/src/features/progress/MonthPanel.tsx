@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react'
+import type { ReactNode } from 'react'
 import { useSearchParams } from 'react-router'
 import type { MonthHabit } from '../../api/types'
 import { cellClass, STATE_LABEL } from '../../lib/cells'
@@ -17,15 +18,15 @@ function greenShare(habit: MonthHabit): number | null {
   return Math.round((habit.cells.filter(({ state }) => state === 'GREEN').length * 100) / due)
 }
 
-export function MonthPanel() {
+export function MonthPanel({ toggle }: { toggle: ReactNode }) {
   const [searchParams, setSearchParams] = useSearchParams()
   const month = searchParams.get('month') ?? undefined
   const { data, isPending, isError, fetchStatus } = useMonth(month)
 
   if (isPending) {
-    return <p className="text-muted">{fetchStatus === 'paused' ? 'Connect to load this month.' : 'Loading…'}</p>
+    return <>{toggle}<p className="mt-4 text-muted">{fetchStatus === 'paused' ? 'Connect to load this month.' : 'Loading…'}</p></>
   }
-  if (isError) return <p role="alert" className="text-cell-red">Couldn't load this month.</p>
+  if (isError) return <>{toggle}<p role="alert" className="mt-4 text-cell-red">Couldn't load this month.</p></>
 
   const goTo = (target: string) => setSearchParams({ view: 'month', month: target })
   const overview = data.overview.map(({ date, score }) => ({
@@ -36,7 +37,8 @@ export function MonthPanel() {
 
   return (
     <div>
-      <div className="mb-4 flex items-center gap-2">
+      {toggle}
+      <div className="my-4 flex items-center gap-2">
         <button type="button" aria-label="Previous month" className={iconButton}
           onClick={() => goTo(addMonths(data.month, -1))}>
           <ChevronLeft size={18} aria-hidden="true" />

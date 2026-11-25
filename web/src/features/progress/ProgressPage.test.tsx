@@ -29,7 +29,7 @@ describe('ProgressPage', () => {
 
     await user.click(within(views).getByRole('button', { name: 'Month' }))
 
-    expect(within(views).getByRole('button', { name: 'Month' })).toHaveAttribute('aria-pressed', 'true')
+    expect(within(screen.getByRole('group', { name: 'View' })).getByRole('button', { name: 'Month' })).toHaveAttribute('aria-pressed', 'true')
     expect(await screen.findByRole('heading', { name: 'November 2026' })).toBeInTheDocument()
   })
 

@@ -31,13 +31,13 @@ describe('MonthPanel', () => {
   it('asks to connect for a month that was never loaded', async () => {
     stubApi(() => undefined)
     onlineManager.setOnline(false)
-    renderWithProviders(<MonthPanel />, { route: '/progress?view=month' })
+    renderWithProviders(<MonthPanel toggle={null} />, { route: '/progress?view=month' })
     expect(await screen.findByText('Connect to load this month.')).toBeInTheDocument()
   })
 
   it('colors the overview on a red → green scale, Monday first', async () => {
     api()
-    renderWithProviders(<MonthPanel />, { route: '/progress?view=month' })
+    renderWithProviders(<MonthPanel toggle={null} />, { route: '/progress?view=month' })
 
     expect(await screen.findByRole('heading', { name: 'November 2026' })).toBeInTheDocument()
     const overview = screen.getByRole('region', { name: 'Daily score' })
@@ -53,7 +53,7 @@ describe('MonthPanel', () => {
 
   it('shows the distribution and per-habit heatmaps', async () => {
     api()
-    renderWithProviders(<MonthPanel />, { route: '/progress?view=month' })
+    renderWithProviders(<MonthPanel toggle={null} />, { route: '/progress?view=month' })
 
     const distribution = await screen.findByRole('region', { name: 'Distribution' })
     expect(within(distribution).getByRole('listitem', { name: 'Green 2' })).toBeInTheDocument()
@@ -65,7 +65,7 @@ describe('MonthPanel', () => {
 
   it('moves between months', async () => {
     const fetchMock = api()
-    const { user } = renderWithProviders(<MonthPanel />, { route: '/progress?view=month' })
+    const { user } = renderWithProviders(<MonthPanel toggle={null} />, { route: '/progress?view=month' })
 
     await user.click(await screen.findByRole('button', { name: 'Next month' }))
 
