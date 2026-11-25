@@ -44,3 +44,22 @@ export function frequencyLabel(frequency: Frequency, intervalDays?: number | nul
       return `Every ${intervalDays} days`
   }
 }
+
+export type MarkKind = 'GREEN' | 'YELLOW' | 'RED' | 'OPEN' | 'FUTURE' | 'PAUSED'
+
+/** The shape for a cell: colours as themselves, unmarked as an open ring (fainter once it's in the future). */
+export function markKind(state: CellState, future: boolean): MarkKind | null {
+  switch (state) {
+    case 'GREEN':
+    case 'YELLOW':
+    case 'RED':
+      return state
+    case 'PAUSED':
+      return 'PAUSED'
+    case 'NOT_DUE':
+      return null
+    case 'PENDING':
+    case 'GREY':
+      return future ? 'FUTURE' : 'OPEN'
+  }
+}
