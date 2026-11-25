@@ -1,35 +1,58 @@
 @import "tailwindcss";
 
-/* UI v2 design tokens (dark only). `surface` is the raised "card2" tone and `muted` the secondary text, so the
-   copied WakingNotice (bg-surface / text-muted) matches without changes. */
+/* Calendar pad (light only). See docs/superpowers/specs/2026-11-25-calendar-pad-redesign-design.md */
 @theme {
-  --color-bg: #0a0d14;
-  --color-card: #10141d;
-  --color-surface: #131824;
-  --color-line: rgb(255 255 255 / 0.06);
-  --color-fg: #e9edf3;
-  --color-muted: #8891a1;
-  /* Tertiary text; still ≥4.5:1 on surface */
-  --color-dim: #7d8698;
-  --color-accent: #5ab9fc;
-  --color-urgent: #ff9f0a;
-  --color-outline: #2a3140;
-  --color-cell-green: #30d158;
-  --color-cell-yellow: #ffd60a;
-  --color-cell-red: #ff453a;
-  --color-cell-grey: #232a37;
+  --color-paper: #f7f3ea;
+  --color-paper-2: #e9e2d4;
+  --color-binding: #2c2a27;
+  --color-ink: #1d1b18;
+  --color-muted: #665e53;
+  /* Decorative only (future circles, dashed dividers): never text */
+  --color-faint: #a89f8f;
+  /* Open-today circles: ≥ 3:1 on paper */
+  --color-ring: #857d70;
+  --color-rule: #e3dbcb;
+  --color-rule-2: #d6ccb9;
+  --color-accent: #b0361f;
+  --color-cell-green: #1a7a43;
+  /* Minimum fill (graphics only); text and outlines use yellow-ink */
+  --color-cell-yellow: #c08a00;
+  --color-yellow-ink: #8a6200;
+  --color-cell-red: #c4391f;
   /* Month daily-score scale, red → green */
-  --color-score-0: #ff453a;
-  --color-score-1: #ff8a3d;
-  --color-score-2: #ffd60a;
-  --color-score-3: #7ed957;
-  --color-score-4: #30d158;
-  --radius-card: 22px;
-  --radius-cell: 10px;
-  --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
-  --font-display: 'Geist', 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --color-score-0: #c4391f;
+  --color-score-1: #d9761a;
+  --color-score-2: #c08a00;
+  --color-score-3: #7a9a2a;
+  --color-score-4: #1a7a43;
+
+  /* Legacy names mapped onto the pad until each screen is restyled; Task 10 deletes them. */
+  --color-bg: #f7f3ea;
+  --color-card: #f7f3ea;
+  --color-surface: #efe8da;
+  --color-line: #e3dbcb;
+  --color-fg: #1d1b18;
+  --color-dim: #665e53;
+  --color-urgent: #b0361f;
+  --color-outline: #d6ccb9;
+  --color-cell-grey: #e3dbcb;
+  --font-display: 'Instrument Serif', Georgia, serif;
   --animate-pop: pop 320ms cubic-bezier(0.22, 1, 0.36, 1);
 
+  /* Radii still used by existing components (e.g. rounded-card) */
+  --radius-card: 22px;
+  --radius-cell: 10px;
+
+  --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
+  --font-serif: 'Instrument Serif', Georgia, 'Times New Roman', serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
+  --animate-stamp: stamp 240ms cubic-bezier(0.2, 0.9, 0.3, 1.25) both;
+
+  @keyframes stamp {
+    0% { opacity: 0; transform: scale(1.18); }
+    55% { opacity: 1; }
+    100% { opacity: 1; transform: scale(1); }
+  }
   @keyframes pop {
     0% { transform: scale(1); }
     40% { transform: scale(1.08); }
@@ -38,32 +61,63 @@
 }
 
 :root {
-  color-scheme: dark;
+  color-scheme: light;
 }
 
 body {
-  background-color: var(--color-bg);
-  color: var(--color-fg);
+  background-color: var(--color-paper-2);
+  color: var(--color-ink);
   -webkit-font-smoothing: antialiased;
   -webkit-tap-highlight-color: transparent;
   /* Fixed-width digits so ticking countdowns and counts don't jitter */
   font-variant-numeric: tabular-nums;
 }
 
-h1, h2, h3, .font-display {
-  font-family: var(--font-display);
-  font-weight: 600;
-  letter-spacing: -0.035em;
+:focus-visible {
+  outline: 2px solid var(--color-ink);
+  outline-offset: 2px;
 }
 
-/* PAUSED cells: diagonal hatching */
+@layer components {
+  /* The pad's dark binding with a row of punched holes along its lower edge */
+  .binding {
+    background-color: var(--color-binding);
+    background-image: radial-gradient(circle, var(--color-paper-2) 0 3.5px, transparent 4px);
+    background-size: 22px 10px;
+    background-repeat: repeat-x;
+    background-position: 11px calc(100% - 9px);
+  }
+  /* Torn-off top edge of a sheet */
+  .perforated {
+    background-image: radial-gradient(circle at 5px 0, var(--color-binding) 2.5px, transparent 3px);
+    background-size: 10px 6px;
+    background-repeat: repeat-x;
+    background-position: 0 0;
+  }
+  /* Stacked sheets under the current one */
+  .sheet-edges {
+    box-shadow: 0 2px 0 #ddd5c4, 0 4px 0 #f1ebdf, 0 6px 0 #d8cfbe, 0 8px 0 #efe8da, 0 10px 0 #d3c9b6;
+  }
+  /* Unmarked share in the distribution bar; paused periods */
+  .hatched {
+    background: repeating-linear-gradient(45deg, var(--color-rule-2) 0 3px, transparent 3px 6px);
+  }
+  /* Double-bordered rubber stamp; colour comes from `color` */
+  .stamp {
+    border: 2.5px solid currentColor;
+    border-radius: 6px;
+    box-shadow: inset 0 0 0 2px var(--color-paper), inset 0 0 0 3.5px currentColor;
+  }
+}
+
+/* PAUSED cells (legacy, removed in Task 10 with its last user) */
 .cell-paused {
-  background: repeating-linear-gradient(135deg, #232a37 0 4px, #161b26 4px 8px);
+  background: repeating-linear-gradient(135deg, var(--color-rule-2) 0 3px, transparent 3px 6px);
 }
 
-/* The app logo: a rounded tile with a red → yellow → green → accent sweep */
+/* Legacy logo tile, removed in Task 2 */
 .logo-tile {
-  background: conic-gradient(from 210deg, var(--color-cell-red), var(--color-cell-yellow), var(--color-cell-green), var(--color-accent), var(--color-cell-red));
+  background: var(--color-binding);
 }
 
 @media (prefers-reduced-motion: reduce) {
