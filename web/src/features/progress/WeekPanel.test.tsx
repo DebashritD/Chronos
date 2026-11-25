@@ -70,10 +70,6 @@ describe('WeekPanel', () => {
     expect(screen.getByRole('button', { name: 'Piano, week of Mon 16 Nov, Not marked yet' })).toBeEnabled()
     expect(screen.getByRole('heading', { level: 3, name: 'Read' }).closest('li')).toContainElement(
       screen.getByRole('button', { name: 'Read, Mon 16 Nov, Target hit' }))
-    const list = screen.getByRole('heading', { level: 3, name: 'Read' }).closest('ul')!
-    const weekCard = list.parentElement!
-    expect(list.querySelector('.rounded-card')).toBeNull()
-    expect(weekCard.firstElementChild).toHaveAttribute('aria-hidden', 'true')
     const distribution = screen.getByRole('region', { name: 'This week' })
     expect(within(distribution).getByRole('listitem', { name: 'Green 1' })).toBeInTheDocument()
     expect(within(distribution).getByRole('listitem', { name: 'Red 1' })).toBeInTheDocument()

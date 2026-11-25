@@ -1,3 +1,4 @@
+import { useCallback, useRef } from 'react'
 import { useSearchParams } from 'react-router'
 import { SyncStatus } from '../../app/SyncStatus'
 import { eyebrow } from '../../lib/ui'
@@ -12,10 +13,19 @@ function toggleClass(active: boolean): string {
 export function ProgressPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const isMonth = searchParams.get('view') === 'month'
+  const focusSelected = useRef(false)
+  // Panels remount the toggle (also across their loading states), so refocus the selected button each time after a user switch.
+  const focusOnMount = useCallback((el: HTMLButtonElement | null) => {
+    if (el && focusSelected.current) el.focus()
+  }, [])
+  const switchTo = (params: Record<string, string>) => {
+    focusSelected.current = true
+    setSearchParams(params)
+  }
   const toggle = (
     <div role="group" aria-label="View" className="mt-3 flex gap-6">
-      <button type="button" aria-pressed={!isMonth} className={toggleClass(!isMonth)} onClick={() => setSearchParams({})}>Week</button>
-      <button type="button" aria-pressed={isMonth} className={toggleClass(isMonth)} onClick={() => setSearchParams({ view: 'month' })}>Month</button>
+      <button type="button" ref={isMonth ? undefined : focusOnMount} aria-pressed={!isMonth} className={toggleClass(!isMonth)} onClick={() => switchTo({})}>Week</button>
+      <button type="button" ref={isMonth ? focusOnMount : undefined} aria-pressed={isMonth} className={toggleClass(isMonth)} onClick={() => switchTo({ view: 'month' })}>Month</button>
     </div>
   )
   return (

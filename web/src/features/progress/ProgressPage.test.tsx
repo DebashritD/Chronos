@@ -31,6 +31,7 @@ describe('ProgressPage', () => {
 
     expect(within(screen.getByRole('group', { name: 'View' })).getByRole('button', { name: 'Month' })).toHaveAttribute('aria-pressed', 'true')
     expect(await screen.findByRole('heading', { name: 'November 2026' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Month' })).toHaveFocus()
   })
 
   it('opens on the month from the URL and goes back to the week', async () => {
@@ -41,5 +42,14 @@ describe('ProgressPage', () => {
     await user.click(screen.getByRole('button', { name: 'Week' }))
 
     expect(await screen.findByRole('heading', { name: '16 – 22 Nov 2026' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Week' })).toHaveFocus()
+  })
+
+  it('does not steal focus on the initial load', async () => {
+    api()
+    renderWithProviders(<ProgressPage />, { route: '/progress' })
+
+    expect(await screen.findByRole('heading', { name: '16 – 22 Nov 2026' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Week' })).not.toHaveFocus()
   })
 })
