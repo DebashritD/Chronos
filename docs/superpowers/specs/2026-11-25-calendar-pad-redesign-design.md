@@ -35,7 +35,8 @@ The redesign changes the look, not what the app does. The only behaviour changes
 | `binding` | `#2c2a27` | top binding strip, PWA status bar |
 | `ink` | `#1d1b18` | primary text, filled buttons |
 | `muted` | `#665e53` | secondary text (≥ 4.5:1 on paper and paper-2) |
-| `faint` | `#a89f8f` | decorative only: empty circles, dashed dividers |
+| `faint` | `#a89f8f` | decorative only: future-day circles, dashed dividers |
+| `ring` | `#857d70` | open-today circles (≥ 3:1 on paper) |
 | `rule` | `#e3dbcb` | row separators |
 | `rule-2` | `#d6ccb9` | section separators, input underlines |
 | `accent` | `#b0361f` | eyebrows, active tab underline, today's column, Log out |
@@ -82,7 +83,7 @@ Eyebrows: 11–12 px Plex Sans 600, uppercase, 0.22em tracking, `accent`.
 - **Stamped rows (GREEN or YELLOW):** the habit name, the streak line, and a rotated double-border stamp in mono capitals, "● TARGET" in `green` or "◐ MINIMUM" in `yellow-ink`. The whole row stays a button that reopens the marking buttons, as GREEN does today, and focus moves to it after collapsing.
 - **Streak line:**
   - DAILY: "**N** days unbroken"; WEEKLY: "**N** weeks unbroken"; EVERY_N_DAYS: "**N** in a row".
-  - Non-daily habits add "· N days left" (from the existing time-left text); it uses `accent` when urgent.
+  - Non-daily habits add the time left ("· 4d 2h left", from the existing time-left text). Daily habits add it only once it is urgent (the header already shows the day's countdown). Urgent time left is `accent`.
   - With no streak, the line reads "Fresh start".
 - The "Done" heading, ordering and flat keyed list are unchanged apart from YELLOW joining the collapsed group.
 - WeekPills and the frequency chip are removed from the rows. Frequency appears in the streak line's units.
@@ -98,7 +99,7 @@ Eyebrows: 11–12 px Plex Sans 600, uppercase, 0.22em tracking, `accent`.
   - GREEN: a filled `green` dot.
   - YELLOW: a half-filled `yellow` dot with a `yellow-ink` outline.
   - RED: a `red` ✕.
-  - Open today: an empty circle (`faint` stroke).
+  - Open today: an empty circle (`ring` stroke).
   - Future or not yet due: a fainter empty circle.
   - NOT_DUE gaps: nothing.
 - **Lines and brackets:**
