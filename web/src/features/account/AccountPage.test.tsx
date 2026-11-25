@@ -141,9 +141,23 @@ describe('AccountPage', () => {
     const { user } = renderWithProviders(<AccountPage />, { route: '/settings' })
 
     await user.click(screen.getByRole('button', { name: 'Fewer' }))
-    expect(screen.getByRole('button', { name: 'Fewer' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'Fewer' })).toHaveAttribute('aria-disabled', 'true')
     for (let i = 0; i < 6; i++) await user.click(screen.getByRole('button', { name: 'More' }))
-    expect(screen.getByRole('button', { name: 'More' })).toBeDisabled()
+    expect(screen.getByRole('button', { name: 'More' })).toHaveAttribute('aria-disabled', 'true')
+    expect(screen.getByRole('status', { name: 'Minimums allowed in a row' })).toHaveTextContent('7')
+  })
+
+  it('keeps keyboard focus on the stepper button at a limit', async () => {
+    stubApi(() => undefined)
+    const { user } = renderWithProviders(<AccountPage />, { route: '/settings' })
+
+    const fewer = screen.getByRole('button', { name: 'Fewer' })
+    fewer.focus()
+    await user.keyboard('{Enter}')
+    expect(fewer).toHaveAttribute('aria-disabled', 'true')
+    expect(fewer).toHaveFocus()
+    await user.keyboard('{Enter}')
+    expect(screen.getByRole('status', { name: 'Minimums allowed in a row' })).toHaveTextContent('1')
   })
 
   it('logs out', async () => {

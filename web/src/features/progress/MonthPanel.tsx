@@ -84,7 +84,7 @@ export function MonthPanel({ toggle }: { toggle: ReactNode }) {
           <span className="h-2 flex-1 rounded-full bg-linear-to-r from-score-0 via-score-2 to-score-4" />
           <span>Target</span>
           <span className="ml-2 h-3 w-3 flex-none rounded-full border-[1.5px] border-faint" />
-          <span>not marked</span>
+          <span>unmarked</span>
         </div>
       </section>
       <DistributionBar title="Distribution" caption={`${data.distribution.total} due`} distribution={data.distribution} />

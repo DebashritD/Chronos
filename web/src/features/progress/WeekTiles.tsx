@@ -47,7 +47,7 @@ function HabitMarks({ habit, start, today, onPick }: { habit: WeekHabit; start: 
           <span aria-hidden="true" className={`absolute top-1/2 right-1/2 left-[-50%] h-[1.5px] -translate-y-1/2 ${
             cell.state === 'GREEN' ? 'bg-cell-green' : 'bg-cell-yellow'} ${dim ? 'opacity-30' : 'opacity-60'}`} />
         )}
-        {!daily && <Bracket state={cell.state} future={future} dim={dim} />}
+        {!daily && cell.state !== 'NOT_DUE' && <Bracket state={cell.state} future={future} dim={dim} />}
         <WeekCellButton habit={habit} cell={cell} isToday={from <= today && today <= to} onPick={onPick}>
           {kind && <Mark kind={kind} dim={dim && kind !== 'RED'} />}
         </WeekCellButton>
@@ -76,7 +76,7 @@ export function WeekTiles({ start, today, habits, onPick }: WeekTilesProps) {
               <span className={`text-[10px] font-semibold tracking-[0.14em] ${date === today ? 'text-accent' : 'text-muted'}`}>
                 {weekday.charAt(0)}
               </span>
-              <span className={`font-serif text-[17px] leading-tight ${date > today ? 'text-faint' : 'text-ink'}`}>{dayOfMonth(date)}</span>
+              <span className={`font-serif text-[17px] leading-tight ${date > today ? 'text-muted' : 'text-ink'}`}>{dayOfMonth(date)}</span>
             </span>
           )
         })}

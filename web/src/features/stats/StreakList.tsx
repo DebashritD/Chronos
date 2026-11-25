@@ -1,7 +1,7 @@
 import { eyebrow } from '../../lib/ui'
 import { useStreaks } from './api'
 
-/** Current and best streak per habit; a broken run (current 0) is faded. Streaks count Target/Minimum periods. */
+/** Current and best streak per habit; a broken run (current 0) fades its numeral only, so names and meta keep their contrast. Streaks count Target/Minimum periods. */
 export function StreakList() {
   const { data } = useStreaks()
   return (
@@ -14,9 +14,9 @@ export function StreakList() {
       <ul className="mt-1">
         {data?.map((streak) => (
           <li key={streak.habitId} aria-label={streak.name}
-            className={`flex items-baseline gap-3 border-b border-rule py-2.5 ${streak.current === 0 ? 'opacity-45' : ''}`}>
+            className={`flex items-baseline gap-3 border-b border-rule py-2.5`}>
             <span className="min-w-0 flex-1 font-serif text-[22px] leading-tight break-words text-ink">{streak.name}</span>
-            <span className="font-serif text-[26px] leading-none text-ink">
+            <span className={`font-serif text-[26px] leading-none text-ink ${streak.current === 0 ? 'opacity-45' : ''}`}>
               <span className="sr-only">Current streak </span>{streak.current}
             </span>
             <span className="w-16 text-right font-mono text-[12px] text-muted">best {streak.best}</span>

@@ -25,11 +25,11 @@ function IconButton({ label, title, onClick, children }: { label: string; title:
   )
 }
 
-function Rule({ kind, term, detail }: { kind: 'GREEN' | 'YELLOW'; term: string; detail: string }) {
+function Rule({ kind, term, detail, faded }: { kind: 'GREEN' | 'YELLOW'; term: string; detail: string; faded: boolean }) {
   return (
     <div className="flex items-center gap-2">
       <dt className="sr-only">{term}</dt>
-      <dd className="flex min-w-0 items-center gap-2 text-[14px] break-words text-ink"><Mark kind={kind} size={11} />{detail}</dd>
+      <dd className="flex min-w-0 items-center gap-2 text-[14px] break-words text-ink"><Mark kind={kind} size={11} dim={faded} />{detail}</dd>
     </div>
   )
 }
@@ -74,7 +74,7 @@ export function HabitsPage() {
     const run = streaks.data?.find((s) => s.habitId === habit.id)?.current
     return (
       <li key={habit.id} aria-label={habit.name}
-        className={`flex items-start gap-2 border-b border-rule py-4 ${isArchived || isPaused ? 'opacity-50' : ''}`}>
+        className={`flex items-start gap-2 border-b border-rule py-4`}>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-3">
             <h2 className="font-serif text-[27px] leading-tight break-words text-ink">{habit.name}</h2>
@@ -82,12 +82,12 @@ export function HabitsPage() {
           </div>
           <p className="mt-1.5 font-mono text-[11px] text-muted">
             {frequencyLabel(habit.frequency, habit.intervalDays).toLowerCase()} · since {formatDayMonth(habit.startDate)}
-            {!isArchived && run !== undefined && <> · <b className="font-medium text-ink">{run}</b> run</>}
+            {!isArchived && run !== undefined && <> · <b className={`font-medium text-ink ${isPaused ? 'opacity-50' : ''}`}>{run}</b> run</>}
             {habit.yellowCap && ` · ≤${me?.maxYellows ?? 2} minimums`}
           </p>
           <dl className="mt-2 grid gap-1">
-            <Rule kind="GREEN" term="Target" detail={habit.targetText} />
-            <Rule kind="YELLOW" term="Minimum" detail={habit.minText} />
+            <Rule kind="GREEN" term="Target" detail={habit.targetText} faded={isArchived || isPaused} />
+            <Rule kind="YELLOW" term="Minimum" detail={habit.minText} faded={isArchived || isPaused} />
           </dl>
         </div>
         <div className="flex flex-none">

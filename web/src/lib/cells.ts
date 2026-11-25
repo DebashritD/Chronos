@@ -6,7 +6,7 @@ export const STATE_LABEL: Record<CellState, string> = {
   RED: 'Missed',
   PAUSED: 'Paused',
   PENDING: 'Not marked yet',
-  GREY: 'Not marked',
+  GREY: 'Unmarked',
   NOT_DUE: 'Not due',
 }
 

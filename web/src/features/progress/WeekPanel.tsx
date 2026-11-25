@@ -30,8 +30,10 @@ export function WeekPanel({ toggle }: { toggle: ReactNode }) {
   const goTo = (weekStart: string) => setSearchParams({ start: weekStart })
   const pickedStreak = picked ? streaks.data?.find((streak) => streak.habitId === picked.habit.id) : undefined
 
-  const noRed = data.habits.every((habit) => habit.cells.every((cell) => cell.state !== 'RED'))
   const current = !start
+  // "No red" is only a claim once something was actually due, today or earlier.
+  const hasDue = data.habits.some((habit) => habit.cells.some((cell) => cell.periodStart !== null && cell.periodStart <= data.today && cell.state !== 'NOT_DUE'))
+  const noRed = hasDue && data.habits.every((habit) => habit.cells.every((cell) => cell.state !== 'RED'))
   const headline = noRed ? `No red ${current ? 'this' : 'that'} week` : current ? 'This week' : 'That week'
 
   return (

@@ -44,6 +44,18 @@ describe('HabitsPage', () => {
     expect(screen.getByRole('button', { name: 'Unarchive Piano' })).toBeInTheDocument()
   })
 
+  it('fades only the marks on a paused row, keeping text unfaded', async () => {
+    api()
+    renderWithProviders(<HabitsPage />, { route: '/habits' })
+
+    const runRow = await screen.findByRole('listitem', { name: 'Run' })
+    expect(runRow).not.toHaveClass('opacity-50')
+    expect(within(runRow).getByRole('heading', { name: 'Run' })).not.toHaveClass('opacity-50')
+    expect(within(runRow).getByText('Target').nextElementSibling).not.toHaveClass('opacity-50')
+    runRow.querySelectorAll('[data-mark]').forEach((mark) => expect(mark).toHaveAttribute('data-dim'))
+    expect(within(await screen.findByRole('listitem', { name: 'Read' })).getByText('Target').nextElementSibling?.querySelector('[data-mark]')).not.toHaveAttribute('data-dim')
+  })
+
   it('shows an active habit’s run from the streaks', async () => {
     api()
     renderWithProviders(<HabitsPage />, { route: '/habits' })

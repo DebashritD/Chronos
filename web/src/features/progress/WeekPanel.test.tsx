@@ -75,7 +75,10 @@ describe('WeekPanel', () => {
     expect(within(distribution).getByRole('listitem', { name: 'Missed 1' })).toBeInTheDocument()
     expect(within(distribution).getByText('50%')).toBeInTheDocument()
     const streakList = screen.getByRole('region', { name: 'Streaks' })
-    expect(await within(streakList).findByRole('listitem', { name: 'Read' })).toHaveClass('opacity-45')
+    const broken = await within(streakList).findByRole('listitem', { name: 'Read' })
+    expect(broken).not.toHaveClass('opacity-45')
+    expect(within(broken).getByText('Read')).not.toHaveClass('opacity-45')
+    expect(within(broken).getByText('0').className).toContain('opacity-45')
     expect(within(streakList).getByText('best 9')).toBeInTheDocument()
   })
 
@@ -117,6 +120,22 @@ describe('WeekPanel', () => {
     api((r) => (r.url.startsWith('/api/stats/week') ? jsonResponse({ ...week, habits }) : undefined))
     renderWithProviders(<WeekPanel toggle={null} />, { route: '/progress' })
     expect(await screen.findByText('No red this week')).toBeInTheDocument()
+  })
+
+  it('claims no red only when something was due by today', async () => {
+    const cells = (states: WeekCell['state'][]) => daily(states)
+    const future = ['PENDING', 'PENDING', 'PENDING', 'PENDING', 'PENDING', 'PENDING', 'PENDING'] as WeekCell['state'][]
+    const nextWeek = { ...week, start: '2026-11-23', today: '2026-11-18', habits: [{ ...week.habits[0], cells: cells(future).map((c, i) => ({ ...c, periodStart: `2026-11-${23 + i}`, date: `2026-11-${23 + i}` })) }] }
+    api((r) => (r.url.startsWith('/api/stats/week') ? jsonResponse(nextWeek) : undefined))
+    const { unmount } = renderWithProviders(<WeekPanel toggle={null} />, { route: '/progress?start=2026-11-23' })
+    expect(await screen.findByText('That week', { selector: 'p' })).toBeInTheDocument()
+    expect(screen.queryByText(/No red/)).not.toBeInTheDocument()
+    unmount()
+
+    api((r) => (r.url.startsWith('/api/stats/week') ? jsonResponse({ ...week, habits: [] }) : undefined))
+    renderWithProviders(<WeekPanel toggle={null} />, { route: '/progress' })
+    expect(await screen.findByText('This week', { selector: 'p' })).toBeInTheDocument()
+    expect(screen.queryByText(/No red/)).not.toBeInTheDocument()
   })
 
   it('saves on a single tap, with a note added first', async () => {

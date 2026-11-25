@@ -85,7 +85,7 @@ export function TodayPage() {
             )}
           </div>
         </header>
-        <SyncStatus />
+        <SyncStatus className="mt-1" />
         {data.habits.length === 0 ? (
           <EmptyState title="Start your first chain"
             action={<Link to="/habits" className={inkButton}>Create your first habit</Link>}>
