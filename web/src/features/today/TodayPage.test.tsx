@@ -298,6 +298,21 @@ describe('TodayPage', () => {
     expect(within(dialog).getByLabelText('Note (optional)')).toHaveValue('ch 3')
   })
 
+  it('shows the streak and time left in the picker', async () => {
+    api()
+    const { user } = renderWithProviders(<TodayPage />)
+
+    const read = await screen.findByRole('article', { name: 'Read' })
+    await waitFor(() => expect(read).toHaveTextContent('Current streak 12'))
+    await user.click(within(read).getByRole('button', { name: 'Read' }))
+
+    const dialog = screen.getByRole('dialog', { name: 'Read, Wed 18 Nov' })
+    expect(dialog).toHaveTextContent('Current streak 12')
+    expect(chip(dialog)).toHaveTextContent('12h left today')
+    expect(chip(dialog)).toHaveAttribute('data-tone', 'done')
+    expect(dialog.querySelectorAll('[data-ring]')).toHaveLength(1)
+  })
+
   it('drops a mark the server rejects and says so in a toast', async () => {
     api((r) => (r.method === 'PUT' ? problemResponse(422, 'CHECK_IN_NOT_ALLOWED') : undefined))
     const toast = vi.fn()
@@ -438,7 +453,6 @@ describe('TodayPage', () => {
     const read = await screen.findByRole('article', { name: 'Read' })
     await user.click(within(read).getByRole('button', { name: 'Read' }))
     await user.click(screen.getByRole('button', { name: /^Minimum done/ }))
-    await user.click(screen.getByRole('button', { name: 'Save' }))
 
     await waitFor(() => {
       const all = requests(fetchMock)

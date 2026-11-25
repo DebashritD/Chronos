@@ -104,7 +104,8 @@ export function TodayPage() {
         )}
         <StreakList />
       </aside>
-      {picked && <CellPicker habit={picked.habit} cell={picked.cell} onClose={() => setPicked(null)} />}
+      {picked && <CellPicker habit={picked.habit} cell={picked.cell} streak={streakFor(picked.habit.id)?.current}
+        now={now} onClose={() => setPicked(null)} />}
     </div>
   )
 }

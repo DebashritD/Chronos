@@ -5,6 +5,7 @@ import type { WeekCell, WeekHabit } from '../../api/types'
 import { addDays, formatWeekRange } from '../../lib/dates'
 import { EmptyState } from '../../app/EmptyState'
 import { emptyAction, pillButton } from '../../lib/ui'
+import { useNow } from '../../lib/useNow'
 import { CellPicker } from '../checkin/CellPicker'
 import { useStreaks, useWeek } from '../stats/api'
 import { DistributionDonut } from '../stats/DistributionDonut'
@@ -18,6 +19,7 @@ export function WeekPanel() {
   const start = searchParams.get('start') ?? undefined
   const { data, isPending, isError, fetchStatus } = useWeek(start)
   const streaks = useStreaks()
+  const now = useNow()
   const [picked, setPicked] = useState<{ habit: WeekHabit; cell: WeekCell } | null>(null)
 
   // Offline and never loaded: the query is paused, not failing.
@@ -58,7 +60,9 @@ export function WeekPanel() {
         <DistributionDonut title={start ? 'Distribution' : 'This week'} distribution={data.distribution} />
         <StreakList />
       </div>
-      {picked && <CellPicker habit={picked.habit} cell={picked.cell} onClose={() => setPicked(null)} />}
+      {picked && <CellPicker habit={picked.habit} cell={picked.cell}
+        streak={streaks.data?.find((streak) => streak.habitId === picked.habit.id)?.current}
+        now={now} onClose={() => setPicked(null)} />}
     </div>
   )
 }

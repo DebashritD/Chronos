@@ -102,19 +102,23 @@ describe('WeekPanel', () => {
     expect(screen.getByRole('button', { name: /^Piano/ }).querySelector('[data-pill]')).toHaveClass('border-outline')
   })
 
-  it('saves a color with a note', async () => {
+  it('saves on a single tap, with a note added first', async () => {
     const fetchMock = api((r) => (r.method === 'PUT' ? jsonResponse({ periodStart: '2026-11-18', color: 'GREEN', note: 'ch 4' }) : undefined))
     const { user } = renderWithProviders(<WeekPanel />, { route: '/progress' })
 
     await user.click(await screen.findByRole('button', { name: 'Read, Wed 18 Nov, Not marked yet' }))
     const dialog = screen.getByRole('dialog', { name: 'Read, Wed 18 Nov' })
-    expect(within(dialog).getByRole('button', { name: 'Save' })).toBeDisabled()
+    expect(within(dialog).queryByRole('button', { name: 'Save' })).not.toBeInTheDocument()
+    expect(within(dialog).queryByLabelText('Note (optional)')).not.toBeInTheDocument()
     expect(within(dialog).getByRole('button', { name: /^Target hit/ })).toHaveTextContent('20 pages')
     expect(within(dialog).getByRole('button', { name: /^Minimum done/ })).toHaveTextContent('1 page')
     expect(within(dialog).getByRole('button', { name: /^Missed/ })).toHaveTextContent("Didn't do it")
+    await user.click(within(dialog).getByRole('button', { name: '+ Add note' }))
+    const note = within(dialog).getByLabelText('Note (optional)')
+    expect(note).toHaveFocus()
+    expect(within(dialog).queryByRole('button', { name: '+ Add note' })).not.toBeInTheDocument()
+    await user.type(note, 'ch 4')
     await user.click(within(dialog).getByRole('button', { name: /^Target hit/ }))
-    await user.type(within(dialog).getByLabelText('Note (optional)'), 'ch 4')
-    await user.click(within(dialog).getByRole('button', { name: 'Save' }))
 
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     expect(requests(fetchMock).find((r) => r.method === 'PUT')).toEqual({
@@ -133,20 +137,54 @@ describe('WeekPanel', () => {
     const dialog = screen.getByRole('dialog')
     expect(within(dialog).getByRole('button', { name: /^Target hit/ })).toHaveAttribute('aria-pressed', 'true')
     expect(within(dialog).getByLabelText('Note (optional)')).toHaveValue('great')
+    expect(within(dialog).queryByRole('button', { name: '+ Add note' })).not.toBeInTheDocument()
+    expect(within(dialog).queryByRole('button', { name: 'Save note' })).not.toBeInTheDocument()
+    expect(within(dialog).getByRole('button', { name: /^Target hit/ })).toHaveClass('border-cell-green', 'bg-cell-green/15')
+    expect(within(dialog).getByRole('button', { name: /^Missed/ })).toHaveClass('border-line', 'bg-surface')
     await user.click(within(dialog).getByRole('button', { name: 'Clear' }))
 
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
     expect(requests(fetchMock).find((r) => r.method === 'DELETE')?.url).toBe('/api/habits/1/check-ins/2026-11-16')
   })
 
-  it('has no Clear for unmarked periods and closes on Cancel', async () => {
+  it('saves only the note of a marked day with Save note', async () => {
+    const fetchMock = api((r) => (r.method === 'PUT' ? jsonResponse({ periodStart: '2026-11-16', color: 'GREEN', note: 'great run' }) : undefined))
+    const { user } = renderWithProviders(<WeekPanel />, { route: '/progress' })
+
+    await user.click(await screen.findByRole('button', { name: 'Read, Mon 16 Nov, Target hit' }))
+    const dialog = screen.getByRole('dialog')
+    await user.type(within(dialog).getByLabelText('Note (optional)'), ' run')
+    await user.click(within(dialog).getByRole('button', { name: 'Save note' }))
+
+    await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
+    expect(requests(fetchMock).find((r) => r.method === 'PUT')).toEqual({
+      method: 'PUT',
+      url: '/api/habits/1/check-ins/2026-11-16',
+      body: { color: 'GREEN', note: 'great run' },
+    })
+  })
+
+  it('shows the streak and rings the opened day, without a countdown for a past day', async () => {
+    api()
+    const { user } = renderWithProviders(<WeekPanel />, { route: '/progress' })
+
+    await user.click(await screen.findByRole('button', { name: 'Read, Mon 16 Nov, Target hit' }))
+    const dialog = screen.getByRole('dialog')
+    expect(dialog).toHaveTextContent('Current streak 0')
+    expect(dialog.querySelector('[data-tone]')).toBeNull()
+    expect(dialog.querySelectorAll('[data-ring]')).toHaveLength(1)
+  })
+
+  it('has no Clear or pills for an unmarked weekly period and closes on a backdrop tap', async () => {
     api()
     const { user } = renderWithProviders(<WeekPanel />, { route: '/progress' })
 
     await user.click(await screen.findByRole('button', { name: /^Piano/ }))
-    expect(screen.getByRole('dialog', { name: 'Piano, week of Mon 16 Nov' })).toBeInTheDocument()
+    const dialog = screen.getByRole('dialog', { name: 'Piano, week of Mon 16 Nov' })
     expect(screen.queryByRole('button', { name: 'Clear' })).not.toBeInTheDocument()
-    await user.click(screen.getByRole('button', { name: 'Cancel' }))
+    expect(screen.queryByRole('button', { name: 'Cancel' })).not.toBeInTheDocument()
+    expect(dialog.querySelector('[data-ring]')).toBeNull()
+    await user.click(dialog.parentElement!)
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
@@ -159,7 +197,6 @@ describe('WeekPanel', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Read, Tue 17 Nov, Missed' }))
     await user.click(screen.getByRole('button', { name: /^Minimum done/ }))
-    await user.click(screen.getByRole('button', { name: 'Save' }))
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
     await waitFor(() => expect(toast).toHaveBeenCalledWith('Couldn’t sync Read. Refreshed.'))
@@ -201,7 +238,6 @@ describe('WeekPanel', () => {
 
     await user.click(await screen.findByRole('button', { name: 'Read, Wed 18 Nov, Not marked yet' }))
     await user.click(screen.getByRole('button', { name: /^Minimum done/ }))
-    await user.click(screen.getByRole('button', { name: 'Save' }))
 
     expect(await screen.findByRole('alertdialog', { name: 'Yellow limit reached' })).toBeInTheDocument()
   })
