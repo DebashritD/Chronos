@@ -44,7 +44,7 @@ export function WeekPanel({ toggle }: { toggle: ReactNode }) {
         <button type="button" aria-label="Previous week" className={iconButton} onClick={() => goTo(addDays(data.start, -7))}>
           <ChevronLeft size={20} strokeWidth={1.5} aria-hidden="true" className="text-muted" />
         </button>
-        <h2 className="min-w-0 flex-1 text-center font-serif text-[26px] text-ink">{formatWeekRange(data.start)}</h2>
+        <h2 className="min-w-0 flex-1 text-center font-display text-[22px] text-ink">{formatWeekRange(data.start)}</h2>
         <button type="button" aria-label="Next week" className={iconButton} onClick={() => goTo(addDays(data.start, 7))}>
           <ChevronRight size={20} strokeWidth={1.5} aria-hidden="true" className="text-muted" />
         </button>

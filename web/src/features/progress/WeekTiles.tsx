@@ -76,7 +76,7 @@ export function WeekTiles({ start, today, habits, onPick }: WeekTilesProps) {
               <span className={`text-[10px] font-semibold tracking-[0.14em] ${date === today ? 'text-accent' : 'text-muted'}`}>
                 {weekday.charAt(0)}
               </span>
-              <span className={`font-serif text-[17px] leading-tight ${date > today ? 'text-muted' : 'text-ink'}`}>{dayOfMonth(date)}</span>
+              <span className={`font-display text-[15px] leading-tight ${date > today ? 'text-muted' : 'text-ink'}`}>{dayOfMonth(date)}</span>
             </span>
           )
         })}
@@ -85,7 +85,7 @@ export function WeekTiles({ start, today, habits, onPick }: WeekTilesProps) {
         {habits.map((habit) => (
           <li key={habit.id} aria-label={habit.name} className={`${GRID} items-center border-b border-rule`}>
             <div className="min-w-0 py-2 pr-2">
-              <h3 className="font-serif text-[20px] leading-tight break-words text-ink">{habit.name}</h3>
+              <h3 className="font-display text-[17px] leading-[1.15] break-words hyphens-auto text-ink">{habit.name}</h3>
               <p className="font-mono text-[11px] text-muted">{frequencyText(habit)}</p>
             </div>
             <HabitMarks habit={habit} start={start} today={today} onPick={onPick} />

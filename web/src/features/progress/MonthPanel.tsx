@@ -24,8 +24,8 @@ function HabitStrip({ habit }: { habit: MonthHabit }) {
   const bright = brightness(habit.cells.map(({ state }) => state))
   return (
     <section aria-label={habit.name} className="flex min-h-10 items-center gap-2.5 border-b border-rule py-2">
-      <h3 className="min-w-0 flex-1 font-serif text-[19px] leading-tight break-words text-ink">{habit.name}</h3>
-      <div className="flex w-[217px] flex-none flex-wrap gap-px">
+      <h3 className="min-w-[5.5rem] flex-1 font-display text-[16px] leading-[1.15] break-words hyphens-auto text-ink">{habit.name}</h3>
+      <div className="flex min-w-0 flex-[0_1_217px] flex-wrap gap-px">
         {habit.cells.map(({ date, state }, i) => {
           const kind = markKind(state, state === 'PENDING')
           return (
@@ -67,7 +67,7 @@ export function MonthPanel({ toggle }: { toggle: ReactNode }) {
         <button type="button" aria-label="Previous month" className={iconButton} onClick={() => goTo(addMonths(data.month, -1))}>
           <ChevronLeft size={20} strokeWidth={1.5} aria-hidden="true" className="text-muted" />
         </button>
-        <h2 className="min-w-0 flex-1 text-center font-serif text-[26px] text-ink">{formatMonth(data.month)}</h2>
+        <h2 className="min-w-0 flex-1 text-center font-display text-[22px] text-ink">{formatMonth(data.month)}</h2>
         <button type="button" aria-label="Next month" className={iconButton} onClick={() => goTo(addMonths(data.month, 1))}>
           <ChevronRight size={20} strokeWidth={1.5} aria-hidden="true" className="text-muted" />
         </button>

@@ -1,6 +1,6 @@
 /** Shared Tailwind class strings for the calendar pad (tokens in index.css). No cards: sections are ruled. */
 export const eyebrow = 'text-[11px] font-semibold tracking-[0.22em] text-accent uppercase'
-export const pageTitle = 'font-serif text-[40px] leading-[1.05] tracking-[-0.01em] text-ink'
+export const pageTitle = 'font-display text-[34px] leading-[1.05] text-ink'
 /** A ruled section below the previous one. */
 export const section = 'mt-7 border-t border-rule-2 pt-5'
 export const underlineInput =

@@ -21,8 +21,8 @@ export function DistributionBar({ title, caption, distribution }: { title: strin
         <span className="font-mono text-[12px] text-muted">{caption}</span>
       </div>
       <p className="mt-2 flex items-baseline gap-2">
-        <span className="font-serif text-[64px] leading-none text-ink">{target === null ? '–' : `${target}%`}</span>
-        <span className="font-serif text-[22px] text-muted italic">target</span>
+        <span className="font-display text-[54px] leading-none font-bold tracking-[-0.04em] text-ink">{target === null ? '–' : `${target}%`}</span>
+        <span className="font-display text-[19px] text-muted">target</span>
       </p>
       <div aria-hidden="true" className="mt-3 flex h-2.5 overflow-hidden rounded-full bg-paper-2">
         {PARTS.map(({ key, bar }) => distribution[key] > 0 && <span key={key} className={bar} style={{ flex: distribution[key] }} />)}

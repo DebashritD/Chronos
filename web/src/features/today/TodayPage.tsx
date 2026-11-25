@@ -74,7 +74,7 @@ export function TodayPage() {
         <header aria-hidden="true" className="flex items-end justify-between gap-4">
           <div>
             <p className={eyebrow}>{formatWeekday(data.today)}</p>
-            <p className="font-serif text-[92px] leading-[0.85] tracking-[-0.02em] text-ink">{dayOfMonth(data.today)}</p>
+            <p className="font-display text-[78px] leading-[0.85] font-bold tracking-[-0.04em] text-ink">{dayOfMonth(data.today)}</p>
           </div>
           <div className="pb-2 text-right">
             <p className="text-[14px] text-muted">{formatMonth(data.today.slice(0, 7))}</p>

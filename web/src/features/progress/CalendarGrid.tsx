@@ -33,7 +33,7 @@ export function CalendarGrid({ days }: { days: CalendarDay[] }) {
       {Array.from({ length: blanks }, (_, i) => <div key={`blank-${i}`} data-blank />)}
       {days.map((day) => (
         <div key={day.date} role="img" aria-label={day.label}
-          className={`mx-auto flex h-[34px] w-[34px] items-center justify-center rounded-full font-serif text-[16px] ${day.className}`}>
+          className={`mx-auto flex h-[34px] w-[34px] items-center justify-center rounded-full font-display text-[15px] ${day.className}`}>
           {dayOfMonth(day.date)}
         </div>
       ))}

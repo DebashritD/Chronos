@@ -84,7 +84,7 @@ export function CellPicker({ habit, cell, streak, yellowLimit, now, onClose }: C
         }}
         className="perforated w-full bg-paper px-6 pt-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))] outline-none md:max-w-md md:rounded-[12px] md:pt-7">
         <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-rule-2 md:hidden" aria-hidden="true" />
-        <h2 className="font-serif text-[30px] leading-tight text-ink">{habit.name}</h2>
+        <h2 className="font-display text-[26px] leading-tight text-ink">{habit.name}</h2>
         <p className="font-mono text-[12px] text-muted">{periodLabel(habit, cell)}</p>
         <StreakLine habit={habit} cell={cell} streak={streak} now={now} />
         <div className="border-t border-rule">

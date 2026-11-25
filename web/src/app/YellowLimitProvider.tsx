@@ -26,7 +26,7 @@ export function YellowLimitProvider({ children }: { children: ReactNode }) {
           <div role="alertdialog" aria-modal="true" aria-labelledby="yellow-limit-title" aria-describedby="yellow-limit-text"
             className="w-full max-w-sm rounded-[12px] border border-rule-2 bg-paper p-6 text-center shadow-[0_20px_50px_rgb(29_27_24/0.25)]">
             <span className="mx-auto mb-3 block w-fit" aria-hidden="true"><Mark kind="YELLOW" size={36} /></span>
-            <h2 id="yellow-limit-title" className="font-serif text-[26px] text-ink">Minimum limit reached</h2>
+            <h2 id="yellow-limit-title" className="font-display text-[22px] text-ink">Minimum limit reached</h2>
             <p id="yellow-limit-text" className="mt-2 text-[15px] text-muted">
               You've hit {hit.limit} minimums in a row on {hit.name}. Next time hit the target, or the streak starts over.
             </p>

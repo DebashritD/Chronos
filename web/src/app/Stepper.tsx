@@ -7,7 +7,7 @@ export function Stepper({ value, min, max, labelledBy, onChange }: {
   return (
     <div className="flex items-center gap-5">
       <button type="button" aria-label="Fewer" aria-disabled={value <= min} onClick={() => value > min && onChange(value - 1)} className={stepButton}>−</button>
-      <output aria-live="polite" aria-labelledby={labelledBy} className="w-12 text-center font-serif text-[48px] leading-none text-ink">
+      <output aria-live="polite" aria-labelledby={labelledBy} className="w-12 text-center font-display text-[40px] leading-none font-bold text-ink">
         {value}
       </output>
       <button type="button" aria-label="More" aria-disabled={value >= max} onClick={() => value < max && onChange(value + 1)} className={stepButton}>+</button>

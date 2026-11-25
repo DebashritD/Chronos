@@ -77,7 +77,7 @@ export function HabitCard({ habit, cell, streak, now, yellowLimit, onOpen }: Hab
 
   const streakLine = <StreakLine habit={habit} cell={cell} streak={streak} now={now} />
   const errorLine = error && <p role="alert" className="mt-2 text-sm text-cell-red">{error}</p>
-  const name = 'font-serif text-[27px] leading-tight break-words text-ink'
+  const name = 'font-display text-[23px] leading-tight break-words text-ink'
 
   if (stamped) {
     return (

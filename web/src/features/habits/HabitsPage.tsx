@@ -78,7 +78,7 @@ export function HabitsPage() {
         className={`flex items-start gap-2 border-b border-rule py-4`}>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-3">
-            <h2 className="font-serif text-[27px] leading-tight break-words text-ink">{habit.name}</h2>
+            <h2 className="font-display text-[23px] leading-tight break-words text-ink">{habit.name}</h2>
             {isPaused && <span className="stamp -rotate-6 px-1.5 py-0.5 font-mono text-[10px] font-medium tracking-[0.14em] text-accent uppercase">Paused</span>}
           </div>
           <p className="mt-1.5 font-mono text-[11px] text-muted">

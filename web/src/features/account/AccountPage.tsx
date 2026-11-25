@@ -85,11 +85,11 @@ export function AccountPage() {
     <section className="max-w-lg">
       <h1 className={eyebrow}>Account</h1>
       <div className="mt-4 flex items-center gap-4">
-        <span aria-hidden="true" className="flex h-16 w-16 flex-none -rotate-6 items-center justify-center rounded-full border-2 border-accent font-serif text-[40px] text-accent shadow-[inset_0_0_0_3px_var(--color-paper),inset_0_0_0_4.5px_var(--color-accent)]">
+        <span aria-hidden="true" className="flex h-16 w-16 flex-none -rotate-6 items-center justify-center rounded-full border-2 border-accent font-display text-[34px] text-accent shadow-[inset_0_0_0_3px_var(--color-paper),inset_0_0_0_4.5px_var(--color-accent)]">
           {me?.username.charAt(0).toUpperCase()}
         </span>
         <div className="min-w-0">
-          <p className="truncate font-serif text-[34px] leading-none text-ink">{me?.username}</p>
+          <p className="truncate font-display text-[29px] leading-none text-ink">{me?.username}</p>
           <p className="mt-1.5 truncate font-mono text-[12px] text-muted">{me?.timezone} · day ends 00:00</p>
         </div>
       </div>
@@ -112,7 +112,7 @@ export function AccountPage() {
       </form>
       <form className={section} onSubmit={(event) => void saveStreakRule(event)}>
         <h2 className={eyebrow}>Streak rule</h2>
-        <p id="max-yellows-label" className="mt-3 font-serif text-[22px] text-ink">Minimums allowed in a row</p>
+        <p id="max-yellows-label" className="mt-3 font-display text-[19px] text-ink">Minimums allowed in a row</p>
         <div className="mt-3"><Stepper value={maxYellows} min={1} max={7} labelledBy="max-yellows-label" onChange={setMaxYellows} /></div>
         <p className="mt-2 text-[12px] text-muted">For habits with the limit on, one more minimum starts the streak over.</p>
         <button type="submit" className={`${inkButton} mt-4`}>Save streak rule</button>
@@ -147,7 +147,7 @@ export function AccountPage() {
           }}>
           <div role="alertdialog" aria-modal="true" aria-labelledby="logout-unsynced"
             className="w-full max-w-sm rounded-[12px] border border-rule-2 bg-paper p-6 text-center shadow-[0_20px_50px_rgb(29_27_24/0.25)]">
-            <p id="logout-unsynced" className="font-serif text-[22px] text-ink">{unsyncedMarksCopy(Math.max(unsynced, 1))}</p>
+            <p id="logout-unsynced" className="font-display text-[19px] text-ink">{unsyncedMarksCopy(Math.max(unsynced, 1))}</p>
             <div className="mt-5 flex gap-3">
               <button type="button" autoFocus onClick={() => setConfirmingLogout(false)} className={`${outlineButton} flex-1`}>
                 Cancel
