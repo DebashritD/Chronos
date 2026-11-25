@@ -60,7 +60,8 @@ function HabitMarks({ habit, start, today, onPick }: { habit: WeekHabit; start: 
 export function WeekTiles({ start, today, habits, onPick }: WeekTilesProps) {
   const todayCol = WEEKDAYS.findIndex((_, i) => addDays(start, i) === today)
   return (
-    <div className="relative">
+    <div>
+      <div className="relative">
       {todayCol >= 0 && (
         <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 rounded-full bg-accent/[0.06]"
           style={{ left: `calc(${NAME_COL} + (100% - ${NAME_COL}) * ${todayCol} / 7)`, width: `calc((100% - ${NAME_COL}) / 7)` }} />
@@ -82,7 +83,7 @@ export function WeekTiles({ start, today, habits, onPick }: WeekTilesProps) {
       </div>
       <ul>
         {habits.map((habit) => (
-          <li key={habit.id} aria-label={habit.name} className={`${GRID} items-center border-t border-rule`}>
+          <li key={habit.id} aria-label={habit.name} className={`${GRID} items-center border-b border-rule`}>
             <div className="min-w-0 py-2 pr-2">
               <h3 className="font-serif text-[20px] leading-tight break-words text-ink">{habit.name}</h3>
               <p className="font-mono text-[11px] text-muted">{frequencyText(habit)}</p>
@@ -91,7 +92,8 @@ export function WeekTiles({ start, today, habits, onPick }: WeekTilesProps) {
           </li>
         ))}
       </ul>
-      <p className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-1 font-mono text-[11px] text-muted">
+      </div>
+      <p className="mt-3 flex flex-wrap items-center gap-x-3.5 gap-y-1 font-mono text-[11px] text-muted">
         <span className="flex items-center gap-1.5"><Mark kind="GREEN" size={10} /> bright: current run</span>
         <span className="flex items-center gap-1.5"><Mark kind="GREEN" size={10} dim /> dim: before the last miss</span>
       </p>

@@ -23,21 +23,21 @@ function HabitStrip({ habit }: { habit: MonthHabit }) {
   const share = greenShare(habit)
   const bright = brightness(habit.cells.map(({ state }) => state))
   return (
-    <section aria-label={habit.name} className="border-b border-rule py-3">
-      <div className="flex items-baseline justify-between gap-3">
-        <h3 className="min-w-0 font-serif text-[20px] leading-tight break-words text-ink">{habit.name}</h3>
-        <span className="flex-none font-mono text-[12px] text-muted">{share === null ? '–' : `${share}% target`}</span>
-      </div>
-      <div className="mt-2 flex flex-wrap gap-[2.5px]">
+    <section aria-label={habit.name} className="flex min-h-10 items-center gap-2.5 border-b border-rule py-2">
+      <h3 className="min-w-0 flex-1 font-serif text-[19px] leading-tight break-words text-ink">{habit.name}</h3>
+      <div className="flex w-[217px] flex-none flex-wrap gap-px">
         {habit.cells.map(({ date, state }, i) => {
           const kind = markKind(state, state === 'PENDING')
           return (
             <span key={date} role="img" aria-label={`${habit.name}, ${formatDay(date)}, ${STATE_LABEL[state]}`}>
-              {kind ? <Mark kind={kind} size={8} dim={!bright[i] && kind !== 'RED'} /> : <span className="block h-2 w-2" />}
+              {kind ? <Mark kind={kind} size={6} dim={!bright[i] && kind !== 'RED'} /> : <span className="block h-1.5 w-1.5" />}
             </span>
           )
         })}
       </div>
+      <span className="w-10 flex-none text-right font-mono text-[11px] font-medium text-muted">
+        {share === null ? '–' : <>{share}%<span className="sr-only"> target</span></>}
+      </span>
     </section>
   )
 }
@@ -63,18 +63,21 @@ export function MonthPanel({ toggle }: { toggle: ReactNode }) {
     <div>
       <p className={`${pageTitle} mt-1`}>{formatMonth(data.month).split(' ')[0]}</p>
       {toggle}
-      <div className="mt-4 mb-4 flex items-center gap-1 border-y border-rule-2 py-1">
+      <div className="mt-3 mb-1 flex items-center gap-1">
         <button type="button" aria-label="Previous month" className={iconButton} onClick={() => goTo(addMonths(data.month, -1))}>
-          <ChevronLeft size={20} aria-hidden="true" />
+          <ChevronLeft size={20} strokeWidth={1.5} aria-hidden="true" className="text-muted" />
         </button>
-        <h2 className="min-w-0 flex-1 text-center font-serif text-[22px] text-ink">{formatMonth(data.month)}</h2>
+        <h2 className="min-w-0 flex-1 text-center font-serif text-[26px] text-ink">{formatMonth(data.month)}</h2>
         <button type="button" aria-label="Next month" className={iconButton} onClick={() => goTo(addMonths(data.month, 1))}>
-          <ChevronRight size={20} aria-hidden="true" />
+          <ChevronRight size={20} strokeWidth={1.5} aria-hidden="true" className="text-muted" />
         </button>
       </div>
       {month && <button type="button" className={`${textButton} mb-2`} onClick={() => setSearchParams({ view: 'month' })}>This month</button>}
-      <section aria-label="Daily score" className="mt-2">
-        <h3 className={`${eyebrow} mb-3`}>Daily score</h3>
+      <section aria-label="Daily score" className="mt-2 border-t border-rule-2 pt-3">
+        <div className="mb-2.5 flex items-baseline justify-between gap-3">
+          <h3 className={eyebrow}>Daily score</h3>
+          <span aria-hidden="true" className="text-[11px] font-medium tracking-[0.06em] text-muted">brighter = better day</span>
+        </div>
         <CalendarGrid days={overview} />
         <div aria-hidden="true" className="mt-4 flex items-center gap-2 font-mono text-[11px] text-muted">
           <span>Missed</span>
@@ -87,7 +90,7 @@ export function MonthPanel({ toggle }: { toggle: ReactNode }) {
       <DistributionBar title="Distribution" caption={`${data.distribution.total} due`} distribution={data.distribution} />
       {data.habits.length > 0 && (
         <section aria-label="By habit" className="mt-8 border-t border-rule-2 pt-5">
-          <div className="flex items-baseline justify-between">
+          <div className="mb-1 flex items-baseline justify-between">
             <h2 className={eyebrow}>By habit</h2>
             <span aria-hidden="true" className="text-[11px] font-semibold tracking-[0.14em] text-muted uppercase">% target</span>
           </div>

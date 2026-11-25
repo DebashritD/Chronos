@@ -1,10 +1,10 @@
-import { ArchiveRestore, Pause, Pencil, Play, Plus, Square } from 'lucide-react'
+import { Archive, ArchiveRestore, Pause, Pencil, Play, Plus } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
 import { messageFor } from '../../api/errors'
 import type { Habit } from '../../api/types'
 import { frequencyLabel } from '../../lib/cells'
-import { formatDay } from '../../lib/dates'
+import { formatDayMonth } from '../../lib/dates'
 import { EmptyState } from '../../app/EmptyState'
 import { Mark } from '../../app/Mark'
 import { useIsNeighbour } from '../../app/neighbour'
@@ -15,9 +15,11 @@ import { useStreaks } from '../stats/api'
 import { useCreateHabit, useHabitAction, useHabits, useUpdateHabit, type HabitAction } from './api'
 import { HabitForm } from './HabitForm'
 
+const mutedIconButton = iconButton.replace('text-ink', 'text-muted')
+
 function IconButton({ label, title, onClick, children }: { label: string; title: string; onClick(): void; children: ReactNode }) {
   return (
-    <button type="button" aria-label={label} title={title} onClick={onClick} className={iconButton}>
+    <button type="button" aria-label={label} title={title} onClick={onClick} className={mutedIconButton}>
       {children}
     </button>
   )
@@ -78,8 +80,8 @@ export function HabitsPage() {
             <h2 className="font-serif text-[27px] leading-tight break-words text-ink">{habit.name}</h2>
             {isPaused && <span className="stamp -rotate-6 px-1.5 py-0.5 font-mono text-[10px] font-medium tracking-[0.14em] text-accent uppercase">Paused</span>}
           </div>
-          <p className="mt-1 font-mono text-[12px] text-muted">
-            {frequencyLabel(habit.frequency, habit.intervalDays).toLowerCase()} · since {formatDay(habit.startDate)}
+          <p className="mt-1.5 font-mono text-[11px] text-muted">
+            {frequencyLabel(habit.frequency, habit.intervalDays).toLowerCase()} · since {formatDayMonth(habit.startDate)}
             {!isArchived && run !== undefined && <> · <b className="font-medium text-ink">{run}</b> run</>}
             {habit.yellowCap && ` · ≤${me?.maxYellows ?? 2} minimums`}
           </p>
@@ -91,24 +93,24 @@ export function HabitsPage() {
         <div className="flex flex-none">
           {isArchived ? (
             <IconButton label={`Unarchive ${habit.name}`} title="Restore" onClick={() => void act(habit.id, 'unarchive')}>
-              <ArchiveRestore size={18} aria-hidden="true" />
+              <ArchiveRestore size={20} strokeWidth={1.6} aria-hidden="true" />
             </IconButton>
           ) : (
             <>
               <IconButton label={`Edit ${habit.name}`} title="Edit" onClick={() => setEditingId(habit.id)}>
-                <Pencil size={18} aria-hidden="true" />
+                <Pencil size={20} strokeWidth={1.6} aria-hidden="true" />
               </IconButton>
               {isPaused ? (
                 <IconButton label={`Resume ${habit.name}`} title="Resume" onClick={() => void act(habit.id, 'resume')}>
-                  <Play size={18} aria-hidden="true" />
+                  <Play size={20} strokeWidth={1.6} aria-hidden="true" />
                 </IconButton>
               ) : (
                 <IconButton label={`Pause ${habit.name}`} title="Pause" onClick={() => void act(habit.id, 'pause')}>
-                  <Pause size={18} aria-hidden="true" />
+                  <Pause size={20} strokeWidth={1.6} aria-hidden="true" />
                 </IconButton>
               )}
               <IconButton label={`Archive ${habit.name}`} title="Stop (archive)" onClick={() => void act(habit.id, 'archive')}>
-                <Square size={16} aria-hidden="true" />
+                <Archive size={20} strokeWidth={1.6} aria-hidden="true" />
               </IconButton>
             </>
           )}
@@ -127,7 +129,7 @@ export function HabitsPage() {
   )
   return (
     <section className="max-w-3xl pb-20 md:pb-0">
-      <div className="mb-6 flex items-end justify-between">
+      <div className="flex items-end justify-between border-b border-rule-2 pb-4">
         <div>
           <p className={eyebrow}>Your pad</p>
           <h1 className={pageTitle}>Habits</h1>

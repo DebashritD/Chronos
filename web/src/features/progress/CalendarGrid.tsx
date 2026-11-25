@@ -26,7 +26,7 @@ export function CalendarGrid({ days }: { days: CalendarDay[] }) {
   return (
     <div className="grid grid-cols-7 gap-y-1.5">
       {WEEKDAYS.map((weekday) => (
-        <div key={weekday} aria-hidden="true" className="pb-1 text-center text-[10px] font-semibold tracking-[0.14em] text-muted">
+        <div key={weekday} aria-hidden="true" className="border-b border-rule pb-1.5 text-center text-[10px] font-semibold tracking-[0.14em] text-muted">
           {weekday.charAt(0)}
         </div>
       ))}

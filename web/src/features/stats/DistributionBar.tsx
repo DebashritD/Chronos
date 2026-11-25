@@ -28,10 +28,10 @@ export function DistributionBar({ title, caption, distribution }: { title: strin
         {PARTS.map(({ key, bar }) => distribution[key] > 0 && <span key={key} className={bar} style={{ flex: distribution[key] }} />)}
       </div>
       {total === 0 && <p className="mt-2 text-[14px] text-muted">Nothing marked yet</p>}
-      <ul className="mt-3 flex flex-wrap justify-between gap-x-4 gap-y-1 font-mono text-[13px]">
+      <ul className="mt-3 flex flex-wrap justify-between gap-x-2 gap-y-1 font-mono text-[12px] font-medium">
         {PARTS.map(({ key, label, kind, text }) => (
-          <li key={key} aria-label={`${label} ${distribution[key]}`} className={`flex items-center gap-1.5 ${text}`}>
-            <Mark kind={kind} size={11} />
+          <li key={key} aria-label={`${label} ${distribution[key]}`} className={`flex items-center gap-1 ${text}`}>
+            <Mark kind={kind} size={10} />
             {distribution[key]} {label.toLowerCase()}
           </li>
         ))}

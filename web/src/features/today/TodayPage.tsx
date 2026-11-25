@@ -94,7 +94,7 @@ export function TodayPage() {
         ) : (
           <>
             <TodaySummary summary={summary} />
-            <div className="flex flex-col">
+            <div className="flex flex-col *:last:border-b-0">
               {/* One flat keyed list, so a card that moves into Done keeps its state. */}
               {ordered.flatMap((item, i) => {
                 const s = streakFor(item.habit.id)

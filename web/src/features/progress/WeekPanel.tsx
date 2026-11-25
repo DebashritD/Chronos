@@ -38,13 +38,13 @@ export function WeekPanel({ toggle }: { toggle: ReactNode }) {
     <div>
       <p className={`${pageTitle} mt-1`}>{headline}</p>
       {toggle}
-      <div className="mt-4 mb-4 flex items-center gap-1 border-y border-rule-2 py-1">
+      <div className="mt-3 mb-1 flex items-center gap-1">
         <button type="button" aria-label="Previous week" className={iconButton} onClick={() => goTo(addDays(data.start, -7))}>
-          <ChevronLeft size={20} aria-hidden="true" />
+          <ChevronLeft size={20} strokeWidth={1.5} aria-hidden="true" className="text-muted" />
         </button>
-        <h2 className="min-w-0 flex-1 text-center font-serif text-[22px] text-ink">{formatWeekRange(data.start)}</h2>
+        <h2 className="min-w-0 flex-1 text-center font-serif text-[26px] text-ink">{formatWeekRange(data.start)}</h2>
         <button type="button" aria-label="Next week" className={iconButton} onClick={() => goTo(addDays(data.start, 7))}>
-          <ChevronRight size={20} aria-hidden="true" />
+          <ChevronRight size={20} strokeWidth={1.5} aria-hidden="true" className="text-muted" />
         </button>
       </div>
       {start && <button type="button" className={`${textButton} mb-2`} onClick={() => setSearchParams({})}>This week</button>}

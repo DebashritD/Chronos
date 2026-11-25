@@ -85,12 +85,12 @@ export function AccountPage() {
     <section className="max-w-lg">
       <h1 className={eyebrow}>Account</h1>
       <div className="mt-4 flex items-center gap-4">
-        <span aria-hidden="true" className="flex h-14 w-14 flex-none items-center justify-center rounded-full border-2 border-accent font-serif text-[28px] text-accent shadow-[inset_0_0_0_3px_var(--color-paper),inset_0_0_0_4.5px_var(--color-accent)]">
+        <span aria-hidden="true" className="flex h-16 w-16 flex-none -rotate-6 items-center justify-center rounded-full border-2 border-accent font-serif text-[40px] text-accent shadow-[inset_0_0_0_3px_var(--color-paper),inset_0_0_0_4.5px_var(--color-accent)]">
           {me?.username.charAt(0).toUpperCase()}
         </span>
         <div className="min-w-0">
-          <p className="truncate font-serif text-[30px] leading-tight text-ink">{me?.username}</p>
-          <p className="truncate font-mono text-[12px] text-muted">{me?.timezone} · day ends 00:00</p>
+          <p className="truncate font-serif text-[34px] leading-none text-ink">{me?.username}</p>
+          <p className="mt-1.5 truncate font-mono text-[12px] text-muted">{me?.timezone} · day ends 00:00</p>
         </div>
       </div>
       <form className={section} onSubmit={(event) => void saveTimezone(event)}>

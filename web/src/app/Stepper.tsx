@@ -1,4 +1,4 @@
-const stepButton = 'flex h-11 w-11 items-center justify-center rounded-full border border-ink text-[22px] leading-none text-ink disabled:opacity-30'
+const stepButton = 'flex h-11 w-11 items-center justify-center rounded-full border-[1.5px] border-rule-2 text-[22px] leading-none text-ink disabled:opacity-30'
 
 /** − value + for a small whole number; the value is announced as it changes. */
 export function Stepper({ value, min, max, labelledBy, onChange }: {

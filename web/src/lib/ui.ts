@@ -9,7 +9,7 @@ export const underlineInput =
 export const inkButton =
   'inline-flex min-h-11 items-center justify-center gap-2 rounded-[8px] bg-ink px-5 text-[15px] font-semibold text-paper transition-opacity hover:opacity-90 disabled:opacity-50'
 export const outlineButton =
-  'inline-flex min-h-11 items-center justify-center gap-2 rounded-[8px] border border-ink px-5 text-[15px] font-medium text-ink disabled:opacity-50'
+  'inline-flex min-h-11 items-center justify-center gap-2 rounded-[8px] border-[1.5px] border-rule-2 px-5 text-[15px] font-medium text-ink disabled:opacity-50'
 export const textButton =
   'inline-flex min-h-11 items-center gap-1.5 text-[14px] font-semibold text-ink underline decoration-rule-2 decoration-2 underline-offset-[6px] hover:decoration-ink disabled:opacity-50'
 export const iconButton =
