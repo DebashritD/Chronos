@@ -12,35 +12,29 @@ export interface CalendarDay {
  * null (nothing marked, or a future day) stays neutral. Thresholds are explicit so 1.25 lands in step 3.
  */
 export function scoreClass(score: number | null): string {
-  if (score === null) return 'bg-surface text-dim'
-  if (score < 0.4) return 'bg-score-0 text-bg'
-  if (score < 0.8) return 'bg-score-1 text-bg'
-  if (score < 1.2) return 'bg-score-2 text-bg'
-  if (score < 1.6) return 'bg-score-3 text-bg'
-  return 'bg-score-4 text-bg'
+  if (score === null) return 'border-[1.5px] border-faint text-muted'
+  if (score < 0.4) return 'bg-score-0/30 text-ink'
+  if (score < 0.8) return 'bg-score-1/30 text-ink'
+  if (score < 1.2) return 'bg-score-2/30 text-ink'
+  if (score < 1.6) return 'bg-score-3/30 text-ink'
+  return 'bg-score-4 text-paper'
 }
 
-interface CalendarGridProps {
-  days: CalendarDay[]
-  showNumbers?: boolean
-  compact?: boolean
-}
-
-/** One month as a Monday-first 7-column grid. */
-export function CalendarGrid({ days, showNumbers = false, compact = false }: CalendarGridProps) {
+/** One month as a Monday-first wall calendar: a serif numeral on a score-coloured circle. */
+export function CalendarGrid({ days }: { days: CalendarDay[] }) {
   const blanks = days.length > 0 ? weekdayIndex(days[0].date) : 0
   return (
-    <div className={`grid grid-cols-7 ${compact ? 'gap-[3px]' : 'gap-1.5'}`}>
-      {!compact && WEEKDAYS.map((weekday) => (
-        <div key={weekday} className="pb-1 text-center text-[11px] font-medium text-muted" aria-hidden="true">
+    <div className="grid grid-cols-7 gap-y-1.5">
+      {WEEKDAYS.map((weekday) => (
+        <div key={weekday} aria-hidden="true" className="pb-1 text-center text-[10px] font-semibold tracking-[0.14em] text-muted">
           {weekday.charAt(0)}
         </div>
       ))}
       {Array.from({ length: blanks }, (_, i) => <div key={`blank-${i}`} data-blank />)}
       {days.map((day) => (
         <div key={day.date} role="img" aria-label={day.label}
-          className={`aspect-square ${compact ? 'rounded-[3px]' : 'rounded-[8px] p-1 text-[11px] font-semibold'} ${day.className}`}>
-          {showNumbers && dayOfMonth(day.date)}
+          className={`mx-auto flex h-[34px] w-[34px] items-center justify-center rounded-full font-serif text-[16px] ${day.className}`}>
+          {dayOfMonth(day.date)}
         </div>
       ))}
     </div>
