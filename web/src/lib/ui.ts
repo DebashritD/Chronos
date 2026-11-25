@@ -1,5 +1,6 @@
 /** Shared Tailwind class strings for the v2 look. Colors come from the theme tokens in index.css. */
 export const card = 'rounded-card border border-line bg-card p-5'
+export const chip = 'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-semibold'
 export const cardTitle = 'mb-3 text-[15px] font-semibold text-fg'
 export const pageTitle = 'text-[34px] leading-tight font-semibold text-fg'
 export const eyebrow = 'text-[13px] font-medium tracking-[0.06em] text-muted uppercase'

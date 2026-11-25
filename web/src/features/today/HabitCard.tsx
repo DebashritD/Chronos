@@ -1,12 +1,12 @@
-import { Clock, Flame, NotebookPen } from 'lucide-react'
+import { NotebookPen } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
 import { messageFor } from '../../api/errors'
 import type { Color, WeekCell, WeekHabit } from '../../api/types'
 import { cellClass, isColor, STATE_LABEL } from '../../lib/cells'
 import { hapticMark } from '../../lib/haptics'
-import { formatTimeLeft, isUrgent } from '../../lib/timeLeft'
-import { card } from '../../lib/ui'
+import { card, chip } from '../../lib/ui'
 import { useSaveCheckIn } from '../stats/api'
+import { StreakBadge, TimeLeftChip, WeekPills } from './habitBits'
 
 /** Each choice wears its colour before it's pressed (dot + tinted edge) and fills with it once selected. */
 const BUTTONS: { color: Color; label: string; idle: string; dot: string; selected: string }[] = [
@@ -17,16 +17,6 @@ const BUTTONS: { color: Color; label: string; idle: string; dot: string; selecte
   { color: 'RED', label: 'Missed', idle: 'border-cell-red/30 bg-cell-red/[0.07]', dot: 'bg-cell-red',
     selected: 'border-cell-red bg-cell-red text-bg' },
 ]
-
-type Tone = 'normal' | 'urgent' | 'done'
-
-const TONE_CLASS: Record<Tone, string> = {
-  normal: 'bg-surface text-muted',
-  urgent: 'bg-urgent/15 text-urgent',
-  done: 'bg-cell-green/15 text-cell-green',
-}
-
-const chipBase = 'inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[12px] font-semibold'
 
 function frequencyChip(habit: WeekHabit): string | null {
   if (habit.frequency === 'EVERY_N_DAYS') return `Every ${habit.intervalDays} days`
@@ -69,8 +59,6 @@ export function HabitCard({ habit, cell, streak, now, yellowLimit, onOpen }: Hab
   const marked = isColor(cell.state)
   // At the limit, one more yellow restarts the streak (re-tapping today's own yellow changes nothing).
   const yellowResets = yellowLimit !== undefined && cell.state !== 'YELLOW'
-  const timeLeft = cell.closesAt ? formatTimeLeft(cell.closesAt, now, habit.frequency) : null
-  const tone: Tone = marked ? 'done' : cell.closesAt && isUrgent(cell.closesAt, now) ? 'urgent' : 'normal'
   const freq = frequencyChip(habit)
   const collapsedJustNow = cell.state === 'GREEN' && popped === 'GREEN'
 
@@ -97,13 +85,7 @@ export function HabitCard({ habit, cell, streak, now, yellowLimit, onOpen }: Hab
     }
   }
 
-  const streakBadge = streak !== undefined && (
-    <span className="flex flex-none items-center gap-1 font-display text-[15px] font-semibold text-fg">
-      <Flame size={18} className={streak > 0 ? 'text-urgent' : 'text-dim'} aria-hidden="true" />
-      <span className="sr-only">Current streak </span>
-      {streak}
-    </span>
-  )
+  const streakBadge = streak !== undefined && <StreakBadge streak={streak} />
   const errorLine = error && <p role="alert" className="mt-2 text-sm text-cell-red">{error}</p>
 
   if (cell.state === 'GREEN') {
@@ -171,26 +153,13 @@ export function HabitCard({ habit, cell, streak, now, yellowLimit, onOpen }: Hab
       )}
       <div className="mt-3 flex items-center justify-between gap-3">
         <span className="flex flex-wrap items-center gap-1.5">
-          {timeLeft && (
-            <span data-tone={tone} className={`${chipBase} ${TONE_CLASS[tone]}`}>
-              <Clock size={13} aria-hidden="true" />
-              {timeLeft}
-            </span>
-          )}
-          {freq && <span className={`${chipBase} bg-surface text-muted`}>{freq}</span>}
+          <TimeLeftChip habit={habit} cell={cell} now={now} />
+          {freq && <span className={`${chip} bg-surface text-muted`}>{freq}</span>}
           {yellowLimit !== undefined && (
-            <span className={`${chipBase} bg-cell-yellow/15 text-cell-yellow`}>{yellowLimit}/{yellowLimit} yellows</span>
+            <span className={`${chip} bg-cell-yellow/15 text-cell-yellow`}>{yellowLimit}/{yellowLimit} yellows</span>
           )}
         </span>
-        {habit.frequency === 'DAILY' && (
-          <span className="flex gap-1 md:hidden" aria-hidden="true">
-            {habit.cells.map((c) => (
-              <span key={c.date} className={`h-1.5 w-4 rounded-full ${
-                c.state === 'PENDING' || c.state === 'NOT_DUE' ? 'bg-surface' : cellClass(c.state)
-              }`} />
-            ))}
-          </span>
-        )}
+        {habit.frequency === 'DAILY' && <WeekPills cells={habit.cells} className="md:hidden" />}
       </div>
       {marked && cell.note && <NotePreview note={cell.note} className="mt-3" />}
       {errorLine}
