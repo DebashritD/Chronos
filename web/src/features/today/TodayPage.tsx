@@ -6,7 +6,7 @@ import { atYellowLimit } from '../../lib/yellowLimit'
 import { useNow } from '../../lib/useNow'
 import { EmptyState } from '../../app/EmptyState'
 import { SyncStatus } from '../../app/SyncStatus'
-import { emptyAction, eyebrow } from '../../lib/ui'
+import { inkButton, eyebrow } from '../../lib/ui'
 import { browserTimezone, useSession } from '../auth/session'
 import { CellPicker } from '../checkin/CellPicker'
 import { useHabits } from '../habits/api'
@@ -88,7 +88,7 @@ export function TodayPage() {
         <SyncStatus />
         {data.habits.length === 0 ? (
           <EmptyState title="Start your first chain"
-            action={<Link to="/habits" className={emptyAction}>Create your first habit</Link>}>
+            action={<Link to="/habits" className={inkButton}>Create your first habit</Link>}>
             Add a habit with a minimum and a target. Even the minimum keeps the day off red.
           </EmptyState>
         ) : (

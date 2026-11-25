@@ -1,20 +1,20 @@
 import { useEffect, useId, useRef, useState } from 'react'
 import { messageFor } from '../../api/errors'
 import type { Color, WeekCell, WeekHabit } from '../../api/types'
-import { cellClass, isColor, STATE_LABEL } from '../../lib/cells'
+import { Mark } from '../../app/Mark'
+import { isColor, STATE_LABEL } from '../../lib/cells'
 import { hapticMark } from '../../lib/haptics'
-import { inputClass, primaryButton } from '../../lib/ui'
+import { inkButton, textButton, underlineInput } from '../../lib/ui'
 import { MOBILE_QUERY, REDUCED_MOTION_QUERY, useMediaQuery } from '../../lib/useMediaQuery'
 import { useClearCheckIn, useSaveCheckIn } from '../stats/api'
 import { StreakLine } from '../today/habitBits'
 import { periodLabel } from './period'
 import { useSheetDrag } from './useSheetDrag'
 
-/** Each choice is tinted in its own colour once it is the saved one. */
-const CHOICES: { color: Color; hint(habit: WeekHabit): string; selected: string }[] = [
-  { color: 'GREEN', hint: (habit) => habit.targetText, selected: 'border-cell-green bg-cell-green/15' },
-  { color: 'YELLOW', hint: (habit) => habit.minText, selected: 'border-cell-yellow bg-cell-yellow/15' },
-  { color: 'RED', hint: () => "Didn't do it", selected: 'border-cell-red bg-cell-red/15' },
+const CHOICES: { color: Color; hint(habit: WeekHabit): string }[] = [
+  { color: 'GREEN', hint: (habit) => habit.targetText },
+  { color: 'YELLOW', hint: (habit) => habit.minText },
+  { color: 'RED', hint: () => "Didn't do it" },
 ]
 
 interface CellPickerProps {
@@ -74,7 +74,7 @@ export function CellPicker({ habit, cell, streak, yellowLimit, now, onClose }: C
   }
 
   return (
-    <div className="fixed inset-0 z-20 flex items-end justify-center bg-black/60 backdrop-blur-sm md:items-center"
+    <div className="fixed inset-0 z-20 flex items-end justify-center bg-binding/45 md:items-center"
       onClick={(event) => {
         if (event.target === event.currentTarget) onClose()
       }}>
@@ -82,32 +82,31 @@ export function CellPicker({ habit, cell, streak, yellowLimit, now, onClose }: C
         onKeyDown={(event) => {
           if (event.key === 'Escape') onClose()
         }}
-        className="w-full rounded-t-[28px] outline-none border border-line bg-card px-5 pt-3 pb-[calc(1.5rem+env(safe-area-inset-bottom))] md:max-w-md md:rounded-[28px] md:pt-6">
-        <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-outline md:hidden" aria-hidden="true" />
-        <h2 className="text-[22px] font-semibold text-fg">{habit.name}</h2>
-        <p className="mt-0.5 text-[14px] text-muted">{periodLabel(habit, cell)}</p>
+        className="perforated w-full bg-paper px-6 pt-5 pb-[calc(1.5rem+env(safe-area-inset-bottom))] outline-none md:max-w-md md:rounded-[12px] md:pt-7">
+        <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-rule-2 md:hidden" aria-hidden="true" />
+        <h2 className="font-serif text-[30px] leading-tight text-ink">{habit.name}</h2>
+        <p className="font-mono text-[12px] text-muted">{periodLabel(habit, cell)}</p>
         <StreakLine habit={habit} cell={cell} streak={streak} now={now} />
-        <div className="flex flex-col gap-2">
+        <div className="border-t border-rule">
           {CHOICES.map((choice) => {
             const warn = yellowResets && choice.color === 'YELLOW'
             return (
               <button key={choice.color} type="button" aria-pressed={saved === choice.color} disabled={busy}
                 aria-describedby={warn ? resetId : undefined} onClick={() => save(choice.color)}
-                className={`flex w-full items-center gap-3 rounded-2xl border p-3.5 text-left disabled:opacity-60 ${
-                  saved === choice.color ? choice.selected : 'border-line bg-surface'
-                }`}>
-                <span className={`h-6 w-6 flex-none rounded-lg ${cellClass(choice.color)}`} aria-hidden="true" />
-                <span className="text-[15px] font-semibold text-fg">
+                className={`flex min-h-14 w-full items-center gap-3 border-b border-rule px-1 py-3 text-left disabled:opacity-60 ${saved === choice.color ? 'bg-paper-2' : ''}`}>
+                <Mark kind={choice.color} size={18} />
+                <span className="min-w-0 flex-1 text-[16px] font-semibold text-ink">
                   {STATE_LABEL[choice.color]}
-                  <small className="block text-[13px] font-normal text-muted">{choice.hint(habit)}</small>
-                  {warn && <small className="block text-[11px] leading-tight font-medium text-cell-yellow" aria-hidden="true">restarts streak</small>}
+                  <small className="block font-mono text-[12px] font-normal text-muted">{choice.hint(habit)}</small>
+                  {warn && <small className="block font-mono text-[11px] leading-tight text-yellow-ink" aria-hidden="true">restarts streak</small>}
                 </span>
+                {saved === choice.color && <span aria-hidden="true" className="font-mono text-[11px] tracking-[0.14em] text-muted">SAVED</span>}
               </button>
             )
           })}
         </div>
         {yellowResets && (
-          <p id={resetId} className="sr-only">You've used {yellowLimit} yellows in a row; another restarts the streak.</p>
+          <p id={resetId} className="sr-only">You've used {yellowLimit} minimums in a row; another restarts the streak.</p>
         )}
         {noteOpen ? (
           <>
@@ -116,20 +115,20 @@ export function CellPicker({ habit, cell, streak, yellowLimit, now, onClose }: C
             </label>
             {/* Focus only when opened by "+ Add note"; an existing note shouldn't pop the keyboard. */}
             <textarea id="check-in-note" rows={2} maxLength={500} value={note} autoFocus={!cell.note}
-              onChange={(e) => setNote(e.target.value)} className={inputClass} />
+              onChange={(e) => setNote(e.target.value)} className={underlineInput} />
           </>
         ) : (
           <button type="button" onClick={() => setNoteOpen(true)}
-            className="mt-4 text-[14px] font-semibold text-accent">+ Add note</button>
+            className={`${textButton} mt-2`}>+ Add note</button>
         )}
         {error && <p role="alert" className="mt-2 text-sm text-cell-red">{error}</p>}
         {saved && (
           <div className="mt-5 flex items-center gap-2">
             <button type="button" disabled={busy}
-              className="rounded-[14px] border border-line bg-surface px-4 py-3 text-[15px] font-medium text-cell-red disabled:opacity-50"
+              className={`${textButton} text-cell-red`}
               onClick={() => void run(() => clearCheckIn.mutateAsync(key))}>Clear</button>
             {noteChanged && (
-              <button type="button" disabled={busy} className={`${primaryButton} ml-auto`}
+              <button type="button" disabled={busy} className={`${inkButton} ml-auto`}
                 onClick={() => void run(() => saveCheckIn.mutateAsync({ ...key, color: saved, note: note.trim() || null }))}>
                 Save note
               </button>

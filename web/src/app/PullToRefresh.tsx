@@ -63,7 +63,7 @@ export function PullToRefresh({ ref }: { ref: Ref<PullToRefreshHandle> }) {
         transition: phase === 'pulling' ? 'none' : `transform ${RETURN_MS}ms ease-out`,
       }}>
       <div role="status"
-        className="flex h-9 min-w-9 items-center justify-center rounded-full border border-line bg-surface px-2 text-[13px] text-muted shadow-[0_8px_24px_rgb(0_0_0/0.45)]">
+        className="flex h-9 min-w-9 items-center justify-center rounded-full border border-rule-2 bg-paper px-2 text-[13px] text-muted shadow-[0_6px_18px_rgb(29_27_24/0.18)]">
         {phase === 'offline' ? 'Offline' : (
           <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"
             className={phase === 'refreshing' ? 'animate-spin motion-reduce:animate-none' : ''}>

@@ -14,20 +14,3 @@ export const textButton =
   'inline-flex min-h-11 items-center gap-1.5 text-[14px] font-semibold text-ink underline decoration-rule-2 decoration-2 underline-offset-[6px] hover:decoration-ink disabled:opacity-50'
 export const iconButton =
   'flex h-11 w-11 flex-none items-center justify-center rounded-full text-ink transition-colors hover:bg-paper-2 active:bg-paper-2 disabled:opacity-40'
-
-/** @deprecated Removed in Task 10; use the helpers above. */
-export const card = 'border-t border-rule-2 py-5'
-/** @deprecated */
-export const chip = 'inline-flex items-center gap-1.5 font-mono text-[12px]'
-/** @deprecated */
-export const cardTitle = `mb-3 block ${eyebrow}`
-/** @deprecated */
-export const inputClass = underlineInput
-/** @deprecated */
-export const primaryButton = inkButton
-/** @deprecated */
-export const secondaryButton = outlineButton
-/** @deprecated */
-export const pillButton = textButton
-/** @deprecated */
-export const emptyAction = inkButton

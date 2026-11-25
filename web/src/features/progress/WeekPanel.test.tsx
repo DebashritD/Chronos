@@ -156,8 +156,8 @@ describe('WeekPanel', () => {
     expect(within(dialog).getByLabelText('Note (optional)')).toHaveValue('great')
     expect(within(dialog).queryByRole('button', { name: '+ Add note' })).not.toBeInTheDocument()
     expect(within(dialog).queryByRole('button', { name: 'Save note' })).not.toBeInTheDocument()
-    expect(within(dialog).getByRole('button', { name: /^Target hit/ })).toHaveClass('border-cell-green', 'bg-cell-green/15')
-    expect(within(dialog).getByRole('button', { name: /^Missed/ })).toHaveClass('border-line', 'bg-surface')
+    expect(within(dialog).getByRole('button', { name: /^Target hit/ })).toHaveAttribute('aria-pressed', 'true')
+    expect(within(dialog).getByRole('button', { name: /^Missed/ })).toHaveAttribute('aria-pressed', 'false')
     await user.click(within(dialog).getByRole('button', { name: 'Clear' }))
 
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument())
@@ -231,7 +231,7 @@ describe('WeekPanel', () => {
     await user.click(screen.getByRole('button', { name: 'Read, Wed 18 Nov, Not marked yet' }))
     const minimum = within(screen.getByRole('dialog')).getByRole('button', { name: /^Minimum done/ })
     expect(minimum).toHaveTextContent('restarts streak')
-    expect(minimum).toHaveAccessibleDescription("You've used 2 yellows in a row; another restarts the streak.")
+    expect(minimum).toHaveAccessibleDescription("You've used 2 minimums in a row; another restarts the streak.")
     await user.click(screen.getByRole('dialog').parentElement!)
 
     await user.click(screen.getByRole('button', { name: 'Read, Tue 17 Nov, Minimum done' }))

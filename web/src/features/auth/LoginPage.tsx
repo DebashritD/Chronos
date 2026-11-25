@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router'
 import { messageFor } from '../../api/errors'
-import { inputClass, primaryButton } from '../../lib/ui'
+import { inkButton, underlineInput } from '../../lib/ui'
 import { AuthLayout } from './AuthLayout'
 import { useSession } from './session'
 
@@ -32,15 +32,15 @@ export function LoginPage() {
       <form onSubmit={(event) => void handleSubmit(event)} className="flex flex-col gap-2.5">
         <label htmlFor="username" className="sr-only">Username</label>
         <input id="username" autoComplete="username" placeholder="Username" value={username}
-          onChange={(e) => setUsername(e.target.value)} className={inputClass} />
+          onChange={(e) => setUsername(e.target.value)} className={underlineInput} />
         <label htmlFor="password" className="sr-only">Password</label>
         <input id="password" type="password" autoComplete="current-password" placeholder="Password" value={password}
-          onChange={(e) => setPassword(e.target.value)} className={inputClass} />
+          onChange={(e) => setPassword(e.target.value)} className={underlineInput} />
         {error && <p role="alert" className="text-sm text-cell-red">{error}</p>}
-        <button type="submit" disabled={submitting} className={`${primaryButton} mt-2 w-full`}>Log in</button>
+        <button type="submit" disabled={submitting} className={`${inkButton} mt-2 w-full`}>Log in</button>
       </form>
       <p className="mt-5 text-center text-sm text-muted">
-        New here? <Link to="/signup" className="font-semibold text-accent">Create an account</Link>
+        New here? <Link to="/signup" className="font-semibold text-accent underline underline-offset-4">Create an account</Link>
       </p>
     </AuthLayout>
   )

@@ -26,22 +26,6 @@
   --color-score-3: #7a9a2a;
   --color-score-4: #1a7a43;
 
-  /* Legacy names mapped onto the pad until each screen is restyled; Task 10 deletes them. */
-  --color-bg: #f7f3ea;
-  --color-card: #f7f3ea;
-  --color-surface: #efe8da;
-  --color-line: #e3dbcb;
-  --color-fg: #1d1b18;
-  --color-dim: #665e53;
-  --color-urgent: #b0361f;
-  --color-outline: #d6ccb9;
-  --color-cell-grey: #e3dbcb;
-  --font-display: 'Instrument Serif', Georgia, serif;
-
-  /* Radii still used by existing components (e.g. rounded-card) */
-  --radius-card: 22px;
-  --radius-cell: 10px;
-
   --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, -apple-system, sans-serif;
   --font-serif: 'Instrument Serif', Georgia, 'Times New Roman', serif;
   --font-mono: 'IBM Plex Mono', ui-monospace, SFMono-Regular, Menlo, monospace;
@@ -107,12 +91,6 @@ body {
     box-shadow: inset 0 0 0 2px var(--color-paper), inset 0 0 0 3.5px currentColor;
   }
 }
-
-/* PAUSED cells (legacy, removed in Task 10 with its last user) */
-.cell-paused {
-  background: repeating-linear-gradient(135deg, var(--color-rule-2) 0 3px, transparent 3px 6px);
-}
-
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {

@@ -13,7 +13,7 @@ export function SyncStatus({ className = '-mt-4 mb-4' }: { className?: string })
   const pending = useMutationState({ filters: { mutationKey: CHECK_IN_KEY, status: 'pending' } }).length
   const text = syncStatusText(online, pending)
   if (text === null) return null
-  return <p className={`${className} text-[13px] text-dim`}>{text}</p>
+  return <p className={`${className} font-mono text-[12px] text-muted`}>{text}</p>
 }
 
 export default SyncStatus

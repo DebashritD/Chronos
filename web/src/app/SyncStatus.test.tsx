@@ -28,7 +28,7 @@ describe('SyncStatus', () => {
     expect(screen.queryByText(/Offline|Syncing/)).not.toBeInTheDocument()
 
     act(() => onlineManager.setOnline(false))
-    expect(screen.getByText('Offline')).toHaveClass('text-[13px]')
+    expect(screen.getByText('Offline')).toHaveClass('text-[12px]')
 
     act(() => {
       void new MutationObserver<void, Error, CheckInVars>(queryClient, { mutationKey: CHECK_IN_KEY })

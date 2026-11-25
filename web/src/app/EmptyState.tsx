@@ -1,28 +1,25 @@
 import type { ReactNode } from 'react'
-import { card } from '../lib/ui'
+import { Mark } from './Mark'
 
-const CHAIN = ['bg-cell-grey', 'bg-cell-grey', 'bg-cell-yellow', 'bg-cell-green', 'bg-cell-green', 'bg-cell-green', 'bg-cell-green']
-
-/** A week of cells warming from grey to green: the "keep the chain green" idea in one picture. */
-function ChainArt() {
+/** A Minimum leading into two Targets: the "keep it off red" idea in one line, as on the app icon. */
+function RunArt() {
   return (
-    <div aria-hidden="true" className="relative mx-auto mb-6 w-fit">
-      <div className="absolute inset-0 -z-10 rounded-full bg-cell-green/20 blur-2xl" />
-      <div className="flex items-end gap-1.5">
-        {CHAIN.map((color, i) => (
-          <span key={i} className={`w-6 rounded-[8px] ${color}`} style={{ height: 18 + i * 5 }} />
-        ))}
-      </div>
+    <div aria-hidden="true" className="mx-auto mb-5 flex w-fit items-center">
+      <Mark kind="YELLOW" size={20} />
+      <span className="h-[1.5px] w-7 bg-cell-yellow opacity-60" />
+      <Mark kind="GREEN" size={20} />
+      <span className="h-[1.5px] w-7 bg-cell-green opacity-60" />
+      <Mark kind="GREEN" size={20} />
     </div>
   )
 }
 
 export function EmptyState({ title, children, action }: { title: string; children: ReactNode; action: ReactNode }) {
   return (
-    <section aria-label={title} className={`${card} px-6 py-10 text-center`}>
-      <ChainArt />
-      <h2 className="text-[20px] font-semibold text-fg">{title}</h2>
-      <p className="mx-auto mt-2 max-w-sm text-[14px] leading-relaxed text-muted">{children}</p>
+    <section aria-label={title} className="my-4 border-y border-rule-2 px-2 py-10 text-center">
+      <RunArt />
+      <h2 className="font-serif text-[30px] leading-tight text-ink">{title}</h2>
+      <p className="mx-auto mt-2 max-w-sm text-[15px] leading-relaxed text-muted">{children}</p>
       <div className="mt-6">{action}</div>
     </section>
   )

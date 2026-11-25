@@ -8,7 +8,7 @@ import { formatDay } from '../../lib/dates'
 import { EmptyState } from '../../app/EmptyState'
 import { Mark } from '../../app/Mark'
 import { useIsNeighbour } from '../../app/neighbour'
-import { emptyAction, eyebrow, iconButton, pageTitle } from '../../lib/ui'
+import { inkButton, eyebrow, iconButton, pageTitle } from '../../lib/ui'
 import { MOBILE_QUERY, useMediaQuery } from '../../lib/useMediaQuery'
 import { useSession } from '../auth/session'
 import { useStreaks } from '../stats/api'
@@ -147,7 +147,7 @@ export function HabitsPage() {
       {current.isPending && <p className="text-muted">Loading…</p>}
       {current.data?.length === 0 && !creating && (
         <EmptyState title="No habits yet"
-          action={<button type="button" className={emptyAction} onClick={() => setCreating(true)}>Create your first habit</button>}>
+          action={<button type="button" className={inkButton} onClick={() => setCreating(true)}>Create your first habit</button>}>
           Start small: a minimum you can do on your worst day, and a target for your best.
         </EmptyState>
       )}

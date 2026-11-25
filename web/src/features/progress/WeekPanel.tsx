@@ -4,7 +4,7 @@ import { Link, useSearchParams } from 'react-router'
 import type { WeekCell, WeekHabit } from '../../api/types'
 import { addDays, formatWeekRange } from '../../lib/dates'
 import { EmptyState } from '../../app/EmptyState'
-import { emptyAction, iconButton, pageTitle, textButton } from '../../lib/ui'
+import { inkButton, iconButton, pageTitle, textButton } from '../../lib/ui'
 import { useNow } from '../../lib/useNow'
 import { atYellowLimit } from '../../lib/yellowLimit'
 import { CellPicker } from '../checkin/CellPicker'
@@ -50,7 +50,7 @@ export function WeekPanel({ toggle }: { toggle: ReactNode }) {
       {start && <button type="button" className={`${textButton} mb-2`} onClick={() => setSearchParams({})}>This week</button>}
       {data.habits.length === 0 ? (
         <EmptyState title="Your progress shows up here"
-          action={<Link to="/habits" className={emptyAction}>Create your first habit</Link>}>
+          action={<Link to="/habits" className={inkButton}>Create your first habit</Link>}>
           Mark your habits each day and this week fills up with targets, minimums and misses.
         </EmptyState>
       ) : (

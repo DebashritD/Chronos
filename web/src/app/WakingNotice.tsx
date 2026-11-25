@@ -40,7 +40,7 @@ export function WakingNotice() {
   return (
     <div
       role="status"
-      className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] left-1/2 z-40 -translate-x-1/2 rounded bg-surface px-4 py-2 text-sm text-muted shadow md:bottom-4"
+      className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom))] left-1/2 z-40 -translate-x-1/2 rounded-[10px] bg-ink px-4 py-2 font-mono text-[12px] text-paper shadow-[0_8px_24px_rgb(29_27_24/0.3)] md:bottom-4"
     >
       Waking the server…
     </div>
