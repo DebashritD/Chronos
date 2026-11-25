@@ -37,7 +37,6 @@
   --color-outline: #d6ccb9;
   --color-cell-grey: #e3dbcb;
   --font-display: 'Instrument Serif', Georgia, serif;
-  --animate-pop: pop 320ms cubic-bezier(0.22, 1, 0.36, 1);
 
   /* Radii still used by existing components (e.g. rounded-card) */
   --radius-card: 22px;
@@ -52,11 +51,6 @@
     0% { opacity: 0; transform: scale(1.18); }
     55% { opacity: 1; }
     100% { opacity: 1; transform: scale(1); }
-  }
-  @keyframes pop {
-    0% { transform: scale(1); }
-    40% { transform: scale(1.08); }
-    100% { transform: scale(1); }
   }
 }
 

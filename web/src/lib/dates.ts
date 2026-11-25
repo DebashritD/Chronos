@@ -41,6 +41,11 @@ export function formatDay(iso: string): string {
   return dayFormat.format(parse(iso)).replace(',', '')
 }
 
+/** "Wednesday" */
+export function formatWeekday(iso: string): string {
+  return longWeekdayFormat.format(parse(iso))
+}
+
 /** "Wednesday, 18 Nov" (the Today eyebrow) */
 export function formatLongDay(iso: string): string {
   return `${longWeekdayFormat.format(parse(iso))}, ${dayMonthFormat.format(parse(iso))}`

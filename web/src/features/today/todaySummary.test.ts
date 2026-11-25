@@ -39,7 +39,7 @@ describe('todaySummary', () => {
 
   it('says go green when most are marked on target', () => {
     expect(todaySummary(day('GREEN', 'GREEN', 'GREEN', 'PENDING', 'PENDING'), NOW, none))
-      .toMatchObject({ headline: 'Go green', line: 'Almost there. 3 of 5 on target.', tone: 'green' })
+      .toMatchObject({ headline: 'Aim for target', line: 'Almost there. 3 of 5 on target.', tone: 'green' })
   })
 
   it('says almost there when most are marked with a minimum', () => {
@@ -85,7 +85,7 @@ describe('todaySummary', () => {
 
   it('closes the day three ways', () => {
     expect(todaySummary(day('GREEN', 'GREEN', 'GREEN', 'GREEN', 'GREEN'), NOW, none))
-      .toMatchObject({ headline: 'All green', line: '5 of 5 on target today.', tone: 'green', countdown: null })
+      .toMatchObject({ headline: 'All on target', line: '5 of 5 on target today.', tone: 'green', countdown: null })
     expect(todaySummary(day('GREEN', 'YELLOW', 'GREEN', 'YELLOW', 'GREEN'), NOW, none))
       .toMatchObject({ headline: 'All done', line: '3 on target, 2 at minimum. All off red.', tone: 'default' })
     expect(todaySummary(day('GREEN', 'GREEN', 'RED', 'GREEN', 'YELLOW'), NOW, none)).toMatchObject({ headline: 'All marked',

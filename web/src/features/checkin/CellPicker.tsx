@@ -6,7 +6,7 @@ import { hapticMark } from '../../lib/haptics'
 import { inputClass, primaryButton } from '../../lib/ui'
 import { MOBILE_QUERY, REDUCED_MOTION_QUERY, useMediaQuery } from '../../lib/useMediaQuery'
 import { useClearCheckIn, useSaveCheckIn } from '../stats/api'
-import { StreakBadge, TimeLeftChip, WeekPills } from '../today/habitBits'
+import { StreakLine } from '../today/habitBits'
 import { periodLabel } from './period'
 import { useSheetDrag } from './useSheetDrag'
 
@@ -86,11 +86,7 @@ export function CellPicker({ habit, cell, streak, yellowLimit, now, onClose }: C
         <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-outline md:hidden" aria-hidden="true" />
         <h2 className="text-[22px] font-semibold text-fg">{habit.name}</h2>
         <p className="mt-0.5 text-[14px] text-muted">{periodLabel(habit, cell)}</p>
-        <div className="mt-3 mb-4 flex min-h-6 items-center gap-2">
-          {streak !== undefined && <StreakBadge streak={streak} />}
-          <TimeLeftChip habit={habit} cell={cell} now={now} />
-          {habit.frequency === 'DAILY' && <WeekPills cells={habit.cells} ring={cell.date} className="ml-auto" />}
-        </div>
+        <StreakLine habit={habit} cell={cell} streak={streak} now={now} />
         <div className="flex flex-col gap-2">
           {CHOICES.map((choice) => {
             const warn = yellowResets && choice.color === 'YELLOW'

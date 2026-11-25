@@ -1,12 +1,12 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
 import { Link } from 'react-router'
-import { formatLongDay } from '../../lib/dates'
+import { dayOfMonth, formatLongDay, formatMonth, formatWeekday } from '../../lib/dates'
 import { atYellowLimit } from '../../lib/yellowLimit'
 import { useNow } from '../../lib/useNow'
 import { EmptyState } from '../../app/EmptyState'
 import { SyncStatus } from '../../app/SyncStatus'
-import { card, cardTitle, emptyAction, pageTitle } from '../../lib/ui'
+import { emptyAction, eyebrow } from '../../lib/ui'
 import { browserTimezone, useSession } from '../auth/session'
 import { CellPicker } from '../checkin/CellPicker'
 import { useHabits } from '../habits/api'
@@ -61,15 +61,30 @@ export function TodayPage() {
   const streakFor = (habitId: number) => streaks.data?.find((s) => s.habitId === habitId)
   const summary = todaySummary(items, now, (habitId) => streakFor(habitId)?.current)
   const pickedStreak = picked ? streakFor(picked.habit.id) : undefined
-  const isDone = (item: TodayItem) => item.cell.state === 'GREEN'
+  const isDone = (item: TodayItem) => item.cell.state === 'GREEN' || item.cell.state === 'YELLOW'
   const ordered = [...items.filter((item) => !isDone(item)), ...items.filter(isDone)]
   const firstDone = ordered.findIndex(isDone)
 
   return (
     <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-8">
       <div>
-        <h1 className={pageTitle}>Today</h1>
-        <p className="mt-0.5 mb-5 text-[15px] text-muted">{formatLongDay(data.today)}</p>
+        <h1 className="sr-only">Today</h1>
+        <p className="sr-only">{formatLongDay(data.today)}</p>
+        {summary.countdown && <p className="sr-only">{summary.countdown.text}</p>}
+        <header aria-hidden="true" className="flex items-end justify-between gap-4">
+          <div>
+            <p className={eyebrow}>{formatWeekday(data.today)}</p>
+            <p className="font-serif text-[92px] leading-[0.85] tracking-[-0.02em] text-ink">{dayOfMonth(data.today)}</p>
+          </div>
+          <div className="pb-2 text-right">
+            <p className="text-[14px] text-muted">{formatMonth(data.today.slice(0, 7))}</p>
+            {summary.countdown && (
+              <p className={`font-mono text-[15px] font-medium ${summary.countdown.urgent ? 'text-accent' : 'text-ink'}`}>
+                {summary.countdown.text}
+              </p>
+            )}
+          </div>
+        </header>
         <SyncStatus />
         {data.habits.length === 0 ? (
           <EmptyState title="Start your first chain"
@@ -79,7 +94,7 @@ export function TodayPage() {
         ) : (
           <>
             <TodaySummary summary={summary} />
-            <div className="grid grid-cols-1 gap-3 xl:grid-cols-2">
+            <div className="flex flex-col">
               {/* One flat keyed list, so a card that moves into Done keeps its state. */}
               {ordered.flatMap((item, i) => {
                 const s = streakFor(item.habit.id)
@@ -88,17 +103,17 @@ export function TodayPage() {
                     yellowLimit={atYellowLimit(s) ? s.yellowLimit : undefined} now={now} onOpen={() => setPicked(item)} />
                 )
                 return i === firstDone
-                  ? [<h2 key="done" className="col-span-full mt-2 px-1 text-[12px] font-semibold tracking-[0.06em] text-muted uppercase">Done</h2>, habitCard]
+                  ? [<h2 key="done" className="mt-6 text-[11px] font-semibold tracking-[0.22em] text-muted uppercase">Done</h2>, habitCard]
                   : [habitCard]
               })}
             </div>
           </>
         )}
       </div>
-      <aside aria-label="This week" className="hidden lg:flex lg:flex-col lg:gap-4">
+      <aside aria-label="This week" className="hidden lg:flex lg:flex-col lg:gap-4 lg:border-l lg:border-rule-2 lg:pl-8">
         {data.habits.length > 0 && (
-          <div className={`${card} px-3`}>
-            <h2 className={`${cardTitle} px-2`}>This week</h2>
+          <div>
+            <h2 className={eyebrow}>This week</h2>
             <WeekGrid start={data.start} today={data.today} habits={data.habits}
               onPick={(habit, cell) => setPicked({ habit, cell })} />
           </div>

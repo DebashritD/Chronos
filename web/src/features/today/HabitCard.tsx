@@ -1,32 +1,23 @@
 import { NotebookPen } from 'lucide-react'
 import { useEffect, useId, useRef, useState } from 'react'
+import { Mark } from '../../app/Mark'
 import { messageFor } from '../../api/errors'
 import type { Color, WeekCell, WeekHabit } from '../../api/types'
-import { cellClass, isColor, STATE_LABEL } from '../../lib/cells'
+import { STATE_LABEL } from '../../lib/cells'
 import { hapticMark } from '../../lib/haptics'
-import { card, chip } from '../../lib/ui'
 import { useSaveCheckIn } from '../stats/api'
-import { StreakBadge, TimeLeftChip, WeekPills } from './habitBits'
+import { StreakLine } from './habitBits'
+import { Stamp } from './Stamp'
 
-/** Each choice wears its colour before it's pressed (dot + tinted edge) and fills with it once selected. */
-const BUTTONS: { color: Color; label: string; idle: string; dot: string; selected: string }[] = [
-  { color: 'GREEN', label: 'Target', idle: 'border-cell-green/30 bg-cell-green/[0.07]', dot: 'bg-cell-green',
-    selected: 'border-cell-green bg-cell-green text-bg' },
-  { color: 'YELLOW', label: 'Minimum', idle: 'border-cell-yellow/30 bg-cell-yellow/[0.07]', dot: 'bg-cell-yellow',
-    selected: 'border-cell-yellow bg-cell-yellow text-bg' },
-  { color: 'RED', label: 'Missed', idle: 'border-cell-red/30 bg-cell-red/[0.07]', dot: 'bg-cell-red',
-    selected: 'border-cell-red bg-cell-red text-bg' },
+const BUTTONS: { color: Color; label: string }[] = [
+  { color: 'GREEN', label: 'Target' },
+  { color: 'YELLOW', label: 'Minimum' },
+  { color: 'RED', label: 'Missed' },
 ]
 
-function frequencyChip(habit: WeekHabit): string | null {
-  if (habit.frequency === 'EVERY_N_DAYS') return `Every ${habit.intervalDays} days`
-  if (habit.frequency === 'WEEKLY') return 'This week'
-  return null
-}
-
-function NotePreview({ note, className = '' }: { note: string; className?: string }) {
+function NotePreview({ note }: { note: string }) {
   return (
-    <p className={`flex items-center gap-1 text-[12px] text-muted ${className}`}>
+    <p className="mt-1 flex items-center gap-1 text-[12px] text-muted">
       <NotebookPen size={12} className="flex-none" aria-hidden="true" />
       <span className="truncate">{note}</span>
     </p>
@@ -45,7 +36,7 @@ interface HabitCardProps {
 }
 
 /**
- * One habit on Today. Until it's green: a card with one-tap Target / Minimum / Missed. Green: a one-line row that
+ * One habit on Today as a ruled row. Open: one-tap Target / Minimum / Missed. Target or Minimum: a stamped row that
  * opens the picker. Both share the <article> root so the node (and this state) survives the switch.
  */
 export function HabitCard({ habit, cell, streak, now, yellowLimit, onOpen }: HabitCardProps) {
@@ -56,13 +47,12 @@ export function HabitCard({ habit, cell, streak, now, yellowLimit, onOpen }: Hab
   const [missedJustNow, setMissedJustNow] = useState(false)
   const articleRef = useRef<HTMLElement>(null)
   const rowButtonRef = useRef<HTMLButtonElement>(null)
-  const marked = isColor(cell.state)
-  // At the limit, one more yellow restarts the streak (re-tapping today's own yellow changes nothing).
+  const stamped = cell.state === 'GREEN' || cell.state === 'YELLOW'
+  // At the limit, one more minimum restarts the streak (re-tapping today's own minimum changes nothing).
   const yellowResets = yellowLimit !== undefined && cell.state !== 'YELLOW'
-  const freq = frequencyChip(habit)
-  const collapsedJustNow = cell.state === 'GREEN' && popped === 'GREEN'
+  const collapsedJustNow = stamped && popped === cell.state
 
-  // Collapsing unmounts the pressed Target button; hand focus to the row's button unless it has moved elsewhere.
+  // Collapsing unmounts the pressed button; hand focus to the row's button unless it has moved elsewhere.
   useEffect(() => {
     if (!collapsedJustNow) return
     const active = document.activeElement
@@ -77,7 +67,7 @@ export function HabitCard({ habit, cell, streak, now, yellowLimit, onOpen }: Hab
     hapticMark(color)
     try {
       await saveCheckIn.mutateAsync({ habitId: habit.id, periodStart: cell.periodStart ?? cell.date, color, note: cell.note })
-      // A miss gets a quiet word instead of the celebratory pop.
+      // A miss gets a quiet word instead of a stamp.
       setPopped(color === 'RED' ? null : color)
       setMissedJustNow(color === 'RED')
     } catch (err) {
@@ -85,83 +75,72 @@ export function HabitCard({ habit, cell, streak, now, yellowLimit, onOpen }: Hab
     }
   }
 
-  const streakBadge = streak !== undefined && <StreakBadge streak={streak} />
+  const streakLine = <StreakLine habit={habit} cell={cell} streak={streak} now={now} />
   const errorLine = error && <p role="alert" className="mt-2 text-sm text-cell-red">{error}</p>
+  const name = 'font-serif text-[27px] leading-tight break-words text-ink'
 
-  if (cell.state === 'GREEN') {
+  if (stamped) {
     return (
-      <article ref={articleRef} aria-labelledby={titleId}
-        className="relative flex items-center gap-3 rounded-[18px] border border-line bg-card px-4 py-3">
-        <span aria-hidden="true" data-pop={popped === 'GREEN' ? '' : undefined} onAnimationEnd={() => setPopped(null)}
-          className={`h-[22px] w-[22px] flex-none rounded-[7px] data-pop:animate-pop ${cellClass(cell.state)}`} />
+      <article ref={articleRef} aria-labelledby={titleId} className="relative flex items-center gap-4 border-b border-rule py-4">
         <div className="min-w-0 flex-1">
-          <h2 id={titleId} className="text-[15px] font-semibold break-words text-fg">
+          <h2 id={titleId} className={name}>
             {/* The ::after stretches the tap target over the whole row. */}
             <button ref={rowButtonRef} type="button" aria-haspopup="dialog" onClick={onOpen}
-              className="text-left after:absolute after:inset-0 after:rounded-[18px]">
+              className="text-left after:absolute after:inset-0">
               {habit.name}
             </button>
           </h2>
           <p className="sr-only">{STATE_LABEL[cell.state]}</p>
+          {streakLine}
           {cell.note && <NotePreview note={cell.note} />}
           {errorLine}
         </div>
-        {streakBadge}
+        <Stamp color={cell.state as 'GREEN' | 'YELLOW'} pressed={popped === cell.state} onDone={() => setPopped(null)} />
       </article>
     )
   }
 
   return (
-    <article ref={articleRef} aria-labelledby={titleId} className={card}>
-      <div className="flex items-start justify-between gap-3">
-        <h2 id={titleId} className="min-w-0 text-[18px] font-semibold break-words text-fg">
-          <button type="button" aria-haspopup="dialog" onClick={onOpen} className="text-left hover:underline">
-            {habit.name}
-          </button>
-        </h2>
-        {streakBadge}
-      </div>
-      <div className="mt-4 grid grid-cols-3 gap-2">
-        {BUTTONS.map(({ color, label, idle, dot, selected }) => {
+    <article ref={articleRef} aria-labelledby={titleId} className="border-b border-rule py-4">
+      <h2 id={titleId} className={name}>
+        <button type="button" aria-haspopup="dialog" onClick={onOpen}
+          className="text-left decoration-rule-2 underline-offset-4 hover:underline">
+          {habit.name}
+        </button>
+      </h2>
+      {streakLine}
+      <div className="mt-2 grid grid-cols-3">
+        {BUTTONS.map(({ color, label }, i) => {
           const pressed = cell.state === color
           const warn = color === 'YELLOW' && yellowResets
           return (
             <button key={color} type="button" aria-pressed={pressed} disabled={saveCheckIn.isPending}
               aria-describedby={warn ? `${titleId}-reset` : undefined}
               onClick={() => void mark(color)}
-              onAnimationEnd={() => setPopped(null)}
-              data-pop={popped === color ? '' : undefined}
-              className={`flex min-h-12 flex-col items-center justify-center rounded-[14px] border px-1 py-2 text-[14px] font-semibold transition-[transform,background-color,border-color] active:scale-[0.97] disabled:opacity-60 data-pop:animate-pop ${
-                pressed ? selected : `${idle} text-fg`
-              }`}>
-              <span className="flex items-center gap-1.5">
-                {!pressed && <span className={`h-2 w-2 flex-none rounded-full ${dot}`} aria-hidden="true" />}
+              className={`flex min-h-11 flex-col items-center justify-center px-1 py-1.5 text-[14px] font-medium text-ink transition-colors active:bg-paper-2 disabled:opacity-60 ${
+                i > 0 ? 'border-l border-dashed border-faint' : ''
+              } ${pressed ? 'bg-paper-2' : ''}`}>
+              <span className="flex items-center gap-2">
+                <Mark kind={color} size={12} />
                 {label}
               </span>
-              {warn && <span className="text-[11px] leading-tight font-medium text-cell-yellow" aria-hidden="true">restarts streak</span>}
+              {warn && <span className="font-mono text-[11px] leading-tight text-yellow-ink" aria-hidden="true">restarts streak</span>}
             </button>
           )
         })}
       </div>
       {yellowResets && (
-        <p id={`${titleId}-reset`} className="sr-only">You've used {yellowLimit} yellows in a row; another restarts the streak.</p>
+        <p id={`${titleId}-reset`} className="sr-only">You've used {yellowLimit} minimums in a row; another restarts the streak.</p>
+      )}
+      {yellowLimit !== undefined && (
+        <p className="mt-1 font-mono text-[12px] text-yellow-ink">{yellowLimit}/{yellowLimit} minimums in a row</p>
       )}
       {missedJustNow && cell.state === 'RED' && (
-        <p role="status" className="mt-3 text-[14px] text-muted">
+        <p role="status" className="mt-2 font-mono text-[12px] text-muted">
           That's honest. {habit.frequency === 'DAILY' ? 'Tomorrow' : 'The next one'} is a fresh start.
         </p>
       )}
-      <div className="mt-3 flex items-center justify-between gap-3">
-        <span className="flex flex-wrap items-center gap-1.5">
-          <TimeLeftChip habit={habit} cell={cell} now={now} />
-          {freq && <span className={`${chip} bg-surface text-muted`}>{freq}</span>}
-          {yellowLimit !== undefined && (
-            <span className={`${chip} bg-cell-yellow/15 text-cell-yellow`}>{yellowLimit}/{yellowLimit} yellows</span>
-          )}
-        </span>
-        {habit.frequency === 'DAILY' && <WeekPills cells={habit.cells} className="md:hidden" />}
-      </div>
-      {marked && cell.note && <NotePreview note={cell.note} className="mt-3" />}
+      {cell.state === 'RED' && cell.note && <NotePreview note={cell.note} />}
       {errorLine}
     </article>
   )

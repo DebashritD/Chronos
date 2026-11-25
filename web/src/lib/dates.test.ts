@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest'
-import { addDays, addMonths, dayOfMonth, formatDay, formatLongDay, formatMonth, formatWeekRange, weekdayIndex } from './dates'
+import { addDays, addMonths, dayOfMonth, formatDay, formatLongDay, formatMonth, formatWeekRange, formatWeekday, weekdayIndex } from './dates'
 
 describe('dates', () => {
+  it('formats the weekday in full', () => {
+    expect(formatWeekday('2026-11-25')).toBe('Wednesday')
+  })
+
   it('adds days across month and year boundaries', () => {
     expect(addDays('2026-11-30', 1)).toBe('2026-12-01')
     expect(addDays('2026-12-28', 7)).toBe('2027-01-04')

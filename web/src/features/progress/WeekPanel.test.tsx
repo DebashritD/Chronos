@@ -164,18 +164,17 @@ describe('WeekPanel', () => {
     })
   })
 
-  it('shows the streak and rings the opened day, without a countdown for a past day', async () => {
+  it('shows the streak, without a countdown for a past day', async () => {
     api()
     const { user } = renderWithProviders(<WeekPanel />, { route: '/progress' })
 
     await user.click(await screen.findByRole('button', { name: 'Read, Mon 16 Nov, Target hit' }))
     const dialog = screen.getByRole('dialog')
-    expect(dialog).toHaveTextContent('Current streak 0')
+    expect(dialog).toHaveTextContent('Fresh start')
     expect(dialog.querySelector('[data-tone]')).toBeNull()
-    expect(dialog.querySelectorAll('[data-ring]')).toHaveLength(1)
   })
 
-  it('has no Clear or pills for an unmarked weekly period and closes on a backdrop tap', async () => {
+  it('has no Clear for an unmarked weekly period and closes on a backdrop tap', async () => {
     api()
     const { user } = renderWithProviders(<WeekPanel />, { route: '/progress' })
 
@@ -183,7 +182,6 @@ describe('WeekPanel', () => {
     const dialog = screen.getByRole('dialog', { name: 'Piano, week of Mon 16 Nov' })
     expect(screen.queryByRole('button', { name: 'Clear' })).not.toBeInTheDocument()
     expect(screen.queryByRole('button', { name: 'Cancel' })).not.toBeInTheDocument()
-    expect(dialog.querySelector('[data-ring]')).toBeNull()
     await user.click(dialog.parentElement!)
 
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()

@@ -120,13 +120,14 @@ describe('TodayPage', () => {
     const progress = screen.getByRole('region', { name: "Today's progress" })
     expect(within(progress).getByRole('heading', { name: 'Good start' })).toBeInTheDocument()
     expect(within(progress).getByText('1 of 5 marked. 4 to go.')).toBeInTheDocument()
-    expect(within(progress).getByText('12h left')).toBeInTheDocument()
+    // The countdown lives in the (aria-hidden) header and is repeated for screen readers.
+    expect(screen.getAllByText('12h left')).toHaveLength(2)
     expect(within(progress).getByRole('img', { name: '1 of 5 marked: 1 target' })).toBeInTheDocument()
     const names = screen.getAllByRole('article').map((article) => within(article).getByRole('heading').textContent)
     expect(names).toEqual(['Run', 'Piano', 'Stretch', 'Swim', 'Read'])
     expect(screen.getByRole('heading', { level: 2, name: 'Done' })).toBeInTheDocument()
 
-    // Read is green: a one-line row with its colour, note and streak, no mark buttons or countdown.
+    // Read is on target: a stamped row with its note and streak, no mark buttons or countdown.
     const read = screen.getByRole('article', { name: 'Read' })
     expect(within(read).queryByRole('button', { name: /^(Target|Minimum|Missed)$/ })).not.toBeInTheDocument()
     expect(read).toHaveTextContent('Target hit')
@@ -137,23 +138,28 @@ describe('TodayPage', () => {
 
     const run = screen.getByRole('article', { name: 'Run' })
     expect(run).not.toHaveTextContent('5 km')
-    expect(within(run).getByText('Every 3 days')).toBeInTheDocument()
     // Mid-period: the 17–19 Nov period still shows on the 18th.
     expect(chip(run)).toHaveTextContent('1d 12h left in this period')
     expect(chip(run)).toHaveAttribute('data-tone', 'normal')
 
     const piano = screen.getByRole('article', { name: 'Piano' })
-    expect(within(piano).getByText('This week')).toBeInTheDocument()
     expect(chip(piano)).toHaveTextContent('4d 12h left this week')
 
     const stretch = screen.getByRole('article', { name: 'Stretch' })
     expect(stretch).not.toHaveTextContent('1 pose')
-    expect(within(stretch).queryByText(/^(Every \d+ days|This week)$/)).not.toBeInTheDocument()
-    expect(chip(stretch)).toHaveTextContent('12h left today')
+    // A daily habit shows its time left only once urgent.
+    expect(chip(stretch)).toBeNull()
 
     const swim = screen.getByRole('article', { name: 'Swim' })
-    expect(within(swim).getByText('Every 7 days')).toBeInTheDocument()
     expect(chip(swim)).toHaveTextContent('3d 12h left in this period')
+  })
+
+  it('shows a daily habit streak as days unbroken', async () => {
+    api()
+    renderWithProviders(<TodayPage />)
+
+    const read = await screen.findByRole('article', { name: 'Read' })
+    await waitFor(() => expect(read).toHaveTextContent('Current streak 12 days unbroken'))
   })
 
   it('turns the countdown orange in the last three hours', async () => {
@@ -212,21 +218,29 @@ describe('TodayPage', () => {
     )
   })
 
-  it('vibrates on a tap and pops the button once saved', async () => {
+  it('vibrates on a tap and stamps the row once saved', async () => {
     const vibrate = vi.fn(() => true)
     Object.defineProperty(navigator, 'vibrate', { value: vibrate, configurable: true })
-    api((r) => (r.method === 'PUT' ? jsonResponse({ periodStart: '2026-11-18', color: 'YELLOW', note: null }) : undefined))
+    let after = false
+    api((r) => {
+      if (r.method === 'PUT') {
+        after = true
+        return jsonResponse({ periodStart: '2026-11-18', color: 'YELLOW', note: null })
+      }
+      if (r.url.startsWith('/api/stats/week')) return jsonResponse(after ? weekWith(5, 'YELLOW') : week)
+      return undefined
+    })
     const { user } = renderWithProviders(<TodayPage />)
 
     const stretch = await screen.findByRole('article', { name: 'Stretch' })
     await user.click(within(stretch).getByRole('button', { name: 'Minimum' }))
 
     expect(vibrate).toHaveBeenCalledWith(14)
-    await waitFor(() => expect(within(stretch).getByRole('button', { name: 'Minimum' })).toHaveAttribute('data-pop'))
+    await waitFor(() => expect(stretch.querySelector('[data-stamp]')).not.toBeNull())
     delete (navigator as { vibrate?: unknown }).vibrate
   })
 
-  it('collapses a habit into Done once it is green, popping the row', async () => {
+  it('collapses a habit into Done once it is on target, stamping the row', async () => {
     let after = false
     api((r) => {
       if (r.method === 'PUT') {
@@ -243,10 +257,32 @@ describe('TodayPage', () => {
 
     await waitFor(() => expect(within(stretch).queryByRole('button', { name: 'Target' })).not.toBeInTheDocument())
     expect(stretch).toHaveTextContent('Target hit')
-    expect(stretch.querySelector('[data-pop]')).not.toBeNull()
+    expect(stretch.querySelector('[data-stamp]')).not.toBeNull()
     expect(within(stretch).getByRole('button', { name: 'Stretch' })).toHaveFocus()
     const names = screen.getAllByRole('article').map((article) => within(article).getByRole('heading').textContent)
     expect(names).toEqual(['Run', 'Piano', 'Swim', 'Read', 'Stretch'])
+  })
+
+  it('collapses a habit into a stamped row under Done when Minimum is marked', async () => {
+    let after = false
+    api((r) => {
+      if (r.method === 'PUT') {
+        after = true
+        return jsonResponse({ periodStart: '2026-11-18', color: 'YELLOW', note: null })
+      }
+      if (r.url.startsWith('/api/stats/week')) return jsonResponse(after ? weekWith(5, 'YELLOW') : week)
+      return undefined
+    })
+    const { user } = renderWithProviders(<TodayPage />)
+
+    const stretch = await screen.findByRole('article', { name: 'Stretch' })
+    await user.click(within(stretch).getByRole('button', { name: 'Minimum' }))
+
+    await waitFor(() => expect(within(stretch).queryByRole('button', { name: /^Minimum$/ })).toBeNull())
+    expect(stretch.querySelector('[data-stamp]')).not.toBeNull()
+    const names = screen.getAllByRole('article').map((article) => within(article).getByRole('heading').textContent)
+    expect(names.indexOf('Stretch')).toBeGreaterThan(names.indexOf('Run'))
+    expect(names.slice(-2)).toEqual(['Read', 'Stretch'])
   })
 
   it('edits notes only in the picker, not on the card', async () => {
@@ -254,7 +290,8 @@ describe('TodayPage', () => {
     renderWithProviders(<TodayPage />)
 
     const stretch = await screen.findByRole('article', { name: 'Stretch' })
-    expect(within(stretch).getByRole('button', { name: 'Minimum' })).toHaveAttribute('aria-pressed', 'true')
+    expect(within(stretch).queryByRole('button', { name: /^Minimum$/ })).toBeNull()
+    expect(stretch).toHaveTextContent('Minimum')
     expect(screen.queryByRole('button', { name: /note/i })).not.toBeInTheDocument()
     expect(screen.queryByRole('textbox')).not.toBeInTheDocument()
   })
@@ -277,11 +314,11 @@ describe('TodayPage', () => {
   })
 
   it('does nothing when the selected button is tapped again', async () => {
-    const fetchMock = api(undefined, weekWith(5, 'YELLOW'))
+    const fetchMock = api(undefined, weekWith(5, 'RED'))
     const { user } = renderWithProviders(<TodayPage />)
 
     const stretch = await screen.findByRole('article', { name: 'Stretch' })
-    await user.click(within(stretch).getByRole('button', { name: 'Minimum' }))
+    await user.click(within(stretch).getByRole('button', { name: 'Missed' }))
 
     expect(requests(fetchMock).filter((r) => r.method === 'PUT')).toEqual([])
   })
@@ -308,9 +345,7 @@ describe('TodayPage', () => {
 
     const dialog = screen.getByRole('dialog', { name: 'Read, Wed 18 Nov' })
     expect(dialog).toHaveTextContent('Current streak 12')
-    expect(chip(dialog)).toHaveTextContent('12h left today')
-    expect(chip(dialog)).toHaveAttribute('data-tone', 'done')
-    expect(dialog.querySelectorAll('[data-ring]')).toHaveLength(1)
+    expect(chip(dialog)).toBeNull()
   })
 
   it('drops a mark the server rejects and says so in a toast', async () => {
@@ -335,7 +370,8 @@ describe('TodayPage', () => {
     act(() => onlineManager.setOnline(false))
     await user.click(within(stretch).getByRole('button', { name: 'Minimum' }))
 
-    await waitFor(() => expect(within(stretch).getByRole('button', { name: 'Minimum' })).toHaveAttribute('aria-pressed', 'true'))
+    await waitFor(() => expect(stretch.querySelector('[data-stamp]')).not.toBeNull())
+    expect(within(stretch).queryByRole('button', { name: /^Minimum$/ })).toBeNull()
     expect(requests(fetchMock).some((r) => r.method === 'PUT')).toBe(false)
 
     act(() => onlineManager.setOnline(true))
@@ -359,10 +395,10 @@ describe('TodayPage', () => {
     renderWithProviders(<TodayPage />)
 
     expect(await screen.findByRole('img', { name: '1 of 1 marked: 1 target' })).toBeInTheDocument()
-    expect(screen.getByRole('heading', { name: 'All green' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { name: 'All on target' })).toBeInTheDocument()
   })
 
-  it('answers a miss with a kind word instead of the pop', async () => {
+  it('answers a miss with a kind word instead of a stamp', async () => {
     let state: WeekCell['state'] = 'PENDING'
     api((r) => {
       if (r.method === 'PUT') {
@@ -378,7 +414,7 @@ describe('TodayPage', () => {
     await user.click(within(stretch).getByRole('button', { name: 'Missed' }))
 
     expect(await within(stretch).findByRole('status')).toHaveTextContent("That's honest. Tomorrow is a fresh start.")
-    expect(within(stretch).getByRole('button', { name: 'Missed' })).not.toHaveAttribute('data-pop')
+    expect(stretch.querySelector('[data-stamp]')).toBeNull()
     expect(screen.getByRole('heading', { name: 'All marked' })).toBeInTheDocument()
   })
 
@@ -389,7 +425,7 @@ describe('TodayPage', () => {
     expect(await screen.findByRole('link', { name: 'Create your first habit' })).toHaveAttribute('href', '/habits')
   })
 
-  it('warns when a yellow uses up the limit and badges the card', async () => {
+  it('warns when a minimum uses up the limit and stamps the card', async () => {
     let stretchRun = 1
     const fetchMock = api((r) => {
       if (r.method === 'PUT') {
@@ -404,7 +440,7 @@ describe('TodayPage', () => {
     const { user } = renderWithProviders(<TodayPage />)
 
     const stretch = await screen.findByRole('article', { name: 'Stretch' })
-    expect(within(stretch).queryByText('2/2 yellows')).not.toBeInTheDocument()
+    expect(within(stretch).queryByText('2/2 minimums in a row')).not.toBeInTheDocument()
     const streaksFetches = () => requests(fetchMock).filter((r) => r.url === '/api/stats/streaks').length
     await waitFor(() => expect(streaksFetches()).toBe(1))
     await user.click(within(stretch).getByRole('button', { name: 'Minimum' }))
@@ -414,7 +450,7 @@ describe('TodayPage', () => {
     expect(dialog).toHaveTextContent("You've hit 2 yellows in a row on Stretch. Next time go green, or the streak starts over.")
     await user.click(within(dialog).getByRole('button', { name: 'Got it' }))
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
-    expect(within(stretch).getByText('2/2 yellows')).toBeInTheDocument()
+    expect(stretch.querySelector('[data-stamp]')).not.toBeNull()
   })
 
   it('still warns when the yellow syncs while another mark is queued behind it', async () => {
@@ -504,6 +540,6 @@ describe('TodayPage', () => {
     expect(names).toEqual(['Read'])
     const read = screen.getByRole('article', { name: 'Read' })
     expect(within(read).getByRole('button', { name: 'Target' })).toHaveAttribute('aria-pressed', 'false')
-    expect(chip(read)).toHaveTextContent('12h left today')
+    expect(chip(read)).toBeNull()
   })
 })

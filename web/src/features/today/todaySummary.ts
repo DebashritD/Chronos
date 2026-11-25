@@ -61,7 +61,7 @@ export function todaySummary(items: TodayItem[], now: Date, streakOf: (habitId: 
   if (total === 0) return say('Nothing due today', 'Enjoy the break.')
   if (open.length === 0) {
     if (red > 0) return say('All marked', `${total - red} off red, ${red} missed. Tomorrow resets.`)
-    if (yellow === 0) return say('All green', `${total} of ${total} on target today.`, 'green')
+    if (yellow === 0) return say('All on target', `${total} of ${total} on target today.`, 'green')
     return say('All done', `${green} on target, ${yellow} at minimum. All off red.`)
   }
   if (urgentOpen.length > 0 && msLeft !== null) {
@@ -81,7 +81,7 @@ export function todaySummary(items: TodayItem[], now: Date, streakOf: (habitId: 
   const progress = `${marked} of ${total} marked. ${open.length} to go.`
   if (marked > total / 2) {
     return yellow === 0 && red === 0
-      ? say('Go green', `Almost there. ${marked} of ${total} on target.`, 'green')
+      ? say('Aim for target', `Almost there. ${marked} of ${total} on target.`, 'green')
       : say('Almost there', progress)
   }
   return say('Good start', progress)
