@@ -189,6 +189,42 @@ describe('WeekPanel', () => {
     expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
   })
 
+  it('closes on Escape right after opening and returns focus to the cell', async () => {
+    api()
+    const { user } = renderWithProviders(<WeekPanel />, { route: '/progress' })
+
+    const opener = await screen.findByRole('button', { name: 'Read, Wed 18 Nov, Not marked yet' })
+    await user.click(opener)
+    expect(screen.getByRole('dialog')).toBeInTheDocument()
+    await user.keyboard('{Escape}')
+
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(opener).toHaveFocus()
+  })
+
+  it('warns on Minimum done when another yellow restarts the streak', async () => {
+    const habits = [{ ...week.habits[0], cells: daily(['GREEN', 'YELLOW', 'PENDING', 'PENDING', 'PENDING', 'PENDING', 'PENDING']) }]
+    api((r) => {
+      if (r.url.startsWith('/api/stats/week')) return jsonResponse({ ...week, habits })
+      if (r.url === '/api/stats/streaks')
+        return jsonResponse([{ habitId: 1, name: 'Read', current: 3, best: 9, yellowRun: 2, yellowLimit: 2 }])
+      return undefined
+    })
+    const { user } = renderWithProviders(<WeekPanel />, { route: '/progress' })
+
+    await within(await screen.findByRole('region', { name: 'Streaks' })).findByRole('listitem', { name: 'Read' })
+    await user.click(screen.getByRole('button', { name: 'Read, Wed 18 Nov, Not marked yet' }))
+    const minimum = within(screen.getByRole('dialog')).getByRole('button', { name: /^Minimum done/ })
+    expect(minimum).toHaveTextContent('restarts streak')
+    expect(minimum).toHaveAccessibleDescription("You've used 2 yellows in a row; another restarts the streak.")
+    await user.click(screen.getByRole('dialog').parentElement!)
+
+    await user.click(screen.getByRole('button', { name: 'Read, Tue 17 Nov, Minimum done' }))
+    const saved = within(screen.getByRole('dialog')).getByRole('button', { name: /^Minimum done/ })
+    expect(saved).not.toHaveTextContent('restarts streak')
+    expect(saved).not.toHaveAccessibleDescription()
+  })
+
   it('closes the picker at once and reports a rejected save in a toast', async () => {
     api((r) => (r.method === 'PUT' ? problemResponse(422, 'CHECK_IN_NOT_ALLOWED') : undefined))
     const toast = vi.fn()

@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import { messageFor } from '../../api/errors'
 import type { Color, WeekCell, WeekHabit } from '../../api/types'
 import { cellClass, isColor, STATE_LABEL } from '../../lib/cells'
@@ -22,6 +22,8 @@ interface CellPickerProps {
   cell: WeekCell
   /** Current streak, once the streaks query has loaded. */
   streak?: number
+  /** Set while the habit has used every yellow it may have in a row; another restarts the streak. */
+  yellowLimit?: number
   now: Date
   onClose(): void
 }
@@ -30,7 +32,7 @@ interface CellPickerProps {
  * Bottom sheet on phones, centred dialog on wider screens. Tapping a choice saves it (with any note) and closes;
  * "Save note" saves a changed note on an already-marked period; Clear removes the check-in.
  */
-export function CellPicker({ habit, cell, streak, now, onClose }: CellPickerProps) {
+export function CellPicker({ habit, cell, streak, yellowLimit, now, onClose }: CellPickerProps) {
   const saveCheckIn = useSaveCheckIn()
   const clearCheckIn = useClearCheckIn()
   const saved = isColor(cell.state) ? cell.state : null
@@ -41,6 +43,17 @@ export function CellPicker({ habit, cell, streak, now, onClose }: CellPickerProp
   const mobile = useMediaQuery(MOBILE_QUERY)
   const reduced = useMediaQuery(REDUCED_MOTION_QUERY)
   useSheetDrag(sheetRef, { enabled: mobile, reduced, onClose })
+  const resetId = useId()
+  const yellowResets = yellowLimit !== undefined && cell.state !== 'YELLOW'
+
+  // Take focus so Esc reaches the dialog; not a choice, where a stray Enter would save. Hand it back on close.
+  useEffect(() => {
+    const opener = document.activeElement
+    sheetRef.current?.focus({ preventScroll: true })
+    return () => {
+      if (opener instanceof HTMLElement && opener.isConnected) opener.focus({ preventScroll: true })
+    }
+  }, [])
   const busy = saveCheckIn.isPending || clearCheckIn.isPending
   const key = { habitId: habit.id, periodStart: cell.periodStart ?? cell.date }
   const noteChanged = note.trim() !== (cell.note ?? '')
@@ -65,11 +78,11 @@ export function CellPicker({ habit, cell, streak, now, onClose }: CellPickerProp
       onClick={(event) => {
         if (event.target === event.currentTarget) onClose()
       }}>
-      <div ref={sheetRef} role="dialog" aria-modal="true" aria-label={`${habit.name}, ${periodLabel(habit, cell)}`}
+      <div ref={sheetRef} role="dialog" aria-modal="true" tabIndex={-1} aria-label={`${habit.name}, ${periodLabel(habit, cell)}`}
         onKeyDown={(event) => {
           if (event.key === 'Escape') onClose()
         }}
-        className="w-full rounded-t-[28px] border border-line bg-card px-5 pt-3 pb-[calc(1.5rem+env(safe-area-inset-bottom))] md:max-w-md md:rounded-[28px] md:pt-6">
+        className="w-full rounded-t-[28px] outline-none border border-line bg-card px-5 pt-3 pb-[calc(1.5rem+env(safe-area-inset-bottom))] md:max-w-md md:rounded-[28px] md:pt-6">
         <div className="mx-auto mb-4 h-1 w-10 rounded-full bg-outline md:hidden" aria-hidden="true" />
         <h2 className="text-[22px] font-semibold text-fg">{habit.name}</h2>
         <p className="mt-0.5 text-[14px] text-muted">{periodLabel(habit, cell)}</p>
@@ -79,20 +92,27 @@ export function CellPicker({ habit, cell, streak, now, onClose }: CellPickerProp
           {habit.frequency === 'DAILY' && <WeekPills cells={habit.cells} ring={cell.date} className="ml-auto" />}
         </div>
         <div className="flex flex-col gap-2">
-          {CHOICES.map((choice) => (
-            <button key={choice.color} type="button" aria-pressed={saved === choice.color} disabled={busy}
-              onClick={() => save(choice.color)}
-              className={`flex w-full items-center gap-3 rounded-2xl border p-3.5 text-left disabled:opacity-60 ${
-                saved === choice.color ? choice.selected : 'border-line bg-surface'
-              }`}>
-              <span className={`h-6 w-6 flex-none rounded-lg ${cellClass(choice.color)}`} aria-hidden="true" />
-              <span className="text-[15px] font-semibold text-fg">
-                {STATE_LABEL[choice.color]}
-                <small className="block text-[13px] font-normal text-muted">{choice.hint(habit)}</small>
-              </span>
-            </button>
-          ))}
+          {CHOICES.map((choice) => {
+            const warn = yellowResets && choice.color === 'YELLOW'
+            return (
+              <button key={choice.color} type="button" aria-pressed={saved === choice.color} disabled={busy}
+                aria-describedby={warn ? resetId : undefined} onClick={() => save(choice.color)}
+                className={`flex w-full items-center gap-3 rounded-2xl border p-3.5 text-left disabled:opacity-60 ${
+                  saved === choice.color ? choice.selected : 'border-line bg-surface'
+                }`}>
+                <span className={`h-6 w-6 flex-none rounded-lg ${cellClass(choice.color)}`} aria-hidden="true" />
+                <span className="text-[15px] font-semibold text-fg">
+                  {STATE_LABEL[choice.color]}
+                  <small className="block text-[13px] font-normal text-muted">{choice.hint(habit)}</small>
+                  {warn && <small className="block text-[11px] leading-tight font-medium text-cell-yellow" aria-hidden="true">restarts streak</small>}
+                </span>
+              </button>
+            )
+          })}
         </div>
+        {yellowResets && (
+          <p id={resetId} className="sr-only">You've used {yellowLimit} yellows in a row; another restarts the streak.</p>
+        )}
         {noteOpen ? (
           <>
             <label htmlFor="check-in-note" className="mt-4 mb-1.5 block text-[13px] font-medium text-muted">

@@ -60,6 +60,7 @@ export function TodayPage() {
   const items = todayItems(data)
   const streakFor = (habitId: number) => streaks.data?.find((s) => s.habitId === habitId)
   const summary = todaySummary(items, now, (habitId) => streakFor(habitId)?.current)
+  const pickedStreak = picked ? streakFor(picked.habit.id) : undefined
   const isDone = (item: TodayItem) => item.cell.state === 'GREEN'
   const ordered = [...items.filter((item) => !isDone(item)), ...items.filter(isDone)]
   const firstDone = ordered.findIndex(isDone)
@@ -104,8 +105,8 @@ export function TodayPage() {
         )}
         <StreakList />
       </aside>
-      {picked && <CellPicker habit={picked.habit} cell={picked.cell} streak={streakFor(picked.habit.id)?.current}
-        now={now} onClose={() => setPicked(null)} />}
+      {picked && <CellPicker habit={picked.habit} cell={picked.cell} streak={pickedStreak?.current}
+        yellowLimit={atYellowLimit(pickedStreak) ? pickedStreak.yellowLimit : undefined} now={now} onClose={() => setPicked(null)} />}
     </div>
   )
 }

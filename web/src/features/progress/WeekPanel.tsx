@@ -6,6 +6,7 @@ import { addDays, formatWeekRange } from '../../lib/dates'
 import { EmptyState } from '../../app/EmptyState'
 import { emptyAction, pillButton } from '../../lib/ui'
 import { useNow } from '../../lib/useNow'
+import { atYellowLimit } from '../../lib/yellowLimit'
 import { CellPicker } from '../checkin/CellPicker'
 import { useStreaks, useWeek } from '../stats/api'
 import { DistributionDonut } from '../stats/DistributionDonut'
@@ -29,6 +30,7 @@ export function WeekPanel() {
   if (isError) return <p role="alert" className="text-cell-red">Couldn't load this week.</p>
 
   const goTo = (weekStart: string) => setSearchParams({ start: weekStart })
+  const pickedStreak = picked ? streaks.data?.find((streak) => streak.habitId === picked.habit.id) : undefined
 
   return (
     <div>
@@ -61,8 +63,8 @@ export function WeekPanel() {
         <StreakList />
       </div>
       {picked && <CellPicker habit={picked.habit} cell={picked.cell}
-        streak={streaks.data?.find((streak) => streak.habitId === picked.habit.id)?.current}
-        now={now} onClose={() => setPicked(null)} />}
+        streak={pickedStreak?.current}
+        yellowLimit={atYellowLimit(pickedStreak) ? pickedStreak.yellowLimit : undefined} now={now} onClose={() => setPicked(null)} />}
     </div>
   )
 }
