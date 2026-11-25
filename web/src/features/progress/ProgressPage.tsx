@@ -1,4 +1,4 @@
-import { useCallback, useRef } from 'react'
+import { useCallback, useRef, type FocusEvent } from 'react'
 import { useSearchParams } from 'react-router'
 import { SyncStatus } from '../../app/SyncStatus'
 import { eyebrow } from '../../lib/ui'
@@ -14,10 +14,13 @@ export function ProgressPage() {
   const [searchParams, setSearchParams] = useSearchParams()
   const isMonth = searchParams.get('view') === 'month'
   const focusSelected = useRef(false)
-  // Panels remount the toggle (also across their loading states), so refocus the selected button each time after a user switch.
+  // Panels remount the toggle (also across their loading states), so focus the selected button until focus moves elsewhere (a loading panel can remount it more than once).
   const focusOnMount = useCallback((el: HTMLButtonElement | null) => {
     if (el && focusSelected.current) el.focus()
   }, [])
+  const releaseFocus = (e: FocusEvent<HTMLElement>) => {
+    if (!(e.target as HTMLElement).closest('[aria-label="View"]')) focusSelected.current = false
+  }
   const switchTo = (params: Record<string, string>) => {
     focusSelected.current = true
     setSearchParams(params)
@@ -29,7 +32,7 @@ export function ProgressPage() {
     </div>
   )
   return (
-    <section className="max-w-3xl">
+    <section className="max-w-3xl" onFocusCapture={releaseFocus}>
       <h1 className={eyebrow}>Progress</h1>
       <SyncStatus className="mt-1" />
       {isMonth ? <MonthPanel toggle={toggle} /> : <WeekPanel toggle={toggle} />}

@@ -11,7 +11,10 @@ const month: MonthView = { month: '2026-11', distribution: empty, overview: [], 
 
 function api() {
   return stubApi(({ url }) => {
-    if (url.startsWith('/api/stats/week')) return jsonResponse(week)
+    if (url.startsWith('/api/stats/week')) {
+      const start = new URL(url, 'http://x').searchParams.get('start')
+      return jsonResponse(start ? { ...week, start } : week)
+    }
     if (url.startsWith('/api/stats/month')) return jsonResponse(month)
     if (url === '/api/stats/streaks') return jsonResponse([])
     return undefined
@@ -50,6 +53,20 @@ describe('ProgressPage', () => {
     renderWithProviders(<ProgressPage />, { route: '/progress' })
 
     expect(await screen.findByRole('heading', { name: '16 – 22 Nov 2026' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Week' })).not.toHaveFocus()
+  })
+
+  it('focuses the toggle once per switch, not on later navigation', async () => {
+    api()
+    const { user } = renderWithProviders(<ProgressPage />, { route: '/progress?view=month' })
+
+    expect(await screen.findByRole('heading', { name: 'November 2026' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Week' }))
+    expect(await screen.findByRole('heading', { name: '16 – 22 Nov 2026' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Week' })).toHaveFocus()
+
+    await user.click(screen.getByRole('button', { name: 'Next week' }))
+    expect(await screen.findByRole('heading', { name: '23 – 29 Nov 2026' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Week' })).not.toHaveFocus()
   })
 })
