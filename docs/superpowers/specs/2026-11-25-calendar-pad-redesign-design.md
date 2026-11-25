@@ -2,7 +2,7 @@
 
 **Date:** 2026-11-25
 **Status:** Approved through mockups, awaiting spec review
-**Mockups:** `~/Docspace/Chronos/Design Directions/E - Calendar pad (combined)/` (`e-today.png`, `e-week.png`, `e-month.png`, `e-habits.png`, `e-me.png`); source `…/source/e.html`. The mockup is kept in sync with every decision in this spec.
+**Mockups:** `~/Docspace/Chronos/Design Directions/E - Calendar pad (combined)/` (`e-today.png`, `e-week.png`, `e-month.png`, `e-habits.png`, `e-me.png`, `e-icon.png`); source `…/source/e.html`, `icon-a.svg`, `icon-a-small.svg`. The mockup is kept in sync with every decision in this spec.
 
 ## Goal
 
@@ -19,7 +19,8 @@ The redesign changes the look, not what the app does. The only behaviour changes
    - Habit form: "Bare minimum (YELLOW)" → "Minimum"; "Target (GREEN)" → "Target"; "Limit yellows in a row" → "Limit minimums in a row".
    - Any other user-visible "yellow" or "green" text (e.g. Habits page, empty states, the yellow-limit warning).
    - API names, types and code identifiers are not renamed.
-4. **Account streak rule uses a stepper** (− value +, range 1–7) instead of a number input. It still saves with "Save rule".
+4. **The app is renamed "No Reds".** Every user-visible "Chronos" becomes "No Reds": the page `<title>`, the manifest `name` and `short_name`, the wordmark, and the offline error ("Couldn't reach No Reds…"). The repository, package names, code identifiers and the Render URL are unchanged.
+5. **Account streak rule uses a stepper** (− value +, range 1–7) instead of a number input. It still saves with "Save rule".
 
 ## Visual system
 
@@ -62,8 +63,8 @@ Eyebrows: 11–12 px Plex Sans 600, uppercase, 0.22em tracking, `accent`.
 - **Sheet:** `paper`, with a perforated top edge and 2–3 stacked sheet edges below it (box shadows in `paper-2` and `rule-2`). One sheet per screen; no cards inside it.
 - **Structure:** sections are separated by 1 px rules (`rule` between rows, `rule-2` between sections). No rounded boxes, no card backgrounds, no glows.
 - **Tab bar (mobile):** a `paper-2` bar with four text tabs (Today, Progress, Habits, Me) in Plex Sans 600. The active tab is `ink` with a 2 px `accent` underline; inactive tabs are `muted`. Icons are removed. The visible label is the accessible name, so existing tests that find tabs by name keep working.
-- **Desktop (md and up):** the sidebar is removed. The binding strip carries the "Chronos" wordmark (serif) and the same four text tabs. The sheet is centred (max width about 760 px). Today keeps its week and streak side column on lg screens, separated by a vertical rule.
-- **Logo:** the conic-gradient tile is replaced by a serif "Chronos" wordmark. PWA icon image files are out of scope.
+- **Desktop (md and up):** the sidebar is removed. The binding strip carries the "No Reds" wordmark (serif) and the same four text tabs. The sheet is centred (max width about 760 px). Today keeps its week and streak side column on lg screens, separated by a vertical rule.
+- **Logo:** the conic-gradient tile is replaced by the new app icon plus a serif "No Reds" wordmark.
 
 `lib/ui.ts` is rewritten around this system. `card`, `chip` and `cardTitle` are removed. The new helpers are `eyebrow`, `pageTitle` (serif), `rowRule`, `underlineInput`, `inkButton` (ink fill, radius 8), `outlineButton` and `textButton`.
 
@@ -140,16 +141,24 @@ Eyebrows: 11–12 px Plex Sans 600, uppercase, 0.22em tracking, `accent`.
 ### Unmocked surfaces (same language)
 
 - **CellPicker sheet:** a `paper` sheet with a perforated top edge over a dimmed `paper-2` backdrop. The serif habit name and period come first, then ruled option rows ("● Target", "◐ Minimum", "✕ Missed", "Clear") of at least 44 px. Its accessible names, focus trap and closing behaviour are unchanged.
-- **Auth (login and sign-up):** the binding strip and sheet, the serif "Chronos" wordmark, underline inputs, and an ink submit button.
+- **Auth (login and sign-up):** the binding strip and sheet, the app icon and serif "No Reds" wordmark, underline inputs, and an ink submit button.
 - **EmptyState:** a serif title, a muted body, and the action as an `ink` text link with an underline (accessible names unchanged).
 - **WakingNotice, SyncToast and sync status:** small ink-on-paper mono notes with no pill boxes. SyncToast is an `ink` bar with `paper` text.
 - **PullToRefresh:** the indicator uses `ink` and `faint`.
 - **Dialogs:** a `paper` sheet with rules and `ink` / `outline` buttons.
 
+## App icon (`e-icon.png`)
+
+"Pad + run": the top 29% is the `binding` strip with four punched holes in `paper-2` and a perforated lower edge; below it is `paper`, with the run ◐ — ● — ● (Minimum, Target, Target) centred: a half-filled `yellow` dot with a `yellow-ink` outline, then two filled `green` dots, joined by lines in the colour of the mark they lead into.
+
+- Source: `icon-a.svg` (1024 px, full bleed; the platform applies the corner mask) and `icon-a-small.svg` (64 px simplified: two holes, no perforation, bolder marks) for 32 px and smaller.
+- Generated files replace those in `web/public/`: `favicon.svg` (from the small version), `apple-touch-icon.png` (180), `icon-192.png`, `icon-512.png`, and `icon-maskable-512.png` (the artwork scaled to the central 80% safe zone on `paper`).
+
 ## PWA
 
 - `index.html`: `theme-color` becomes `#2c2a27` (binding).
-- `manifest.webmanifest`: `theme_color` becomes `#2c2a27` and `background_color` `#f7f3ea`.
+- `manifest.webmanifest`: `name` and `short_name` become "No Reds", `theme_color` becomes `#2c2a27` and `background_color` `#f7f3ea`.
+- `index.html`: `<title>` becomes "No Reds".
 
 ## Accessibility
 
@@ -164,7 +173,6 @@ Eyebrows: 11–12 px Plex Sans 600, uppercase, 0.22em tracking, `accent`.
 
 - API or data changes.
 - A dark theme.
-- PWA icon images.
 - The marketing landing page.
 
 ## Testing and verification
