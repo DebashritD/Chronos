@@ -12,8 +12,8 @@ test('sign up, create a habit, mark it on Today and see it in Progress', async (
   await page.getByRole('link', { name: 'Create your first habit' }).click()
   await page.getByRole('button', { name: 'New habit' }).click()
   await page.getByLabel('Name').fill('Read')
-  await page.getByLabel('Bare minimum (YELLOW)').fill('1 page')
-  await page.getByLabel('Target (GREEN)').fill('20 pages')
+  await page.getByLabel('Minimum', { exact: true }).fill('1 page')
+  await page.getByLabel('Target', { exact: true }).fill('20 pages')
   await page.getByRole('button', { name: 'Create habit' }).click()
   await expect(page.getByRole('listitem', { name: 'Read' })).toBeVisible()
 

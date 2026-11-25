@@ -290,6 +290,6 @@ describe('WeekPanel', () => {
     await user.click(await screen.findByRole('button', { name: 'Read, Wed 18 Nov, Not marked yet' }))
     await user.click(screen.getByRole('button', { name: /^Minimum done/ }))
 
-    expect(await screen.findByRole('alertdialog', { name: 'Yellow limit reached' })).toBeInTheDocument()
+    expect(await screen.findByRole('alertdialog', { name: 'Minimum limit reached' })).toBeInTheDocument()
   })
 })

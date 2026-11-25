@@ -6,28 +6,28 @@ import type { Habit } from '../../api/types'
 import { frequencyLabel } from '../../lib/cells'
 import { formatDay } from '../../lib/dates'
 import { EmptyState } from '../../app/EmptyState'
+import { Mark } from '../../app/Mark'
 import { useIsNeighbour } from '../../app/neighbour'
-import { card, emptyAction, eyebrow, pageTitle } from '../../lib/ui'
+import { emptyAction, eyebrow, iconButton, pageTitle } from '../../lib/ui'
 import { MOBILE_QUERY, useMediaQuery } from '../../lib/useMediaQuery'
 import { useSession } from '../auth/session'
+import { useStreaks } from '../stats/api'
 import { useCreateHabit, useHabitAction, useHabits, useUpdateHabit, type HabitAction } from './api'
 import { HabitForm } from './HabitForm'
 
 function IconButton({ label, title, onClick, children }: { label: string; title: string; onClick(): void; children: ReactNode }) {
   return (
-    <button type="button" aria-label={label} title={title} onClick={onClick}
-      className="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-surface text-fg transition-transform active:scale-95">
+    <button type="button" aria-label={label} title={title} onClick={onClick} className={iconButton}>
       {children}
     </button>
   )
 }
 
-function Rule({ swatch, term, detail }: { swatch: string; term: string; detail: string }) {
+function Rule({ kind, term, detail }: { kind: 'GREEN' | 'YELLOW'; term: string; detail: string }) {
   return (
-    <div className="flex items-center gap-3 rounded-[14px] bg-surface px-3 py-2.5">
-      <span className={`h-4 w-4 flex-none rounded-[5px] ${swatch}`} aria-hidden="true" />
+    <div className="flex items-center gap-2">
       <dt className="sr-only">{term}</dt>
-      <dd className="min-w-0 text-[15px] break-words text-fg">{detail}</dd>
+      <dd className="flex min-w-0 items-center gap-2 text-[14px] break-words text-ink"><Mark kind={kind} size={11} />{detail}</dd>
     </div>
   )
 }
@@ -39,6 +39,7 @@ export function HabitsPage() {
   const createHabit = useCreateHabit()
   const updateHabit = useUpdateHabit()
   const habitAction = useHabitAction()
+  const streaks = useStreaks()
   const [creating, setCreating] = useState(false)
   const mobile = useMediaQuery(MOBILE_QUERY)
   const neighbour = useIsNeighbour()
@@ -68,31 +69,26 @@ export function HabitsPage() {
     }
     const isArchived = habit.status === 'ARCHIVED'
     const isPaused = habit.status === 'PAUSED'
+    const run = streaks.data?.find((s) => s.habitId === habit.id)?.current
     return (
-      <li key={habit.id} aria-label={habit.name} className={`${card} ${isArchived || isPaused ? 'opacity-60' : ''}`}>
-        <div>
-          <div className="flex flex-wrap items-center gap-2">
-            <h2 className="text-[20px] font-semibold break-words text-fg">{habit.name}</h2>
-            {isPaused && (
-              <span className="rounded-full bg-surface px-2 py-0.5 text-[11px] font-semibold tracking-wide text-muted uppercase">
-                Paused
-              </span>
-            )}
-            {habit.yellowCap && (
-              <span className="rounded-full bg-cell-yellow/15 px-2 py-0.5 text-[11px] font-semibold text-cell-yellow">
-                ≤{me?.maxYellows ?? 2} yellows
-              </span>
-            )}
+      <li key={habit.id} aria-label={habit.name}
+        className={`flex items-start gap-2 border-b border-rule py-4 ${isArchived || isPaused ? 'opacity-50' : ''}`}>
+        <div className="min-w-0 flex-1">
+          <div className="flex flex-wrap items-center gap-3">
+            <h2 className="font-serif text-[27px] leading-tight break-words text-ink">{habit.name}</h2>
+            {isPaused && <span className="stamp -rotate-6 px-1.5 py-0.5 font-mono text-[10px] font-medium tracking-[0.14em] text-accent uppercase">Paused</span>}
           </div>
-          <p className="mt-0.5 text-[13px] text-muted">
-            {frequencyLabel(habit.frequency, habit.intervalDays)} · since {formatDay(habit.startDate)}
+          <p className="mt-1 font-mono text-[12px] text-muted">
+            {frequencyLabel(habit.frequency, habit.intervalDays).toLowerCase()} · since {formatDay(habit.startDate)}
+            {!isArchived && run !== undefined && <> · <b className="font-medium text-ink">{run}</b> run</>}
+            {habit.yellowCap && ` · ≤${me?.maxYellows ?? 2} minimums`}
           </p>
+          <dl className="mt-2 grid gap-1">
+            <Rule kind="GREEN" term="Target" detail={habit.targetText} />
+            <Rule kind="YELLOW" term="Minimum" detail={habit.minText} />
+          </dl>
         </div>
-        <dl className="mt-4 grid gap-2">
-          <Rule swatch="bg-cell-green" term="Green" detail={habit.targetText} />
-          <Rule swatch="bg-cell-yellow" term="Yellow" detail={habit.minText} />
-        </dl>
-        <div className="mt-4 flex justify-end gap-2">
+        <div className="flex flex-none">
           {isArchived ? (
             <IconButton label={`Unarchive ${habit.name}`} title="Restore" onClick={() => void act(habit.id, 'unarchive')}>
               <ArchiveRestore size={18} aria-hidden="true" />
@@ -121,18 +117,21 @@ export function HabitsPage() {
     )
   }
 
-  const list = 'grid grid-cols-1 gap-3'
+  const list = 'flex flex-col'
   const newHabitButton = (
     <button type="button" aria-label="New habit" onClick={() => setCreating(true)}
-      className="fixed right-5 bottom-[calc(5.5rem+env(safe-area-inset-bottom))] z-10 flex h-14 w-14 items-center justify-center rounded-full bg-accent text-bg shadow-lg shadow-black/40 md:static md:h-auto md:w-auto md:gap-2 md:rounded-[14px] md:px-4 md:py-2.5 md:text-sm md:font-semibold md:shadow-none">
-      <Plus size={24} strokeWidth={2.5} aria-hidden="true" />
-      <span className="hidden md:inline">New habit</span>
+      className="fixed right-5 bottom-[calc(4.75rem+env(safe-area-inset-bottom))] z-10 inline-flex h-12 items-center gap-2 rounded-full bg-ink px-5 text-[15px] font-semibold text-paper shadow-[0_6px_18px_rgb(29_27_24/0.25)] md:static md:h-11 md:shadow-none">
+      <Plus size={18} strokeWidth={2.5} aria-hidden="true" />
+      New habit
     </button>
   )
   return (
     <section className="max-w-3xl pb-20 md:pb-0">
       <div className="mb-6 flex items-end justify-between">
-        <h1 className={pageTitle}>Habits</h1>
+        <div>
+          <p className={eyebrow}>Your pad</p>
+          <h1 className={pageTitle}>Habits</h1>
+        </div>
         {!creating && !mobile && newHabitButton}
       </div>
       {/* On a phone the button floats on the body: a swiping track's transform would otherwise carry it along. */}
@@ -155,7 +154,7 @@ export function HabitsPage() {
       {current.data && current.data.length > 0 && <ul className={list}>{current.data.map(row)}</ul>}
       {archived.data && archived.data.length > 0 && (
         <details className="mt-8">
-          <summary className={`${eyebrow} cursor-pointer`}>Archived ({archived.data.length})</summary>
+          <summary className={`${eyebrow} flex min-h-11 cursor-pointer items-center text-muted`}>Archived ({archived.data.length})</summary>
           <ul className={`${list} mt-3`}>{archived.data.map(row)}</ul>
         </details>
       )}

@@ -445,9 +445,9 @@ describe('TodayPage', () => {
     await waitFor(() => expect(streaksFetches()).toBe(1))
     await user.click(within(stretch).getByRole('button', { name: 'Minimum' }))
 
-    const dialog = await screen.findByRole('alertdialog', { name: 'Yellow limit reached' })
+    const dialog = await screen.findByRole('alertdialog', { name: 'Minimum limit reached' })
     expect(streaksFetches()).toBe(2)
-    expect(dialog).toHaveTextContent("You've hit 2 yellows in a row on Stretch. Next time go green, or the streak starts over.")
+    expect(dialog).toHaveTextContent("You've hit 2 minimums in a row on Stretch. Next time hit the target, or the streak starts over.")
     await user.click(within(dialog).getByRole('button', { name: 'Got it' }))
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
     expect(stretch.querySelector('[data-stamp]')).not.toBeNull()
@@ -474,7 +474,7 @@ describe('TodayPage', () => {
     await user.click(within(stretch).getByRole('button', { name: 'Minimum' }))
     act(() => onlineManager.setOnline(true))
 
-    expect(await screen.findByRole('alertdialog', { name: 'Yellow limit reached' })).toHaveTextContent('on Run')
+    expect(await screen.findByRole('alertdialog', { name: 'Minimum limit reached' })).toHaveTextContent('on Run')
   })
 
   it('does not warn again when a yellow is re-saved on a habit already at the limit', async () => {
@@ -520,7 +520,7 @@ describe('TodayPage', () => {
     expect(minimum).toHaveTextContent('restarts streak')
     await user.click(minimum)
 
-    expect(await screen.findByText('Fresh start on Stretch: that was yellow 3 in a row, so the streak is back to 1.')).toBeInTheDocument()
+    expect(await screen.findByText('Fresh start on Stretch: that was minimum 3 in a row, so the streak is back to 1.')).toBeInTheDocument()
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()
   })
 

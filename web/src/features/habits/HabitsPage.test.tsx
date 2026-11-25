@@ -19,6 +19,8 @@ function api(overrides: (r: ApiRequest) => Response | undefined = () => undefine
     const custom = overrides(r)
     if (custom) return custom
     if (r.method === 'GET' && r.url === '/api/habits') return jsonResponse([read, run])
+    if (r.method === 'GET' && r.url === '/api/stats/streaks')
+      return jsonResponse([{ habitId: 1, name: 'Read', current: 31, best: 40, yellowRun: 0, yellowLimit: 2 }])
     if (r.method === 'GET' && r.url === '/api/habits?status=ARCHIVED') return jsonResponse([piano])
     return undefined
   })
@@ -30,16 +32,23 @@ describe('HabitsPage', () => {
     renderWithProviders(<HabitsPage />, { route: '/habits' })
 
     const readRow = await screen.findByRole('listitem', { name: 'Read' })
-    expect(within(readRow).getByText('Daily · since Sun 1 Nov')).toBeInTheDocument()
-    expect(within(readRow).getByText('Green').nextElementSibling).toHaveTextContent('20 pages')
-    expect(within(readRow).getByText('Yellow').nextElementSibling).toHaveTextContent('1 page')
-    expect(within(screen.getByRole('listitem', { name: 'Read' })).getByText('≤2 yellows')).toBeInTheDocument()
+    expect(within(readRow).getByText(/daily · since Sun 1 Nov/)).toBeInTheDocument()
+    expect(within(readRow).getByText('Target').nextElementSibling).toHaveTextContent('20 pages')
+    expect(within(readRow).getByText('Minimum').nextElementSibling).toHaveTextContent('1 page')
+    expect(within(screen.getByRole('listitem', { name: 'Read' })).getByText(/≤2 minimums/)).toBeInTheDocument()
     const runRow = screen.getByRole('listitem', { name: 'Run' })
-    expect(within(runRow).getByText('Every 3 days · since Mon 2 Nov')).toBeInTheDocument()
+    expect(within(runRow).getByText(/every 3 days · since Mon 2 Nov/)).toBeInTheDocument()
     expect(within(runRow).getByText('Paused')).toBeInTheDocument()
     expect(within(runRow).getByRole('button', { name: 'Resume Run' })).toBeInTheDocument()
     expect(await screen.findByText('Archived (1)')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Unarchive Piano' })).toBeInTheDocument()
+  })
+
+  it('shows an active habit’s run from the streaks', async () => {
+    api()
+    renderWithProviders(<HabitsPage />, { route: '/habits' })
+
+    expect(await screen.findByRole('listitem', { name: 'Read' })).toHaveTextContent('31 run')
   })
 
   it('creates an every-N-days habit', async () => {
@@ -48,8 +57,8 @@ describe('HabitsPage', () => {
 
     await user.click(await screen.findByRole('button', { name: 'New habit' }))
     await user.type(screen.getByLabelText('Name'), 'Run')
-    await user.type(screen.getByLabelText('Bare minimum (YELLOW)'), '1 km')
-    await user.type(screen.getByLabelText('Target (GREEN)'), '5 km')
+    await user.type(screen.getByLabelText('Minimum'), '1 km')
+    await user.type(screen.getByLabelText('Target'), '5 km')
     await user.selectOptions(screen.getByLabelText('Frequency'), 'EVERY_N_DAYS')
     await user.clear(screen.getByLabelText('Every how many days?'))
     await user.type(screen.getByLabelText('Every how many days?'), '3')
@@ -92,7 +101,7 @@ describe('HabitsPage', () => {
     expect(screen.queryByLabelText('Frequency')).not.toBeInTheDocument()
     await user.clear(screen.getByLabelText('Name'))
     await user.type(screen.getByLabelText('Name'), 'Read more')
-    await user.click(screen.getByLabelText('Limit yellows in a row'))
+    await user.click(screen.getByLabelText('Limit minimums in a row'))
     await user.click(screen.getByRole('button', { name: 'Save' }))
 
     expect(await screen.findByRole('button', { name: 'Edit Read' })).toBeInTheDocument()
