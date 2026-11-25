@@ -6,7 +6,7 @@ import { cellClass, STATE_LABEL } from '../../lib/cells'
 import { addMonths, formatDay, formatMonth } from '../../lib/dates'
 import { card, cardTitle, pillButton } from '../../lib/ui'
 import { useMonth } from '../stats/api'
-import { DistributionDonut } from '../stats/DistributionDonut'
+import { DistributionBar } from '../stats/DistributionBar'
 import { CalendarGrid, scoreClass } from './CalendarGrid'
 
 const iconButton = 'flex h-9 w-9 flex-none items-center justify-center rounded-full bg-card text-fg'
@@ -69,7 +69,7 @@ export function MonthPanel({ toggle }: { toggle: ReactNode }) {
           </div>
         </section>
         <div className="flex flex-col gap-4">
-          <DistributionDonut title="Distribution" distribution={data.distribution} />
+          <DistributionBar title="Distribution" caption={`${data.distribution.total} due`} distribution={data.distribution} />
           {data.habits.length > 0 && (
             <div className={`${card} grid grid-cols-1 gap-5 sm:grid-cols-2`}>
               {data.habits.map((habit) => {

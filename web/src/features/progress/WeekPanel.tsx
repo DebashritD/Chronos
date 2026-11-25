@@ -9,7 +9,7 @@ import { useNow } from '../../lib/useNow'
 import { atYellowLimit } from '../../lib/yellowLimit'
 import { CellPicker } from '../checkin/CellPicker'
 import { useStreaks, useWeek } from '../stats/api'
-import { DistributionDonut } from '../stats/DistributionDonut'
+import { DistributionBar } from '../stats/DistributionBar'
 import { StreakList } from '../stats/StreakList'
 import { WeekTiles } from './WeekTiles'
 
@@ -57,10 +57,9 @@ export function WeekPanel({ toggle }: { toggle: ReactNode }) {
         <WeekTiles start={data.start} today={data.today} habits={data.habits}
           onPick={(habit, cell) => setPicked({ habit, cell })} />
       )}
-      <div>
-        <DistributionDonut title={start ? 'Distribution' : 'This week'} distribution={data.distribution} />
-        <StreakList />
-      </div>
+      <DistributionBar title={start ? 'Distribution' : 'This week'} caption={`${data.distribution.total} due${start ? '' : ' so far'}`}
+        distribution={data.distribution} />
+      <StreakList />
       {picked && <CellPicker habit={picked.habit} cell={picked.cell}
         streak={pickedStreak?.current}
         yellowLimit={atYellowLimit(pickedStreak) ? pickedStreak.yellowLimit : undefined} now={now} onClose={() => setPicked(null)} />}

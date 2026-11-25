@@ -29,7 +29,7 @@ test('sign up, create a habit, mark it on Today and see it in Progress', async (
   await tabs.getByRole('link', { name: 'Progress' }).click()
   const today = page.getByRole('button', { name: /^Read, / }).and(page.locator('[aria-current="date"]'))
   await expect(today).toHaveAccessibleName(/Target hit$/)
-  await expect(page.getByRole('listitem', { name: 'Green 1' })).toBeVisible()
+  await expect(page.getByRole('listitem', { name: 'Target 1' })).toBeVisible()
 
   await page.getByRole('button', { name: 'Month', exact: true }).click()
   await expect(page.getByRole('img', { name: /^Read, .*, Target hit$/ })).toBeVisible()

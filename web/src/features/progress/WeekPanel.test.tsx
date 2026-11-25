@@ -71,10 +71,12 @@ describe('WeekPanel', () => {
     expect(screen.getByRole('heading', { level: 3, name: 'Read' }).closest('li')).toContainElement(
       screen.getByRole('button', { name: 'Read, Mon 16 Nov, Target hit' }))
     const distribution = screen.getByRole('region', { name: 'This week' })
-    expect(within(distribution).getByRole('listitem', { name: 'Green 1' })).toBeInTheDocument()
-    expect(within(distribution).getByRole('listitem', { name: 'Red 1' })).toBeInTheDocument()
+    expect(within(distribution).getByRole('listitem', { name: 'Target 1' })).toBeInTheDocument()
+    expect(within(distribution).getByRole('listitem', { name: 'Missed 1' })).toBeInTheDocument()
+    expect(within(distribution).getByText('50%')).toBeInTheDocument()
     const streakList = screen.getByRole('region', { name: 'Streaks' })
-    expect(await within(streakList).findByRole('listitem', { name: 'Read' })).toHaveTextContent('0 · best 9')
+    expect(await within(streakList).findByRole('listitem', { name: 'Read' })).toHaveClass('opacity-45')
+    expect(within(streakList).getByText('best 9')).toBeInTheDocument()
   })
 
   it("marks today's cells", async () => {

@@ -56,7 +56,7 @@ describe('MonthPanel', () => {
     renderWithProviders(<MonthPanel toggle={null} />, { route: '/progress?view=month' })
 
     const distribution = await screen.findByRole('region', { name: 'Distribution' })
-    expect(within(distribution).getByRole('listitem', { name: 'Green 2' })).toBeInTheDocument()
+    expect(within(distribution).getByRole('listitem', { name: 'Target 2' })).toBeInTheDocument()
     const read = screen.getByRole('region', { name: 'Read' })
     expect(read).toHaveTextContent('50% green')
     expect(within(read).getByRole('img', { name: 'Read, Sun 1 Nov, Target hit' })).toHaveClass('bg-cell-green')
