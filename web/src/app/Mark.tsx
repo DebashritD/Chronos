@@ -24,5 +24,3 @@ export function Mark({ kind, dim = false, size = 16 }: { kind: MarkKind; dim?: b
     </svg>
   )
 }
-
-export default Mark
