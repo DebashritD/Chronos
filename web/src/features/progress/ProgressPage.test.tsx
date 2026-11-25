@@ -1,4 +1,4 @@
-import { screen, within } from '@testing-library/react'
+import { fireEvent, screen, within } from '@testing-library/react'
 import { describe, expect, it } from 'vitest'
 import type { MonthView, WeekView } from '../../api/types'
 import { jsonResponse, stubApi } from '../../test/http'
@@ -66,6 +66,22 @@ describe('ProgressPage', () => {
     expect(screen.getByRole('button', { name: 'Week' })).toHaveFocus()
 
     await user.click(screen.getByRole('button', { name: 'Next week' }))
+    expect(await screen.findByRole('heading', { name: '23 – 29 Nov 2026' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Week' })).not.toHaveFocus()
+  })
+
+  it('does not refocus the toggle after pointer navigation that leaves focus in place (Safari)', async () => {
+    api()
+    const { user } = renderWithProviders(<ProgressPage />, { route: '/progress?view=month' })
+
+    expect(await screen.findByRole('heading', { name: 'November 2026' })).toBeInTheDocument()
+    await user.click(screen.getByRole('button', { name: 'Week' }))
+    expect(await screen.findByRole('heading', { name: '16 – 22 Nov 2026' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Week' })).toHaveFocus()
+
+    const next = screen.getByRole('button', { name: 'Next week' })
+    fireEvent.pointerDown(next)
+    fireEvent.click(next)
     expect(await screen.findByRole('heading', { name: '23 – 29 Nov 2026' })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Week' })).not.toHaveFocus()
   })
