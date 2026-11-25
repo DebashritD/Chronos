@@ -70,7 +70,7 @@ export function HabitForm({ habit, submitLabel, onSubmit, onCancel }: HabitFormP
           <div className={field}>
             <label htmlFor="habit-frequency" className={label}>Frequency</label>
             <select id="habit-frequency" value={frequency} onChange={(e) => setFrequency(e.target.value as Frequency)}
-              className={`${underlineInput} appearance-none bg-[length:12px] pr-6`}>
+              className={`${underlineInput} select-chevron appearance-none bg-[length:12px] bg-no-repeat bg-[position:right_center] pr-6`}>
               <option value="DAILY">Daily</option>
               <option value="EVERY_N_DAYS">Every N days</option>
               <option value="WEEKLY">Weekly (once per Mon–Sun week)</option>
