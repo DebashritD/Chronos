@@ -84,14 +84,27 @@ describe('HabitsPage', () => {
     })
   })
 
+  it('opens New habit in a sheet that Escape closes, handing focus back', async () => {
+    api()
+    const { user } = renderWithProviders(<HabitsPage />, { route: '/habits' })
+
+    await user.click(await screen.findByRole('button', { name: 'New habit' }))
+    const sheet = screen.getByRole('dialog', { name: 'New habit' })
+    expect(sheet).toHaveAttribute('aria-modal', 'true')
+    expect(within(sheet).getByLabelText('Name')).toHaveFocus()
+
+    await user.keyboard('{Escape}')
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'New habit' })).toHaveFocus()
+  })
+
   it('opens the form from the empty state', async () => {
     api((r) => (r.method === 'GET' ? jsonResponse([]) : undefined))
     const { user } = renderWithProviders(<HabitsPage />, { route: '/habits' })
 
     await user.click(await screen.findByRole('button', { name: 'Create your first habit' }))
 
-    expect(screen.getByLabelText('Name')).toBeInTheDocument()
-    expect(screen.queryByRole('region', { name: 'No habits yet' })).not.toBeInTheDocument()
+    expect(within(screen.getByRole('dialog', { name: 'New habit' })).getByLabelText('Name')).toBeInTheDocument()
   })
 
   it('only asks for an interval for every-N-days habits', async () => {

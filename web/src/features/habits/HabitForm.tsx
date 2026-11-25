@@ -10,9 +10,11 @@ interface HabitFormProps {
   submitLabel: string
   onSubmit(values: NewHabit): Promise<unknown>
   onCancel(): void
+  /** Drop the ruled frame, for when the form sits in its own sheet. */
+  bare?: boolean
 }
 
-export function HabitForm({ habit, submitLabel, onSubmit, onCancel }: HabitFormProps) {
+export function HabitForm({ habit, submitLabel, onSubmit, onCancel, bare = false }: HabitFormProps) {
   const { me } = useSession()
   const yellowCapId = useId()
   const [name, setName] = useState(habit?.name ?? '')
@@ -49,7 +51,7 @@ export function HabitForm({ habit, submitLabel, onSubmit, onCancel }: HabitFormP
   const field = 'mb-3 flex flex-col gap-1.5'
   const label = 'text-[11px] font-semibold tracking-[0.22em] text-muted uppercase'
   return (
-    <form onSubmit={(event) => void handleSubmit(event)} className="mb-6 border-b border-rule-2 pb-6">
+    <form onSubmit={(event) => void handleSubmit(event)} className={bare ? undefined : 'mb-6 border-b border-rule-2 pb-6'}>
       <div className={field}>
         <label htmlFor="habit-name" className={label}>Name</label>
         <input id="habit-name" required maxLength={80} value={name} onChange={(e) => setName(e.target.value)}

@@ -5,6 +5,7 @@ import { messageFor } from '../../api/errors'
 import type { Habit } from '../../api/types'
 import { frequencyLabel } from '../../lib/cells'
 import { formatDayMonth } from '../../lib/dates'
+import { BottomSheet } from '../../app/BottomSheet'
 import { EmptyState } from '../../app/EmptyState'
 import { Mark } from '../../app/Mark'
 import { useIsNeighbour } from '../../app/neighbour'
@@ -134,20 +135,22 @@ export function HabitsPage() {
           <p className={eyebrow}>Your pad</p>
           <h1 className={pageTitle}>Habits</h1>
         </div>
-        {!creating && !mobile && newHabitButton}
+        {!mobile && newHabitButton}
       </div>
       {/* On a phone the button floats on the body: a swiping track's transform would otherwise carry it along. */}
-      {!creating && mobile && !neighbour && createPortal(newHabitButton, document.body)}
+      {mobile && !neighbour && createPortal(newHabitButton, document.body)}
       {creating && (
-        <HabitForm submitLabel="Create habit" onCancel={() => setCreating(false)}
-          onSubmit={async (values) => {
-            await createHabit.mutateAsync(values)
-            setCreating(false)
-          }} />
+        <BottomSheet title="New habit" onClose={() => setCreating(false)}>
+          <HabitForm bare submitLabel="Create habit" onCancel={() => setCreating(false)}
+            onSubmit={async (values) => {
+              await createHabit.mutateAsync(values)
+              setCreating(false)
+            }} />
+        </BottomSheet>
       )}
       {error && <p role="alert" className="mb-3 text-sm text-cell-red">{error}</p>}
       {current.isPending && <p className="text-muted">Loading…</p>}
-      {current.data?.length === 0 && !creating && (
+      {current.data?.length === 0 && (
         <EmptyState title="No habits yet"
           action={<button type="button" className={inkButton} onClick={() => setCreating(true)}>Create your first habit</button>}>
           Start small: a minimum you can do on your worst day, and a target for your best.
