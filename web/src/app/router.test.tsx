@@ -16,9 +16,9 @@ describe('AppRouter', () => {
     stubApi(({ url }) => (url === '/api/auth/me' ? jsonResponse({ username: 'bob', timezone: 'UTC' }) : undefined))
     renderWithProviders(<AppRouter />, { route: '/', path: '/*', me: 'fetch' })
 
-    expect(await screen.findByText('bob')).toBeInTheDocument()
+    expect(await screen.findByRole('navigation', { name: 'Tabs' })).toBeInTheDocument()
     // Both navs are in the DOM (CSS hides one per breakpoint).
-    for (const name of ['Today', 'Progress', 'Habits', 'Account']) {
+    for (const name of ['Today', 'Progress', 'Habits', 'Me']) {
       expect(screen.getAllByRole('link', { name })).toHaveLength(2)
     }
     expect(screen.getByRole('navigation', { name: 'Tabs' })).toBeInTheDocument()
@@ -29,7 +29,7 @@ describe('AppRouter', () => {
     stubApi(() => undefined)
     renderWithProviders(<AppRouter />, { route: '/login', path: '/*' })
 
-    expect(await screen.findByText('bob')).toBeInTheDocument()
+    expect(await screen.findByRole('navigation', { name: 'Tabs' })).toBeInTheDocument()
     expect(screen.queryByRole('heading', { name: 'Log in' })).not.toBeInTheDocument()
   })
 })

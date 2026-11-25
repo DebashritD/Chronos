@@ -1,13 +1,11 @@
-import { AccountIcon, HabitsIcon, ProgressIcon, TodayIcon, type TabIcon } from './TabIcons'
+export interface Tab { to: string; label: string; end: boolean }
 
-export interface Tab { to: string; label: string; icon: TabIcon; end: boolean }
-
-/** Order of the sidebar, the tab bar, and tab swipes. */
+/** Order of the top nav, the tab bar, and tab swipes. */
 export const TABS: readonly Tab[] = [
-  { to: '/', label: 'Today', icon: TodayIcon, end: true },
-  { to: '/progress', label: 'Progress', icon: ProgressIcon, end: false },
-  { to: '/habits', label: 'Habits', icon: HabitsIcon, end: false },
-  { to: '/settings', label: 'Account', icon: AccountIcon, end: false },
+  { to: '/', label: 'Today', end: true },
+  { to: '/progress', label: 'Progress', end: false },
+  { to: '/habits', label: 'Habits', end: false },
+  { to: '/settings', label: 'Me', end: false },
 ]
 
 /** −1 when the path isn't a tab. */

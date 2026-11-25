@@ -14,7 +14,7 @@ describe('messageFor', () => {
   })
 
   it('explains network failures', () => {
-    expect(messageFor(new TypeError('Failed to fetch'))).toBe("Couldn't reach Chronos. Check your connection and try again.")
+    expect(messageFor(new TypeError('Failed to fetch'))).toBe("Couldn't reach No Reds. Check your connection and try again.")
   })
 
   it('maps known codes to friendly copy', () => {

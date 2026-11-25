@@ -23,7 +23,7 @@ const MESSAGES_BY_CODE: Record<string, string> = {
 }
 
 const FALLBACK_MESSAGE = 'Something went wrong. Try again in a moment.'
-const OFFLINE_MESSAGE = "Couldn't reach Chronos. Check your connection and try again."
+const OFFLINE_MESSAGE = "Couldn't reach No Reds. Check your connection and try again."
 
 const FIELD_LABELS: Record<string, string> = {
   username: 'Username',

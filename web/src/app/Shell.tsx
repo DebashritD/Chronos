@@ -1,66 +1,46 @@
 import { NavLink } from 'react-router'
-import { useSession } from '../features/auth/session'
 import { Logo } from './Logo'
 import { SwipeTabs } from './SwipeTabs'
 import { TABS } from './tabs'
 import { WakingNotice } from './WakingNotice'
 import { SyncToast } from './SyncToast'
 
-function sideClass({ isActive }: { isActive: boolean }): string {
-  return `flex items-center gap-3 rounded-xl px-3 py-2.5 text-[15px] font-medium transition-colors ${
-    isActive ? 'bg-surface text-fg' : 'text-muted hover:text-fg'
+function topTabClass({ isActive }: { isActive: boolean }): string {
+  return `flex h-full items-center border-b-2 text-[14px] font-semibold transition-colors ${
+    isActive ? 'border-accent text-paper' : 'border-transparent text-paper/65 hover:text-paper'
   }`
 }
 
-function tabClass({ isActive }: { isActive: boolean }): string {
-  return `flex flex-1 items-center justify-center ${isActive ? 'text-accent' : 'text-dim'}`
-}
-
-/** Desktop: fixed sidebar with a user chip. Mobile (< 768px): bottom tab bar. Logout lives on Account. */
+/**
+ * The pad: a dark binding on top (wordmark and tabs on desktop, punched holes on phones), one paper sheet below,
+ * and on phones a text tab bar at the bottom. Logout lives on Me.
+ */
 export function Shell() {
-  const { me } = useSession()
-
   return (
-    <div className="min-h-screen bg-bg text-fg md:flex">
-      <aside className="sticky top-0 hidden h-screen w-60 flex-none flex-col border-r border-line px-4 py-6 md:flex">
-        <div className="mb-8 px-2"><Logo /></div>
-        <nav aria-label="Primary" className="flex flex-col gap-1">
-          {TABS.map(({ to, label, icon: Icon, end }) => (
-            <NavLink key={to} to={to} end={end} className={sideClass}>
-              {({ isActive }) => (
-                <>
-                  <Icon size={20} active={isActive} />
-                  {label}
-                </>
-              )}
-            </NavLink>
-          ))}
-        </nav>
-        <div className="mt-auto flex items-center gap-3 rounded-2xl bg-card p-3">
-          <span aria-hidden="true"
-            className="flex h-9 w-9 flex-none items-center justify-center rounded-full bg-accent text-sm font-bold text-bg">
-            {me?.username.charAt(0).toUpperCase()}
-          </span>
-          <span className="min-w-0">
-            <span className="block truncate text-sm font-semibold text-fg">{me?.username}</span>
-            <span className="block truncate text-xs text-muted">{me?.timezone}</span>
-          </span>
+    <div className="min-h-screen bg-paper-2 text-ink">
+      <header className="binding sticky top-0 z-10 pt-[env(safe-area-inset-top)] md:bg-none">
+        <div className="mx-auto flex h-9 max-w-[1080px] items-center px-6 md:h-14 md:px-10">
+          <span className="hidden text-paper md:block"><Logo /></span>
+          <nav aria-label="Primary" className="ml-auto hidden h-full gap-8 md:flex">
+            {TABS.map(({ to, label, end }) => (
+              <NavLink key={to} to={to} end={end} className={topTabClass}>{label}</NavLink>
+            ))}
+          </nav>
         </div>
-      </aside>
-      <main className="mx-auto w-full max-w-6xl flex-1 px-5 pt-6 pb-[calc(5.5rem+env(safe-area-inset-bottom))] max-md:flex max-md:min-h-dvh max-md:flex-col md:px-10 md:pt-10 md:pb-10">
+      </header>
+      <main className="perforated sheet-edges mx-auto w-full max-w-[1080px] bg-paper px-6 pt-7 pb-[calc(5.5rem+env(safe-area-inset-bottom))] max-md:flex max-md:min-h-[calc(100dvh-2.25rem)] max-md:flex-col md:mb-10 md:px-10 md:pt-10 md:pb-12">
         <SwipeTabs />
       </main>
       <WakingNotice />
       <SyncToast />
       <nav aria-label="Tabs"
-        className="fixed inset-x-0 bottom-0 z-10 flex h-[calc(4rem+env(safe-area-inset-bottom))] border-t border-line bg-bg/90 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl md:hidden">
-        {TABS.map(({ to, label, icon: Icon, end }) => (
-          <NavLink key={to} to={to} end={end} className={tabClass}>
+        className="fixed inset-x-0 bottom-0 z-10 flex h-[calc(3.75rem+env(safe-area-inset-bottom))] border-t border-rule-2 bg-paper-2 pb-[env(safe-area-inset-bottom)] md:hidden">
+        {TABS.map(({ to, label, end }) => (
+          <NavLink key={to} to={to} end={end} className="flex flex-1 items-center justify-center">
             {({ isActive }) => (
-              <>
-                <Icon size={26} active={isActive} />
-                <span className="sr-only">{label}</span>
-              </>
+              <span className={`border-b-2 pb-1 text-[13px] font-semibold ${isActive ? 'border-accent text-ink' : 'border-transparent text-muted'}`}>
+                {label}
+              </span>
             )}
           </NavLink>
         ))}
