@@ -89,7 +89,7 @@ describe('AccountPage', () => {
     expect(screen.getByLabelText('Timezone')).toHaveValue(browserTimezone())
     await user.click(screen.getByRole('button', { name: 'Save timezone' }))
 
-    expect(await screen.findByText('Timezone saved')).toBeInTheDocument()
+    expect(await screen.findByText('Timezone saved')).toHaveAttribute('role', 'status')
     expect(requests(fetchMock)).toEqual([
       { method: 'PUT', url: '/api/auth/me', body: { timezone: browserTimezone() } },
     ])
@@ -105,7 +105,7 @@ describe('AccountPage', () => {
     await user.type(screen.getByLabelText('New password'), 'new-password')
     await user.click(screen.getByRole('button', { name: 'Change password' }))
 
-    expect(await screen.findByText('Password changed')).toBeInTheDocument()
+    expect(await screen.findByText('Password changed')).toHaveAttribute('role', 'status')
     expect(screen.getByLabelText('Current password')).toHaveValue('')
     expect(requests(fetchMock)[0].body).toEqual({ currentPassword: 'old-password', newPassword: 'new-password' })
   })
@@ -132,7 +132,7 @@ describe('AccountPage', () => {
     await user.click(screen.getByRole('button', { name: 'More' }))
     await user.click(screen.getByRole('button', { name: 'Save streak rule' }))
 
-    expect(await screen.findByText('Streak rule saved')).toBeInTheDocument()
+    expect(await screen.findByText('Streak rule saved')).toHaveAttribute('role', 'status')
     expect(requests(fetchMock)).toContainEqual({ method: 'PUT', url: '/api/auth/me', body: { maxYellows: 3 } })
   })
 
