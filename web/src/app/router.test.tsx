@@ -34,6 +34,24 @@ describe('AppRouter', () => {
     expect(screen.queryByRole('heading', { name: 'Log in' })).not.toBeInTheDocument()
   })
 
+  it('sends users who have not finished the intro to /welcome', async () => {
+    stubApi(({ url }) => (url === '/api/auth/me' ? jsonResponse({ username: 'bob', timezone: 'UTC', maxYellows: 2, onboarded: false }) : undefined))
+    renderWithProviders(<AppRouter />, { route: '/progress', path: '/*', me: 'fetch' })
+
+    expect(await screen.findByRole('heading', { name: 'Aim for no reds, not perfect days.' })).toBeInTheDocument()
+    expect(screen.queryByRole('navigation', { name: 'Tabs' })).not.toBeInTheDocument()
+  })
+
+  it('sends onboarded users from /welcome to Today, unless replaying', async () => {
+    stubApi(() => undefined)
+    const first = renderWithProviders(<AppRouter />, { route: '/welcome', path: '/*' })
+    expect(await screen.findByRole('navigation', { name: 'Tabs' })).toBeInTheDocument()
+    first.unmount()
+
+    renderWithProviders(<AppRouter />, { route: '/welcome?replay', path: '/*' })
+    expect(await screen.findByRole('heading', { name: 'Aim for no reds, not perfect days.' })).toBeInTheDocument()
+  })
+
   it('marks Me as the current tab on Manage habits', async () => {
     stubApi(() => undefined)
     renderWithProviders(<AppRouter />, { route: '/habits', path: '/*' })

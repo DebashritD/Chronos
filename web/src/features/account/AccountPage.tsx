@@ -7,7 +7,7 @@ import { api } from '../../api/client'
 import { messageFor } from '../../api/errors'
 import type { Me } from '../../api/types'
 import { useOnline } from '../../lib/useOnline'
-import { eyebrow, inkButton, outlineButton, section, underlineInput } from '../../lib/ui'
+import { eyebrow, inkButton, outlineButton, section, textButton, underlineInput } from '../../lib/ui'
 import { browserTimezone, useSession } from '../auth/session'
 import { useHabits } from '../habits/api'
 import { NewHabitSheet } from '../habits/NewHabitSheet'
@@ -113,6 +113,7 @@ export function AccountPage() {
           <button type="button" onClick={() => setCreating(true)} className={`${inkButton} flex-1`}><Plus size={18} strokeWidth={2.5} aria-hidden="true" />New habit</button>
           <Link to="/habits" className={`${outlineButton} flex-1`}>Manage habits</Link>
         </div>
+        <Link to="/welcome?replay" className={`${textButton} mt-2`}>Replay intro</Link>
       </section>
       {creating && <NewHabitSheet onClose={() => setCreating(false)} />}
       <form className={section} onSubmit={(event) => void saveStreakRule(event)}>

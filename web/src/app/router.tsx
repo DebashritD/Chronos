@@ -5,17 +5,22 @@ import { LoginPage } from '../features/auth/LoginPage'
 import { useSession } from '../features/auth/session'
 import { SignupPage } from '../features/auth/SignupPage'
 import { HabitsPage } from '../features/habits/HabitsPage'
+import { WelcomePage } from '../features/onboarding/WelcomePage'
 import { ProgressPage } from '../features/progress/ProgressPage'
 import { TasksPage } from '../features/tasks/TasksPage'
 import { TodayPage } from '../features/today/TodayPage'
 import { NotFound } from './NotFound'
 import { Shell } from './Shell'
 
-/** Renders nothing during the startup session check, so a reload doesn't flash /login. */
-function RequireAuth({ children }: { children: ReactNode }) {
+/**
+ * Renders nothing during the startup session check, so a reload doesn't flash /login. Until the intro is done,
+ * the app's pages send the user to /welcome.
+ */
+function RequireAuth({ children, intro = false }: { children: ReactNode; intro?: boolean }) {
   const { me, checking } = useSession()
   if (checking) return null
   if (!me) return <Navigate to="/login" replace />
+  if (!intro && me.onboarded === false) return <Navigate to="/welcome" replace />
   return <>{children}</>
 }
 
@@ -31,6 +36,7 @@ export function AppRouter() {
     <Routes>
       <Route path="/login" element={<GuestOnly><LoginPage /></GuestOnly>} />
       <Route path="/signup" element={<GuestOnly><SignupPage /></GuestOnly>} />
+      <Route path="/welcome" element={<RequireAuth intro><WelcomePage /></RequireAuth>} />
       <Route element={<RequireAuth><Shell /></RequireAuth>}>
         <Route path="/" element={<TodayPage />} />
         <Route path="/tasks" element={<TasksPage />} />

@@ -288,6 +288,9 @@ A full-width rounded bar split Target / Minimum / Missed, with the unmarked shar
 ### Daily Score Calendar
 A seven-column wall calendar of 34 px circles with 15 px display numerals in their score colour (see Colors); unmarked, today and future days are empty rings.
 
+### Onboarding (/welcome)
+Six screens on a single sheet under the binding, with no tab bar. The top row has dots (the current one is an 18px ink pill) and a muted "Skip"; Skip jumps to the first-habit screen, which has no Skip. Each screen has an accent label, a display heading (34px, or 30px for long ones) and a full-width ink button pinned to the bottom. The try-it screens use accent "→" hints and `paper-2` explain boxes, and reuse the real habit row, stamp, picker, week marks and stepper with local state only. Starter habits are pill chips that turn ink when picked.
+
 ## Do's and Don'ts
 
 ### Do:

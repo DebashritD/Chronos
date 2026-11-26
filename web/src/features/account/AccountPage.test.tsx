@@ -193,6 +193,7 @@ describe('AccountPage', () => {
       const { user } = renderWithProviders(<AccountPage />, { route: '/settings' })
 
       expect(screen.getByRole('link', { name: 'Manage habits' })).toHaveAttribute('href', '/habits')
+      expect(screen.getByRole('link', { name: 'Replay intro' })).toHaveAttribute('href', '/welcome?replay')
       await user.click(screen.getByRole('button', { name: 'New habit' }))
       expect(screen.getByRole('dialog', { name: 'New habit' })).toBeInTheDocument()
     })

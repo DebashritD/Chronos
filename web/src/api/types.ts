@@ -2,6 +2,8 @@ export interface Me {
   username: string
   timezone: string
   maxYellows: number
+  /** False until the first-run intro ends with a habit. Missing (an older saved user) counts as done. */
+  onboarded?: boolean
 }
 
 export type Frequency = 'DAILY' | 'EVERY_N_DAYS' | 'WEEKLY'

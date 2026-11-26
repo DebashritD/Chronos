@@ -9,7 +9,7 @@ import { YellowLimitProvider } from '../app/YellowLimitProvider'
 import type { Me } from '../api/types'
 import { SessionProvider } from '../features/auth/session'
 
-export const BOB: Me = { username: 'bob', timezone: 'Asia/Kolkata', maxYellows: 2 }
+export const BOB: Me = { username: 'bob', timezone: 'Asia/Kolkata', maxYellows: 2, onboarded: true }
 
 /** Renders the current pathname + search so tests can assert on navigation. */
 export function LocationDisplay() {
