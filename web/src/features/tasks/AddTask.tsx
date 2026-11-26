@@ -23,7 +23,7 @@ export function AddTask({ onAdd }: { onAdd(text: string, later: boolean): void }
         <input ref={input} aria-label="Add a task" placeholder="Add a task" value={text} maxLength={200} enterKeyHint="done"
           onChange={(e) => setText(e.target.value)} onFocus={() => setFocused(true)}
           onBlur={(e) => { if (!e.currentTarget.form?.contains(e.relatedTarget)) setFocused(false) }}
-          className="min-w-0 flex-1 border-0 bg-transparent py-3 text-[17px] text-ink placeholder:text-muted focus:outline-none!" />
+          className="min-w-0 flex-1 border-0 bg-transparent py-3 text-[16px] text-ink placeholder:text-muted focus:outline-none!" />
       </div>
       {(focused || text !== '') && (
         // preventDefault on mousedown keeps focus in the input: Safari doesn't focus a tapped button, so the blur would unmount the chips.

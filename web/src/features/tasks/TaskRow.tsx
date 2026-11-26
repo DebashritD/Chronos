@@ -54,7 +54,7 @@ export function TaskRow({ task, today, inLater = false, aside, onChange, onDelet
         <label className="-m-2.5 flex h-11 w-11 flex-none cursor-pointer items-center justify-center">
           <input type="checkbox" checked={done} aria-label={`Done: ${task.text}`}
             onChange={() => onChange({ ...task, doneOn: done ? null : today })} className="peer sr-only" />
-          <span aria-hidden="true" data-mark={done ? 'GREEN' : 'OPEN'} className={`block h-[22px] w-[22px] rounded-full border-[1.5px] ${
+          <span aria-hidden="true" data-mark={done ? 'GREEN' : 'OPEN'} className={`block h-[18px] w-[18px] rounded-full border-[1.5px] ${
             done ? 'border-cell-green bg-cell-green' : inLater ? 'border-dashed border-ring' : 'border-ring'} peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ink`} />
         </label>
         <div className="min-w-0 flex-1 pt-0.5">
@@ -63,7 +63,7 @@ export function TaskRow({ task, today, inLater = false, aside, onChange, onDelet
             <div className="flex items-center gap-4" onKeyDown={onKey}
               onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) commit() }}>
               <input autoFocus aria-label="Edit task" value={draft} maxLength={200} onChange={(e) => setDraft(e.target.value)}
-                className="min-w-0 flex-1 border-0 border-b border-ink bg-transparent p-0 text-[17px] text-ink focus:outline-none!" />
+                className="min-w-0 flex-1 border-0 border-b border-ink bg-transparent p-0 text-[16px] text-ink focus:outline-none!" />
               {!inLater && !done && onLater && (
                 <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => onLater(edited())}
                   className={`${textButton} -my-2.5 flex-none`}>Later</button>
@@ -73,7 +73,7 @@ export function TaskRow({ task, today, inLater = false, aside, onChange, onDelet
             </div>
           ) : (
             <button type="button" aria-label={`Edit ${task.text}`} onClick={() => { setDraft(task.text); setEditing(true) }}
-              className={`w-full text-left text-[17px] break-words ${done ? 'text-muted line-through decoration-faint' : 'text-ink'}`}>
+              className={`w-full text-left text-[15px] break-words ${done ? 'text-muted line-through decoration-faint' : 'text-ink'}`}>
               {task.text}
             </button>
           )}
