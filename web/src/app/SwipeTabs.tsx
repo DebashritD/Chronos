@@ -27,9 +27,9 @@ export function SwipeTabs() {
   const settling = useRef(false)
   const snapTimer = useRef<number | undefined>(undefined)
   const commitTimer = useRef<number | undefined>(undefined)
-  const scrollOnArrive = useRef(false)
+  const shownPath = useRef(pathname)
 
-  // A committed swipe lands here: reset the track before the new page paints.
+  // A committed swipe or a tab tap lands here: reset the track and start the new page at the top before it paints.
   // Any other route change (a tab tap mid-settle) cancels the pending swipe.
   useLayoutEffect(() => {
     if (commitTimer.current !== undefined) {
@@ -43,8 +43,8 @@ export function SwipeTabs() {
       track.style.transform = ''
     }
     settling.current = false
-    if (scrollOnArrive.current) {
-      scrollOnArrive.current = false
+    if (shownPath.current !== pathname) {
+      shownPath.current = pathname
       window.scrollTo(0, 0)
     }
   }, [pathname])
@@ -86,7 +86,6 @@ export function SwipeTabs() {
       const to = TABS[index + (decision === 'next' ? 1 : -1)].to
       // Reduced motion switches at once; the global reduced-motion CSS would turn any fade into a blank pause.
       if (reduced) {
-        scrollOnArrive.current = true
         navigate(to)
         return
       }
@@ -94,7 +93,6 @@ export function SwipeTabs() {
       moveTrack(decision === 'next' ? -window.innerWidth : window.innerWidth, SETTLE_MS)
       commitTimer.current = window.setTimeout(() => {
         commitTimer.current = undefined
-        scrollOnArrive.current = true
         setNeighbour(null)
         navigate(to)
       }, SETTLE_MS)

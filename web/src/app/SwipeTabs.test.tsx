@@ -62,6 +62,14 @@ describe('tab swipe', () => {
     expect(window.scrollTo).toHaveBeenCalledWith(0, 0)
   })
 
+  test('tapping a tab also starts the new tab at the top', () => {
+    renderTabs('/')
+    vi.mocked(window.scrollTo).mockClear()
+    fireEvent.click(screen.getByRole('link', { name: 'Go Habits' }))
+    expect(location()).toHaveTextContent('/habits')
+    expect(window.scrollTo).toHaveBeenCalledWith(0, 0)
+  })
+
   test('a fast short flick also switches', async () => {
     renderTabs('/')
     drag(screen.getByText('Today page'), [300, 400], [240, 400], 50)
