@@ -256,8 +256,9 @@ Plain and pressable, like a pen on paper.
 - **Error:** a short line of cell-red text below the field.
 
 ### Navigation
-- **Phone:** a `paper-2` bar with four text tabs (Today, Progress, Habits, Me) in 13 px Hanken Grotesk 600, no icons. Inactive tabs are muted; the active one is ink with a 2 px accent underline.
+- **Phone:** a `paper-2` bar with four text tabs in the order Today · Tasks · Progress · Me, in 13 px Hanken Grotesk 600, no icons. Inactive tabs are muted; the active one is ink with a 2 px accent underline.
 - **Desktop:** the same four tabs in the binding, paper at 65% when inactive and full paper with an accent underline when active.
+- **Manage habits** is reached from Me (an outline button on the Me sheet opens `/habits`), not a tab; Me stays lit while it is open.
 - **View toggles** (Week / Month) use the same text-and-underline pattern. Habit frequency is a native `<select>` on an underline with a chevron (`.select-chevron`), not a toggle.
 
 ### Marks
@@ -277,6 +278,9 @@ Shown on a done row on Today: mono capitals at 13 px with 0.14em tracking, a Mar
 
 ### Choice Row
 Today's open row: a display name, a mono streak line, then three equal 44 px buttons, "● Target", "◐ Minimum", "✕ Missed", split by dashed faint dividers, with `paper-2` on press.
+
+### Task row
+A 22px square box with a 1.5px ink outline and an ink check when done (never green: colour belongs to marks). The text is Hanken 17px. Done rows are struck through in `faint` and sink below open rows. The carry-over age is mono 12px muted ("carried 3 days"). Later rows have a dashed `ring` box and a "Do today" text button. Swiping left shows an ink panel ("Move to Later", then "Delete"), and deleting shows an Undo bar for 5s.
 
 ### Distribution Bar
 A full-width rounded bar split Target / Minimum / Missed, with the unmarked share hatched, over a mono legend that repeats each shape with its count.
