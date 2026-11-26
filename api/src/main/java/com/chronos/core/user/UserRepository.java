@@ -48,6 +48,12 @@ public class UserRepository {
                 .param("id", id).param("maxYellows", maxYellows).update();
     }
 
+    /** Keeps the first timestamp, so repeat calls change nothing. */
+    public void markOnboarded(long id) {
+        jdbc.sql("UPDATE app_user SET onboarded_at = now() WHERE id = :id AND onboarded_at IS NULL")
+                .param("id", id).update();
+    }
+
     public void updatePasswordHash(long id, String passwordHash) {
         jdbc.sql("UPDATE app_user SET password_hash = :hash WHERE id = :id")
                 .param("id", id).param("hash", passwordHash).update();

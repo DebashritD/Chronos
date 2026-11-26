@@ -244,4 +244,31 @@ class AuthIntegrationTest extends IntegrationTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.code").value("VALIDATION"));
     }
+
+    @Test
+    void newUserIsNotOnboardedUntilMarked() throws Exception {
+        var bob = createUser("bob");
+
+        mvc.perform(get("/api/auth/me").with(as(bob))).andExpect(jsonPath("$.onboarded").value(false));
+        mvc.perform(post("/api/auth/me/onboarded").with(as(bob)).with(xsrf())).andExpect(status().isNoContent());
+        mvc.perform(get("/api/auth/me").with(as(bob))).andExpect(jsonPath("$.onboarded").value(true));
+    }
+
+    @Test
+    void markOnboardedKeepsTheFirstTimestamp() throws Exception {
+        var bob = createUser("bob");
+        mvc.perform(post("/api/auth/me/onboarded").with(as(bob)).with(xsrf())).andExpect(status().isNoContent());
+        var first = jdbc.sql("SELECT onboarded_at FROM app_user WHERE id = :id").param("id", bob.id())
+                .query(java.time.OffsetDateTime.class).single();
+
+        mvc.perform(post("/api/auth/me/onboarded").with(as(bob)).with(xsrf())).andExpect(status().isNoContent());
+
+        assertThat(jdbc.sql("SELECT onboarded_at FROM app_user WHERE id = :id").param("id", bob.id())
+                .query(java.time.OffsetDateTime.class).single()).isEqualTo(first);
+    }
+
+    @Test
+    void markOnboardedRequiresAuthentication() throws Exception {
+        mvc.perform(post("/api/auth/me/onboarded").with(xsrf())).andExpect(status().isUnauthorized());
+    }
 }

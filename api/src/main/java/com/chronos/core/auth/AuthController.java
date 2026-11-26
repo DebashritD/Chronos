@@ -1,6 +1,7 @@
 package com.chronos.core.auth;
 
 import com.chronos.core.user.AppUserPrincipal;
+import com.chronos.core.user.UserRepository;
 import com.chronos.core.user.UserService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -32,14 +33,17 @@ public class AuthController {
     private final LoginThrottle loginThrottle;
     private final AccountService accounts;
     private final UserService userService;
+    private final UserRepository users;
 
     public AuthController(AuthenticationManager authenticationManager, SessionLogin sessionLogin,
-                          LoginThrottle loginThrottle, AccountService accounts, UserService userService) {
+                          LoginThrottle loginThrottle, AccountService accounts, UserService userService,
+                          UserRepository users) {
         this.authenticationManager = authenticationManager;
         this.sessionLogin = sessionLogin;
         this.loginThrottle = loginThrottle;
         this.accounts = accounts;
         this.userService = userService;
+        this.users = users;
     }
 
     /** Touching the token makes Spring Security write the XSRF-TOKEN cookie for the SPA. */
@@ -86,5 +90,11 @@ public class AuthController {
     public MeResponse updateMe(@AuthenticationPrincipal AppUserPrincipal principal,
                                @Valid @RequestBody UpdateMeRequest body) {
         return MeResponse.from(accounts.updateMe(principal.id(), body));
+    }
+
+    @PostMapping("/me/onboarded")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void markOnboarded(@AuthenticationPrincipal AppUserPrincipal principal) {
+        users.markOnboarded(principal.id());
     }
 }
