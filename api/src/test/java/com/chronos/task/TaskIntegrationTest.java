@@ -2,12 +2,15 @@ package com.chronos.task;
 
 import com.chronos.core.user.AppUserPrincipal;
 import com.chronos.support.IntegrationTest;
+import com.chronos.support.TestcontainersConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -48,8 +51,9 @@ class TaskIntegrationTest extends IntegrationTest {
     @Test
     void listsOpenLaterAndDoneTodayButNotDoneBefore() throws Exception {
         UUID open = UUID.randomUUID(), later = UUID.randomUUID(), doneToday = UUID.randomUUID(), doneYesterday = UUID.randomUUID();
-        mvc.perform(save(bob, open, "{\"text\": \"Open\", \"scheduledOn\": \"2026-11-15\"}")).andExpect(status().isOk());
-        mvc.perform(save(bob, later, "{\"text\": \"Later\"}")).andExpect(status().isOk());
+        mvc.perform(save(bob, open, "{\"text\": \"Open\", \"scheduledOn\": \"2026-11-15\", \"createdAt\": \"2026-11-15T04:00:00Z\"}"))
+                .andExpect(status().isOk());
+        mvc.perform(save(bob, later, "{\"text\": \"Later\", \"createdAt\": \"2026-11-16T04:00:00Z\"}")).andExpect(status().isOk());
         mvc.perform(save(bob, doneToday, "{\"text\": \"Today\", \"scheduledOn\": \"2026-11-18\", \"doneOn\": \"2026-11-18\"}"))
                 .andExpect(status().isOk());
         mvc.perform(save(bob, doneYesterday, "{\"text\": \"Old\", \"scheduledOn\": \"2026-11-17\", \"doneOn\": \"2026-11-17\"}"))
@@ -59,6 +63,37 @@ class TaskIntegrationTest extends IntegrationTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(3)))
                 .andExpect(jsonPath("$[*].text", contains("Open", "Later", "Today")));
+    }
+
+    @Test
+    void keepsThePhonesCreatedAtAndNeverChangesIt() throws Exception {
+        UUID id = UUID.randomUUID();
+        mvc.perform(save(bob, id, "{\"text\": \"Offline\", \"createdAt\": \"2026-11-16T04:00:00Z\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.createdAt").value("2026-11-16T04:00:00Z"));
+        mvc.perform(save(bob, id, "{\"text\": \"Offline\", \"createdAt\": \"2026-11-17T04:00:00Z\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.createdAt").value("2026-11-16T04:00:00Z"));
+        assertThat(createdAt(id)).isEqualTo(Instant.parse("2026-11-16T04:00:00Z"));
+    }
+
+    @Test
+    void aFutureCreatedAtIsClampedToNow() throws Exception {
+        UUID id = UUID.randomUUID();
+        mvc.perform(save(bob, id, "{\"text\": \"Ahead\", \"createdAt\": \"2026-11-19T04:00:00Z\"}")).andExpect(status().isOk());
+        assertThat(createdAt(id)).isEqualTo(TestcontainersConfig.NOW);
+    }
+
+    @Test
+    void doneTasksClearAtTheUsersMidnightNotUtcs() throws Exception {
+        // 06:30Z on 2026-11-18 is 19:30 on 2026-11-17 in Pago Pago (UTC−11), so the user's today is still the 17th.
+        users.updateTimezone(bob.id(), "Pacific/Pago_Pago");
+        UUID doneToday = UUID.randomUUID(), doneBefore = UUID.randomUUID();
+        mvc.perform(save(bob, doneToday, "{\"text\": \"Local today\", \"doneOn\": \"2026-11-17\"}")).andExpect(status().isOk());
+        mvc.perform(save(bob, doneBefore, "{\"text\": \"Local yesterday\", \"doneOn\": \"2026-11-16\"}")).andExpect(status().isOk());
+
+        mvc.perform(get("/api/tasks").with(as(bob)))
+                .andExpect(jsonPath("$[*].text", contains("Local today")));
     }
 
     @Test
@@ -96,6 +131,10 @@ class TaskIntegrationTest extends IntegrationTest {
 
     private MockHttpServletRequestBuilder save(AppUserPrincipal who, UUID id, String json) {
         return put("/api/tasks/{id}", id).with(as(who)).with(xsrf()).contentType(MediaType.APPLICATION_JSON).content(json);
+    }
+
+    private Instant createdAt(UUID id) {
+        return jdbc.sql("SELECT created_at FROM task WHERE id = :id").param("id", id).query(OffsetDateTime.class).single().toInstant();
     }
 
     private long count() {

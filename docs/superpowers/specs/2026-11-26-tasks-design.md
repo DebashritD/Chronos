@@ -91,8 +91,9 @@ CREATE INDEX task_user_idx ON task (user_id);
 { "id": "uuid", "text": "…", "scheduledOn": "2026-11-26" | null, "doneOn": "2026-11-26" | null, "createdAt": "…" }
 ```
 
-**`PUT /api/tasks/{id}`** takes `{ text, scheduledOn, doneOn }`.
+**`PUT /api/tasks/{id}`** takes `{ text, scheduledOn, doneOn, createdAt }`.
 - It creates the task or replaces it, and sending it twice is harmless.
+- `createdAt` is optional and only used when the task is first inserted (so an offline add or an Undo keeps its place). It is never later than the server's now; a later PUT never changes it.
 - It returns 200 with the task.
 - Text is trimmed and must be 1–200 characters.
 - Each date must be no later than today + 1, to allow for timezone slack.

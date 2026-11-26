@@ -3,7 +3,10 @@ package com.chronos.task;
 import org.springframework.jdbc.core.simple.JdbcClient;
 import org.springframework.stereotype.Repository;
 
+import java.time.Instant;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -17,11 +20,14 @@ public class TaskRepository {
         this.jdbc = jdbc;
     }
 
-    /** Empty when the id belongs to another user: the conflict update is skipped and nothing is returned. */
-    public Optional<Task> upsert(UUID id, long userId, String text, LocalDate scheduledOn, LocalDate doneOn) {
+    /**
+     * Empty when the id belongs to another user: the conflict update is skipped and nothing is returned.
+     * {@code createdAt} is only written on insert.
+     */
+    public Optional<Task> upsert(UUID id, long userId, String text, LocalDate scheduledOn, LocalDate doneOn, Instant createdAt) {
         return jdbc.sql("""
-                        INSERT INTO task (id, user_id, text, scheduled_on, done_on)
-                        VALUES (:id, :userId, :text, :scheduledOn, :doneOn)
+                        INSERT INTO task (id, user_id, text, scheduled_on, done_on, created_at)
+                        VALUES (:id, :userId, :text, :scheduledOn, :doneOn, :createdAt)
                         ON CONFLICT (id) DO UPDATE
                           SET text = EXCLUDED.text, scheduled_on = EXCLUDED.scheduled_on, done_on = EXCLUDED.done_on
                           WHERE task.user_id = EXCLUDED.user_id
@@ -29,6 +35,7 @@ public class TaskRepository {
                         """)
                 .param("id", id).param("userId", userId).param("text", text)
                 .param("scheduledOn", scheduledOn).param("doneOn", doneOn)
+                .param("createdAt", OffsetDateTime.ofInstant(createdAt, ZoneOffset.UTC))
                 .query(Task.class)
                 .optional();
     }

@@ -5,6 +5,8 @@ import com.chronos.core.error.ErrorCode;
 import com.chronos.core.user.UserService;
 import org.springframework.stereotype.Service;
 
+import java.time.Clock;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
@@ -14,10 +16,12 @@ public class TaskService {
 
     private final TaskRepository tasks;
     private final UserService users;
+    private final Clock clock;
 
-    public TaskService(TaskRepository tasks, UserService users) {
+    public TaskService(TaskRepository tasks, UserService users, Clock clock) {
         this.tasks = tasks;
         this.users = users;
+        this.clock = clock;
     }
 
     public List<Task> list(long userId) {
@@ -30,7 +34,10 @@ public class TaskService {
         if (isAfter(body.scheduledOn(), latest) || isAfter(body.doneOn(), latest)) {
             throw new ApiException(ErrorCode.VALIDATION, "Dates can’t be in the future");
         }
-        return tasks.upsert(id, userId, body.text().strip(), body.scheduledOn(), body.doneOn())
+        // The phone's own time keeps an offline add (or an Undo) in its place; never later than now.
+        Instant now = clock.instant();
+        Instant createdAt = body.createdAt() == null || body.createdAt().isAfter(now) ? now : body.createdAt();
+        return tasks.upsert(id, userId, body.text().strip(), body.scheduledOn(), body.doneOn(), createdAt)
                 .orElseThrow(() -> ApiException.notFound("Task"));
     }
 
