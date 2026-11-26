@@ -29,7 +29,7 @@ export function TasksPage() {
 
   const shownLater = allLater ? later : later.slice(0, LATER_SHOWN)
   return (
-    <section className="max-w-xl">
+    <section className="relative max-w-xl">
       <p className={eyebrow}>{formatWeekday(today)} {dayOfMonth(today)}</p>
       <div className="flex items-baseline justify-between gap-4">
         <h1 className={pageTitle}>Tasks</h1>
@@ -37,7 +37,7 @@ export function TasksPage() {
           <p className="font-mono text-[12px] text-muted">{done.length} of {open.length + done.length} done</p>
         )}
       </div>
-      <SyncStatus className="mt-1" />
+      <SyncStatus />
       {tasks.isPending && <p className="mt-4 text-muted">Loading…</p>}
       {tasks.data && open.length + done.length + later.length === 0 && (
         <p className="mt-4 text-[15px] text-muted">Nothing to do. Add a task below.</p>

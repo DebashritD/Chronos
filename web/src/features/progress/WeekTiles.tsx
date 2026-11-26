@@ -60,7 +60,8 @@ function HabitMarks({ habit, start, today, onPick }: { habit: WeekHabit; start: 
 export function WeekTiles({ start, today, habits, onPick }: WeekTilesProps) {
   const todayCol = WEEKDAYS.findIndex((_, i) => addDays(start, i) === today)
   return (
-    <div>
+    // isolate keeps the cells' z-10 inside the grid, below the sticky header.
+    <div className="isolate">
       <div className="relative">
       {todayCol >= 0 && (
         <div aria-hidden="true" className="pointer-events-none absolute inset-y-0 rounded-full bg-accent/[0.06]"

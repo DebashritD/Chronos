@@ -81,7 +81,7 @@ export function TodayPage() {
 
   return (
     <div className="lg:grid lg:grid-cols-[minmax(0,1fr)_400px] lg:gap-8">
-      <div>
+      <div className="relative">
         <h1 className="sr-only">Today</h1>
         <p className="sr-only">{formatLongDay(data.today)}</p>
         {summary.countdown && <p className="sr-only">{summary.countdown.text}</p>}
@@ -99,8 +99,8 @@ export function TodayPage() {
             )}
           </div>
         </header>
+        <SyncStatus />
         <TasksLine />
-        <SyncStatus className="mt-1" />
         {data.habits.length === 0 ? (
           <EmptyState title="Start your first chain"
             action={<Link to="/habits" className={inkButton}>Create your first habit</Link>}>

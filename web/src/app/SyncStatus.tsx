@@ -7,8 +7,11 @@ export function syncStatusText(online: boolean, pending: number): string | null 
   return pending > 0 ? `Offline · ${pending} waiting to sync` : 'Offline'
 }
 
-/** Dim line under the page date; hidden when online with nothing queued. `className` sets its spacing. */
-export function SyncStatus({ className = '-mt-4 mb-4' }: { className?: string }) {
+/**
+ * Dim note on the page's date line; hidden when online with nothing queued.
+ * By default it floats at the top-right of the nearest `relative` parent, so it never moves the page.
+ */
+export function SyncStatus({ className = 'absolute top-0 right-0' }: { className?: string }) {
   const online = useOnline()
   const pending = useMutationState({ filters: { predicate: isQueuedChange, status: 'pending' } }).length
   const text = syncStatusText(online, pending)

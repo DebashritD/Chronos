@@ -37,9 +37,9 @@ export function ProgressPage() {
     </div>
   )
   return (
-    <section className="max-w-3xl" onFocusCapture={releaseFocus} onPointerDownCapture={releaseFocus} onClickCapture={releaseFocus} onKeyDownCapture={releaseFocus}>
+    <section className="relative max-w-3xl" onFocusCapture={releaseFocus} onPointerDownCapture={releaseFocus} onClickCapture={releaseFocus} onKeyDownCapture={releaseFocus}>
       <h1 className={eyebrow}>Progress</h1>
-      <SyncStatus className="mt-1" />
+      <SyncStatus />
       {isMonth ? <MonthPanel toggle={toggle} /> : <WeekPanel toggle={toggle} />}
     </section>
   )
