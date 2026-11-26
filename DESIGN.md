@@ -180,7 +180,7 @@ Warm off-white paper and near-black ink, with mark colours that look like stamp-
 - **Binding Board** (binding): the top strip and PWA theme colour; at 45% it is the backdrop behind sheets and dialogs.
 - **Ink** (ink): primary text, filled buttons, focus outlines.
 - **Pencil** (muted): secondary text, notes, inactive tabs, meta lines.
-- **Faint Pencil** (faint): decorative only, never text: dashed dividers between Today's choice buttons, the paused dash, and the month calendar's unmarked-day ring.
+- **Faint Pencil** (faint): decorative only, never text: dashed dividers between Today's choice buttons, the paused dash, the month calendar's unmarked-day ring, and the strikethrough line on done tasks.
 - **Ring** (ring): the open-today circle.
 - **Rule** (rule): row separators.
 - **Rule Heavy** (rule-2): section separators, input underlines, outline-button borders, future-day circles, the hatched unmarked share.
@@ -280,7 +280,7 @@ Shown on a done row on Today: mono capitals at 13 px with 0.14em tracking, a Mar
 Today's open row: a display name, a mono streak line, then three equal 44 px buttons, "● Target", "◐ Minimum", "✕ Missed", split by dashed faint dividers, with `paper-2` on press.
 
 ### Task row
-A 22px square box with a 1.5px ink outline and an ink check when done (never green: colour belongs to marks). The text is Hanken 17px. Done rows are struck through in `faint` and sink below open rows. The carry-over age is mono 12px muted ("carried 3 days"). Later rows have a dashed `ring` box and a "Do today" text button. Swiping left shows an ink panel ("Move to Later", then "Delete"), and deleting shows an Undo bar for 5s.
+A 22px square box with a 1.5px ink outline and an ink check when done (never green: colour belongs to marks). The text is Hanken 17px. Done rows are struck through in `muted` with a `faint` line and sink below open rows. The carry-over age is mono 12px muted ("carried 3 days"). Later rows have a dashed `ring` box and a "Do today" text button. Swiping left shows an ink panel ("Move to Later", then "Delete"), and deleting shows an Undo bar for 5s.
 
 ### Distribution Bar
 A full-width rounded bar split Target / Minimum / Missed, with the unmarked share hatched, over a mono legend that repeats each shape with its count.

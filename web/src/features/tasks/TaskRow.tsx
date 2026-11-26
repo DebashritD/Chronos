@@ -60,7 +60,7 @@ export function TaskRow({ task, today, inLater = false, aside, onChange, onDelet
               className="w-full border-0 border-b border-ink bg-transparent p-0 text-[17px] text-ink focus:outline-none!" />
           ) : (
             <button type="button" aria-label={`Edit ${task.text}`} onClick={() => { setDraft(task.text); setEditing(true) }}
-              className={`w-full text-left text-[17px] break-words ${done ? 'text-faint line-through decoration-faint' : 'text-ink'}`}>
+              className={`w-full text-left text-[17px] break-words ${done ? 'text-muted line-through decoration-faint' : 'text-ink'}`}>
               {task.text}
             </button>
           )}
