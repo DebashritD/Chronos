@@ -40,7 +40,7 @@ export function pullDistance(dy: number): number {
   return Math.min(Math.max(dy, 0) * PULL_RATIO, PULL_MAX)
 }
 
-const CONTROLS = 'input, textarea, select, [contenteditable]:not([contenteditable="false"])'
+const CONTROLS = 'input, textarea, select, [contenteditable]:not([contenteditable="false"]), [data-row-swipe]'
 
 export function startsOnControl(target: EventTarget | null): boolean {
   return target instanceof Element && target.closest(CONTROLS) !== null

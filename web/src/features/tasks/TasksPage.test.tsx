@@ -1,4 +1,4 @@
-import { screen, waitFor, within } from '@testing-library/react'
+import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Task } from '../../api/types'
 import { jsonResponse, requests, stubApi } from '../../test/http'
@@ -29,6 +29,15 @@ function api(initial: Task[] = [plumber, milk, old, photos]) {
   })
 }
 const writes = (f: ReturnType<typeof stubApi>) => requests(f).filter((r) => r.method !== 'GET')
+
+/** Drags a row sideways by `dx` on a 400px-wide row. */
+function swipe(row: HTMLElement, dx: number): void {
+  vi.spyOn(row, 'getBoundingClientRect').mockReturnValue({ width: 400 } as DOMRect)
+  fireEvent.touchStart(row, { touches: [{ clientX: 350, clientY: 300 }] })
+  fireEvent.touchMove(row, { touches: [{ clientX: 340, clientY: 300 }] })
+  fireEvent.touchMove(row, { touches: [{ clientX: 350 + dx, clientY: 300 }] })
+  fireEvent.touchEnd(row, { changedTouches: [{ clientX: 350 + dx, clientY: 300 }] })
+}
 
 describe('TasksPage', () => {
   beforeEach(() => {
@@ -90,5 +99,23 @@ describe('TasksPage', () => {
     await user.click(await screen.findByRole('button', { name: 'Do Sort old photos today' }))
     expect(await screen.findByRole('listitem', { name: 'Sort old photos' })).not.toHaveTextContent('carried')
     await waitFor(() => expect((writes(f)[0].body as Task).scheduledOn).toBe('2026-11-18'))
+  })
+
+  it('swipes to delete and Undo puts it back', async () => {
+    const f = api()
+    const { user } = renderWithProviders(<TasksPage />, { route: '/tasks' })
+    const row = await screen.findByRole('listitem', { name: 'Call the plumber' })
+    swipe(row, -300)
+    await waitFor(() => expect(screen.queryByRole('listitem', { name: 'Call the plumber' })).not.toBeInTheDocument())
+    await user.click(screen.getByRole('button', { name: 'Undo' }))
+    expect(await screen.findByRole('listitem', { name: 'Call the plumber' })).toBeInTheDocument()
+    await waitFor(() => expect(writes(f).map((r) => r.method)).toEqual(['DELETE', 'PUT']))
+  })
+
+  it('swipes a little to move to Later', async () => {
+    const f = api()
+    renderWithProviders(<TasksPage />, { route: '/tasks' })
+    swipe(await screen.findByRole('listitem', { name: 'Call the plumber' }), -150)
+    await waitFor(() => expect((writes(f)[0].body as Task).scheduledOn).toBeNull())
   })
 })

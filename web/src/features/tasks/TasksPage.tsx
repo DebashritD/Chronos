@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useCallback, useState } from 'react'
 import type { Task } from '../../api/types'
 import { SyncStatus } from '../../app/SyncStatus'
 import { dayOfMonth, formatWeekday } from '../../lib/dates'
@@ -8,6 +8,7 @@ import { useTasks } from './api'
 import { useTaskChange } from './queue'
 import { splitTasks, useTaskToday } from './taskDates'
 import { TaskRow } from './TaskRow'
+import { UndoBar } from './UndoBar'
 
 const LATER_SHOWN = 5
 
@@ -16,9 +17,11 @@ export function TasksPage() {
   const change = useTaskChange()
   const today = useTaskToday()
   const [allLater, setAllLater] = useState(false)
+  const [deleted, setDeleted] = useState<Task | null>(null)
+  const clearDeleted = useCallback(() => setDeleted(null), [])
   const { open, done, later } = splitTasks(tasks.data ?? [], today)
   const put = (task: Task) => change({ op: 'put', task })
-  const remove = (task: Task) => change({ op: 'delete', id: task.id })
+  const remove = (task: Task) => { change({ op: 'delete', id: task.id }); setDeleted(task) }
 
   function add(text: string, toLater: boolean): void {
     put({ id: crypto.randomUUID(), text, scheduledOn: toLater ? null : today, doneOn: null, createdAt: new Date().toISOString() })
@@ -40,7 +43,10 @@ export function TasksPage() {
         <p className="mt-4 text-[15px] text-muted">Nothing to do. Add a task below.</p>
       )}
       <ul className="mt-3">
-        {[...open, ...done].map((task) => <TaskRow key={task.id} task={task} today={today} onChange={put} onDelete={remove} />)}
+        {[...open, ...done].map((task) => (
+          <TaskRow key={task.id} task={task} today={today} onChange={put} onDelete={remove}
+            onLater={(t) => put({ ...t, scheduledOn: null })} />
+        ))}
       </ul>
       <AddTask onAdd={add} />
       {later.length > 0 && (
@@ -65,6 +71,7 @@ export function TasksPage() {
           )}
         </section>
       )}
+      {deleted && <UndoBar text="Task deleted" onUndo={() => { put(deleted); setDeleted(null) }} onDone={clearDeleted} />}
     </section>
   )
 }

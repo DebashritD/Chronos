@@ -76,6 +76,13 @@ describe('ignoreStart', () => {
     document.body.innerHTML = '<p id="p">x</p><div aria-modal="true"></div>'
     expect(ignoreStart(document.getElementById('p'), 200, 390)).toBe(true)
   })
+  test('leaves touches on a swipeable row to the row', () => {
+    const row = document.createElement('div')
+    row.setAttribute('data-row-swipe', '')
+    const inner = document.createElement('span')
+    row.append(inner)
+    expect(ignoreStart(inner, 200, 400)).toBe(true)
+  })
 })
 
 describe('velocityOf', () => {
