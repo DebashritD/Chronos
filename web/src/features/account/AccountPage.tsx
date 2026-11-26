@@ -109,12 +109,20 @@ export function AccountPage() {
             </span>
           )}
         </div>
-        <div className="mt-4 flex flex-wrap gap-2">
-          <button type="button" onClick={() => setCreating(true)} className={inkButton}><Plus size={18} strokeWidth={2.5} aria-hidden="true" />New habit</button>
-          <Link to="/habits" className={outlineButton}>Manage habits</Link>
+        <div className="mt-4 flex gap-2">
+          <button type="button" onClick={() => setCreating(true)} className={`${inkButton} flex-1`}><Plus size={18} strokeWidth={2.5} aria-hidden="true" />New habit</button>
+          <Link to="/habits" className={`${outlineButton} flex-1`}>Manage habits</Link>
         </div>
       </section>
       {creating && <NewHabitSheet onClose={() => setCreating(false)} />}
+      <form className={section} onSubmit={(event) => void saveStreakRule(event)}>
+        <h2 className={eyebrow}>Streak rule</h2>
+        <p id="max-yellows-label" className="mt-3 font-display text-[19px] text-ink">Minimums allowed in a row</p>
+        <div className="mt-3"><Stepper value={maxYellows} min={1} max={7} labelledBy="max-yellows-label" onChange={setMaxYellows} /></div>
+        <p className="mt-2 text-[12px] text-muted">For habits with the limit on, one more minimum starts the streak over.</p>
+        <button type="submit" className={`${inkButton} mt-4`}>Save streak rule</button>
+        <FeedbackLine feedback={ruleFeedback} />
+      </form>
       <form className={section} onSubmit={(event) => void saveTimezone(event)}>
         <h2 className={eyebrow}>Timezone</h2>
         <label htmlFor="timezone" className="sr-only">Timezone</label>
@@ -125,20 +133,12 @@ export function AccountPage() {
         </datalist>
         <p className="mt-2 text-[12px] text-muted">Days (and countdowns) end at midnight in this timezone.</p>
         <div className="mt-4 flex gap-2">
-          <button type="button" onClick={() => setTimezone(browserTimezone())} className={outlineButton}>
+          <button type="button" onClick={() => setTimezone(browserTimezone())} className={`${outlineButton} flex-1`}>
             Use this device
           </button>
-          <button type="submit" className={inkButton}>Save timezone</button>
+          <button type="submit" className={`${inkButton} flex-1`}>Save timezone</button>
         </div>
         <FeedbackLine feedback={tzFeedback} />
-      </form>
-      <form className={section} onSubmit={(event) => void saveStreakRule(event)}>
-        <h2 className={eyebrow}>Streak rule</h2>
-        <p id="max-yellows-label" className="mt-3 font-display text-[19px] text-ink">Minimums allowed in a row</p>
-        <div className="mt-3"><Stepper value={maxYellows} min={1} max={7} labelledBy="max-yellows-label" onChange={setMaxYellows} /></div>
-        <p className="mt-2 text-[12px] text-muted">For habits with the limit on, one more minimum starts the streak over.</p>
-        <button type="submit" className={`${inkButton} mt-4`}>Save streak rule</button>
-        <FeedbackLine feedback={ruleFeedback} />
       </form>
       <form className={section} onSubmit={(event) => void changePassword(event)}>
         <h2 className={eyebrow}>Change password</h2>
