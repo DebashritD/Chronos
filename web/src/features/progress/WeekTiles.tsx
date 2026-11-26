@@ -94,10 +94,6 @@ export function WeekTiles({ start, today, habits, onPick }: WeekTilesProps) {
         ))}
       </ul>
       </div>
-      <p className="mt-3 flex flex-wrap items-center gap-x-3.5 gap-y-1 font-mono text-[11px] text-muted">
-        <span className="flex items-center gap-1.5"><Mark kind="GREEN" size={10} /> bright: current run</span>
-        <span className="flex items-center gap-1.5"><Mark kind="GREEN" size={10} dim /> dim: before the last miss</span>
-      </p>
     </div>
   )
 }
