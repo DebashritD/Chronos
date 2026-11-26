@@ -1,7 +1,7 @@
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister'
 import type { PersistQueryClientOptions, Persister } from '@tanstack/react-query-persist-client'
 import { del, get, set } from 'idb-keyval'
-import { isCheckIn } from '../features/checkin/queue'
+import { isQueuedChange } from '../features/tasks/queue'
 
 /**
  * Bump by hand only when the shape of cached data changes; ordinary deploys keep saved data and queued marks.
@@ -33,7 +33,7 @@ export function persistOptions(persister: Persister): Omit<PersistQueryClientOpt
     maxAge: PERSIST_MAX_AGE,
     buster: CACHE_VERSION,
     // TanStack's default keeps only paused mutations; a mark waiting for sign-in after a 401 must survive a reload too.
-    dehydrateOptions: { shouldDehydrateMutation: (m) => isCheckIn(m) && m.state.status === 'pending' },
+    dehydrateOptions: { shouldDehydrateMutation: (m) => isQueuedChange(m) && m.state.status === 'pending' },
   }
 }
 

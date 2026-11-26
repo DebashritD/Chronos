@@ -100,3 +100,13 @@ export interface Streak {
   /** N while this habit's yellow cap is on, else null. */
   yellowLimit: number | null
 }
+
+export interface Task {
+  id: string
+  text: string
+  /** The day it was put on Today; null = Later. */
+  scheduledOn: string | null
+  /** The user's local date when ticked; null = open. */
+  doneOn: string | null
+  createdAt: string
+}

@@ -9,6 +9,7 @@ import { createQueryClient } from './api/queryClient'
 import { YellowLimitProvider } from './app/YellowLimitProvider'
 import { SessionProvider } from './features/auth/session'
 import { resumeCheckInsOnRestore } from './features/checkin/queue'
+import { resumeTasks } from './features/tasks/queue'
 import '@fontsource-variable/bricolage-grotesque/opsz.css'
 import '@fontsource/hanken-grotesk/400.css'
 import '@fontsource/hanken-grotesk/500.css'
@@ -26,7 +27,7 @@ const persister = createPersister()
 createRoot(document.getElementById('root')!).render(
   <StrictMode>
     <PersistQueryClientProvider client={queryClient} persistOptions={persistOptions(persister)}
-      onSuccess={() => resumeCheckInsOnRestore(queryClient)}>
+      onSuccess={() => { resumeCheckInsOnRestore(queryClient); void resumeTasks(queryClient) }}>
       <BrowserRouter>
         <SessionProvider>
           <YellowLimitProvider>

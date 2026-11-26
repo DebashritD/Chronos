@@ -1,10 +1,10 @@
 import type { Mutation, QueryClient } from '@tanstack/react-query'
+import { authedSend } from '../../api/authedSend'
 import { api } from '../../api/client'
 import { ApiError } from '../../api/errors'
-import { notifyQueryError } from '../../api/queryErrorBridge'
 import type { Habit, WeekView } from '../../api/types'
 import { showSyncToast } from '../../lib/syncToast'
-import { AuthDiscardedError, authDiscarded, waitForAuth } from './authGate'
+import { AuthDiscardedError, authDiscarded } from './authGate'
 import { patchWeek, type CheckInVars } from './patchWeek'
 
 export const CHECK_IN_KEY = ['checkIn'] as const
@@ -14,18 +14,7 @@ const MAX_SERVER_ERROR_RETRIES = 8
 
 async function send(vars: CheckInVars): Promise<void> {
   const path = `/api/habits/${vars.habitId}/check-ins/${vars.periodStart}`
-  for (;;) {
-    try {
-      if (vars.op === 'save') await api.put(path, { color: vars.color, note: vars.note ?? null })
-      else await api.del(path)
-      return
-    } catch (error) {
-      if (!(error instanceof ApiError && error.status === 401)) throw error
-      // Signs out like a query 401 would, so the login screen shows; this mark waits for the same user.
-      notifyQueryError(error)
-      await waitForAuth()
-    }
-  }
+  await authedSend(() => (vars.op === 'save' ? api.put(path, { color: vars.color, note: vars.note ?? null }) : api.del(path)))
 }
 
 function habitName(queryClient: QueryClient, habitId: number): string {

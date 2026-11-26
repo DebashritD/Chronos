@@ -10,6 +10,7 @@ import type { Me } from '../../api/types'
 import { clearStoredMe, readStoredMe, storeMe } from '../../lib/storedMe'
 import { authRestored } from '../checkin/authGate'
 import { discardCheckIns } from '../checkin/queue'
+import { discardTasks } from '../tasks/queue'
 
 interface SessionValue {
   me: Me | null
@@ -77,7 +78,10 @@ export function SessionProvider({ children, initialMe }: { children: ReactNode; 
   function signedIn(result: Me): void {
     queryClient.getQueryCache().clear()
     if (readStoredMe()?.username === result.username) authRestored()
-    else discardCheckIns(queryClient)
+    else {
+      discardTasks(queryClient)
+      discardCheckIns(queryClient)
+    }
     storeMe(result)
     setMeState(result)
   }
@@ -97,6 +101,7 @@ export function SessionProvider({ children, initialMe }: { children: ReactNode; 
       // Sign out locally even if the request failed.
     } finally {
       clearCsrf()
+      discardTasks(queryClient)
       discardCheckIns(queryClient)
       queryClient.clear()
       clearStoredMe()

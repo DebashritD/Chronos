@@ -14,8 +14,8 @@ describe('AccountPage', () => {
   })
 
   it('words the unsynced-marks question', () => {
-    expect(unsyncedMarksCopy(1)).toBe('1 mark hasn’t synced. Log out anyway?')
-    expect(unsyncedMarksCopy(3)).toBe('3 marks haven’t synced. Log out anyway?')
+    expect(unsyncedMarksCopy(1)).toBe('1 change hasn’t synced. Log out anyway?')
+    expect(unsyncedMarksCopy(3)).toBe('3 changes haven’t synced. Log out anyway?')
   })
 
   it('asks before logging out with marks still waiting to sync', async () => {
@@ -30,7 +30,7 @@ describe('AccountPage', () => {
 
     await user.click(screen.getByRole('button', { name: 'Log out' }))
     const dialog = await screen.findByRole('alertdialog')
-    expect(dialog).toHaveTextContent('2 marks haven’t synced. Log out anyway?')
+    expect(dialog).toHaveTextContent('2 changes haven’t synced. Log out anyway?')
 
     await user.click(within(dialog).getByRole('button', { name: 'Cancel' }))
     expect(screen.queryByRole('alertdialog')).not.toBeInTheDocument()

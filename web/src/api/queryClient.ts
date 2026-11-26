@@ -1,5 +1,6 @@
 import { QueryCache, QueryClient, type QueryObserverOptions } from '@tanstack/react-query'
 import { registerCheckInDefaults } from '../features/checkin/queue'
+import { registerTaskDefaults } from '../features/tasks/queue'
 import { ApiError } from './errors'
 import { PERSIST_MAX_AGE } from './persist'
 import { notifyQueryError } from './queryErrorBridge'
@@ -32,5 +33,6 @@ export function createQueryClient(
     },
   })
   registerCheckInDefaults(queryClient)
+  registerTaskDefaults(queryClient)
   return queryClient
 }

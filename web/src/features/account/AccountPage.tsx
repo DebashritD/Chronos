@@ -7,7 +7,7 @@ import type { Me } from '../../api/types'
 import { useOnline } from '../../lib/useOnline'
 import { eyebrow, inkButton, outlineButton, section, underlineInput } from '../../lib/ui'
 import { browserTimezone, useSession } from '../auth/session'
-import { CHECK_IN_KEY } from '../checkin/queue'
+import { isQueuedChange } from '../tasks/queue'
 
 type Feedback = { kind: 'ok' | 'error'; text: string } | null
 
@@ -24,12 +24,12 @@ function timezones(): string[] {
 }
 
 export function unsyncedMarksCopy(count: number): string {
-  return count === 1 ? '1 mark hasn’t synced. Log out anyway?' : `${count} marks haven’t synced. Log out anyway?`
+  return count === 1 ? '1 change hasn’t synced. Log out anyway?' : `${count} changes haven’t synced. Log out anyway?`
 }
 
 export function AccountPage() {
   const { me, setMe, logout } = useSession()
-  const unsynced = useIsMutating({ mutationKey: CHECK_IN_KEY })
+  const unsynced = useIsMutating({ predicate: isQueuedChange })
   const [confirmingLogout, setConfirmingLogout] = useState(false)
   // Logging out offline would leave the server session open and drop the saved data the app needs to sign back in.
   const online = useOnline()
