@@ -50,7 +50,7 @@ describe('task queue', () => {
     onlineManager.setOnline(true)
     await waitFor(() => expect(requests(fetchMock).filter((r) => r.method !== 'GET').map((r) => `${r.method} ${r.url}`))
       .toEqual(['PUT /api/tasks/b', 'DELETE /api/tasks/a']))
-    expect(requests(fetchMock).find((r) => r.method === 'PUT')?.body).toEqual({ text: 'Buy milk', scheduledOn: null, doneOn: null })
+    expect(requests(fetchMock).find((r) => r.method === 'PUT')?.body).toEqual({ text: 'Buy milk', scheduledOn: null, doneOn: null, createdAt: '2026-11-18T05:01:00Z' })
   })
 
   it('refreshes and says so when the server rejects a change', async () => {

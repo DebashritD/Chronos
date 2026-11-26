@@ -22,8 +22,8 @@ export function patchTasks(list: Task[], vars: TaskVars): Task[] {
 
 function send(vars: TaskVars): Promise<unknown> {
   if (vars.op === 'delete') return authedSend(() => api.del(`/api/tasks/${vars.id}`))
-  const { id, text, scheduledOn, doneOn } = vars.task
-  return authedSend(() => api.put(`/api/tasks/${id}`, { text, scheduledOn, doneOn }))
+  const { id, text, scheduledOn, doneOn, createdAt } = vars.task
+  return authedSend(() => api.put(`/api/tasks/${id}`, { text, scheduledOn, doneOn, createdAt }))
 }
 
 /** Refetch once the last queued change settles (the settling one still counts here). */
