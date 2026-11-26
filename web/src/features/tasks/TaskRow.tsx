@@ -1,4 +1,3 @@
-import { Check } from 'lucide-react'
 import { useState, type KeyboardEvent, type ReactNode } from 'react'
 import type { Task } from '../../api/types'
 import { formatDayMonth } from '../../lib/dates'
@@ -55,10 +54,8 @@ export function TaskRow({ task, today, inLater = false, aside, onChange, onDelet
         <label className="-m-2.5 flex h-11 w-11 flex-none cursor-pointer items-center justify-center">
           <input type="checkbox" checked={done} aria-label={`Done: ${task.text}`}
             onChange={() => onChange({ ...task, doneOn: done ? null : today })} className="peer sr-only" />
-          <span aria-hidden="true" className={`flex h-[22px] w-[22px] items-center justify-center rounded-[3px] border-[1.5px] ${
-            inLater ? 'border-dashed border-ring' : 'border-ink'} peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ink`}>
-            {done && <Check size={16} strokeWidth={2.5} className="text-ink" />}
-          </span>
+          <span aria-hidden="true" data-mark={done ? 'GREEN' : 'OPEN'} className={`block h-[22px] w-[22px] rounded-full border-[1.5px] ${
+            done ? 'border-cell-green bg-cell-green' : inLater ? 'border-dashed border-ring' : 'border-ring'} peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-ink`} />
         </label>
         <div className="min-w-0 flex-1 pt-0.5">
           {editing ? (
