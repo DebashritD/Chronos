@@ -26,7 +26,8 @@ export function AddTask({ onAdd }: { onAdd(text: string, later: boolean): void }
           className="min-w-0 flex-1 border-0 bg-transparent py-3 text-[17px] text-ink placeholder:text-muted focus:outline-none!" />
       </div>
       {(focused || text !== '') && (
-        <div className="flex gap-2 pb-3 pl-8">
+        // preventDefault on mousedown keeps focus in the input: Safari doesn't focus a tapped button, so the blur would unmount the chips.
+        <div className="flex gap-2 pb-3 pl-8" onMouseDown={(e) => e.preventDefault()}>
           <button type="button" aria-pressed={!later} onClick={() => { setLater(false); input.current?.focus() }} className={chip(!later)}>Today</button>
           <button type="button" aria-pressed={later} onClick={() => { setLater(true); input.current?.focus() }} className={chip(later)}>Later</button>
         </div>

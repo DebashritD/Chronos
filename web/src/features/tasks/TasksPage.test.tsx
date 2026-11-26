@@ -1,6 +1,7 @@
 import { fireEvent, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import type { Task } from '../../api/types'
+import { formatDayMonth } from '../../lib/dates'
 import { jsonResponse, requests, stubApi } from '../../test/http'
 import { renderWithProviders } from '../../test/utils'
 import { TasksPage } from './TasksPage'
@@ -69,6 +70,27 @@ describe('TasksPage', () => {
     await waitFor(() => expect(writes(f).map((r) => (r.body as Task).scheduledOn)).toEqual(['2026-11-18', null]))
   })
 
+  it('a chip tap keeps the input focused, so the chip survives Safari’s null-relatedTarget blur', async () => {
+    const f = api([])
+    const { user } = renderWithProviders(<TasksPage />, { route: '/tasks' })
+    const input = await screen.findByRole('textbox', { name: 'Add a task' })
+    await user.click(input)
+    const later = screen.getByRole('button', { name: 'Later' })
+    // Safari doesn't focus a tapped button: unless mousedown is prevented, the input blurs with no relatedTarget.
+    if (fireEvent.mouseDown(later)) fireEvent.blur(input, { relatedTarget: null })
+    fireEvent.click(later)
+    expect(screen.getByRole('button', { name: 'Later' })).toHaveAttribute('aria-pressed', 'true')
+    await user.type(input, 'Fix bike{Enter}')
+    await waitFor(() => expect(writes(f).map((r) => (r.body as Task).scheduledOn)).toEqual([null]))
+  })
+
+  it('shows a Later task’s added date in the user’s timezone', async () => {
+    api([{ ...photos, createdAt: '2026-11-11T19:30:00Z' }])
+    renderWithProviders(<TasksPage />, { route: '/tasks' })
+    const row = await screen.findByRole('listitem', { name: 'Sort old photos' })
+    expect(within(row).getByText(`added ${formatDayMonth('2026-11-12')}`)).toBeInTheDocument()
+  })
+
   it('ticks and un-ticks with today’s date', async () => {
     const f = api()
     const { user } = renderWithProviders(<TasksPage />, { route: '/tasks' })
@@ -91,6 +113,29 @@ describe('TasksPage', () => {
     await user.keyboard('{Enter}')
     expect(screen.getByRole('listitem', { name: 'Call Raj' })).toBeInTheDocument()
     expect(writes(f)).toHaveLength(1)
+  })
+
+  it('deletes from edit mode without a swipe, and Undo shows', async () => {
+    const f = api()
+    const { user } = renderWithProviders(<TasksPage />, { route: '/tasks' })
+    await user.click(await screen.findByRole('button', { name: 'Edit Call the plumber' }))
+    await user.click(within(screen.getByRole('listitem', { name: 'Call the plumber' })).getByRole('button', { name: 'Delete' }))
+    expect(await screen.findByRole('button', { name: 'Undo' })).toBeInTheDocument()
+    await waitFor(() => expect(writes(f).map((r) => `${r.method} ${r.url}`)).toEqual(['DELETE /api/tasks/a']))
+    await new Promise((r) => setTimeout(r, 50))
+    expect(writes(f)).toHaveLength(1)
+  })
+
+  it('moves an open task to Later from edit mode; Escape still cancels', async () => {
+    const f = api()
+    const { user } = renderWithProviders(<TasksPage />, { route: '/tasks' })
+    await user.click(await screen.findByRole('button', { name: 'Edit Buy milk' }))
+    expect(within(screen.getByRole('listitem', { name: 'Buy milk' })).queryByRole('button', { name: 'Later' })).not.toBeInTheDocument()
+    await user.keyboard('{Escape}')
+    await user.click(screen.getByRole('button', { name: 'Edit Call the plumber' }))
+    await user.click(within(screen.getByRole('listitem', { name: 'Call the plumber' })).getByRole('button', { name: 'Later' }))
+    await waitFor(() => expect(writes(f).map((r) => [r.url, (r.body as Task).scheduledOn])).toEqual([['/api/tasks/a', null]]))
+    expect(await within(screen.getByRole('region', { name: 'Later' })).findByText('Call the plumber')).toBeInTheDocument()
   })
 
   it('pulls a Later task onto today', async () => {

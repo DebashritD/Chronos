@@ -280,7 +280,7 @@ Shown on a done row on Today: mono capitals at 13 px with 0.14em tracking, a Mar
 Today's open row: a display name, a mono streak line, then three equal 44 px buttons, "● Target", "◐ Minimum", "✕ Missed", split by dashed faint dividers, with `paper-2` on press.
 
 ### Task row
-A 22px square box with a 1.5px ink outline and an ink check when done (never green: colour belongs to marks). The text is Hanken 17px. Done rows are struck through in `muted` with a `faint` line and sink below open rows. The carry-over age is mono 12px muted ("carried 3 days"). Later rows have a dashed `ring` box and a "Do today" text button. Swiping left shows an ink panel ("Move to Later", then "Delete"), and deleting shows an Undo bar for 5s.
+A 22px square box with a 1.5px ink outline and an ink check when done (never green: colour belongs to marks). The text is Hanken 17px. Done rows are struck through in `muted` with a `faint` line and sink below open rows. The carry-over age is mono 12px muted ("carried 3 days"). Later rows have a dashed `ring` box and a "Do today" text button. Swiping left shows an ink panel ("Move to Later", then "Delete"; Later rows show only "Delete"), and deleting shows an Undo bar for 5s. While a row is being edited, "Later" (open rows) and "Delete" text buttons follow the input, so mouse, keyboard and screen-reader users can do the same without a swipe.
 
 ### Distribution Bar
 A full-width rounded bar split Target / Minimum / Missed, with the unmarked share hatched, over a mono legend that repeats each shape with its count.

@@ -2,7 +2,9 @@ import { Check } from 'lucide-react'
 import { useState, type KeyboardEvent, type ReactNode } from 'react'
 import type { Task } from '../../api/types'
 import { formatDayMonth } from '../../lib/dates'
-import { carriedText } from './taskDates'
+import { textButton } from '../../lib/ui'
+import { todayIn } from '../../lib/zonedTime'
+import { carriedText, useTaskTimezone } from './taskDates'
 import { useRowSwipe } from './useRowSwipe'
 
 interface Props {
@@ -18,8 +20,9 @@ interface Props {
 export function TaskRow({ task, today, inLater = false, aside, onChange, onDelete, onLater }: Props) {
   const [editing, setEditing] = useState(false)
   const [draft, setDraft] = useState(task.text)
+  const zone = useTaskTimezone()
   const done = task.doneOn !== null
-  const note = inLater ? `added ${formatDayMonth(task.createdAt.slice(0, 10))}` : task.scheduledOn && !done ? carriedText(task.scheduledOn, today) : null
+  const note = inLater ? `added ${formatDayMonth(todayIn(zone, new Date(task.createdAt)))}` : task.scheduledOn && !done ? carriedText(task.scheduledOn, today) : null
 
   function commit(): void {
     const text = draft.trim()
@@ -27,8 +30,12 @@ export function TaskRow({ task, today, inLater = false, aside, onChange, onDelet
     if (text === '' || text === task.text) return setDraft(task.text)
     onChange({ ...task, text: text.slice(0, 200) })
   }
-  function onKey(event: KeyboardEvent<HTMLInputElement>): void {
-    if (event.key === 'Enter') commit()
+  function edited(): Task {
+    const text = draft.trim()
+    return text === '' ? task : { ...task, text: text.slice(0, 200) }
+  }
+  function onKey(event: KeyboardEvent<HTMLElement>): void {
+    if (event.key === 'Enter' && event.target instanceof HTMLInputElement) commit()
     if (event.key === 'Escape') { setDraft(task.text); setEditing(false) }
   }
   const swipeable = !editing && (inLater || !done)
@@ -55,9 +62,18 @@ export function TaskRow({ task, today, inLater = false, aside, onChange, onDelet
         </label>
         <div className="min-w-0 flex-1 pt-0.5">
           {editing ? (
-            <input autoFocus aria-label="Edit task" value={draft} maxLength={200} onChange={(e) => setDraft(e.target.value)}
-              onBlur={commit} onKeyDown={onKey}
-              className="w-full border-0 border-b border-ink bg-transparent p-0 text-[17px] text-ink focus:outline-none!" />
+            // Blur saves only when focus leaves the input and its buttons; mousedown is prevented so a click (Safari) keeps focus.
+            <div className="flex items-center gap-4" onKeyDown={onKey}
+              onBlur={(e) => { if (!e.currentTarget.contains(e.relatedTarget)) commit() }}>
+              <input autoFocus aria-label="Edit task" value={draft} maxLength={200} onChange={(e) => setDraft(e.target.value)}
+                className="min-w-0 flex-1 border-0 border-b border-ink bg-transparent p-0 text-[17px] text-ink focus:outline-none!" />
+              {!inLater && !done && onLater && (
+                <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => onLater(edited())}
+                  className={`${textButton} -my-2.5 flex-none`}>Later</button>
+              )}
+              <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={() => onDelete(task)}
+                className={`${textButton} -my-2.5 flex-none`}>Delete</button>
+            </div>
           ) : (
             <button type="button" aria-label={`Edit ${task.text}`} onClick={() => { setDraft(task.text); setEditing(true) }}
               className={`w-full text-left text-[17px] break-words ${done ? 'text-muted line-through decoration-faint' : 'text-ink'}`}>

@@ -27,7 +27,11 @@ export function openTodayCount(tasks: Task[] | undefined, today: string): number
   return tasks ? splitTasks(tasks, today).open.length : 0
 }
 
-export function useTaskToday(): string {
+export function useTaskTimezone(): string {
   const { me } = useSession()
-  return todayIn(me?.timezone ?? browserTimezone(), useNow())
+  return me?.timezone ?? browserTimezone()
+}
+
+export function useTaskToday(): string {
+  return todayIn(useTaskTimezone(), useNow())
 }
