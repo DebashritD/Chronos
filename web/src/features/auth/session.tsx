@@ -13,7 +13,7 @@ import { discardCheckIns } from '../checkin/queue'
 
 interface SessionValue {
   me: Me | null
-  /** True while the startup `/api/auth/me` check is in flight. */
+  /** True while the startup `/api/auth/me` check is in flight and there is no saved user to open as. */
   checking: boolean
   login(username: string, password: string): Promise<void>
   signup(username: string, password: string): Promise<void>
@@ -29,13 +29,15 @@ export function browserTimezone(): string {
 
 /**
  * Signed-in user state. Checks `/api/auth/me` on mount unless `initialMe` is given (tests).
+ * A saved user opens the app at once from cache, so a sleeping server (which holds requests
+ * open while it wakes) never blocks startup; the check carries on in the background.
  * Any query that fails with 401 signs the user out locally (the route guard then shows /login).
  */
 export function SessionProvider({ children, initialMe }: { children: ReactNode; initialMe?: Me | null }) {
   const queryClient = useQueryClient()
   const navigate = useNavigate()
-  const [me, setMeState] = useState<Me | null>(initialMe ?? null)
-  const [checking, setChecking] = useState(initialMe === undefined)
+  const [me, setMeState] = useState<Me | null>(() => (initialMe === undefined ? readStoredMe() : initialMe))
+  const [checking, setChecking] = useState(() => initialMe === undefined && readStoredMe() === null)
 
   useEffect(() => {
     if (initialMe !== undefined) {

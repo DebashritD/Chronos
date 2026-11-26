@@ -68,6 +68,22 @@ describe('session', () => {
     await waitFor(() => expect(who()).toHaveTextContent('bob'))
   })
 
+  it('opens as the saved me without waiting for a server that is still waking', async () => {
+    save(BOB)
+    let answer: (res: Response) => void = () => undefined
+    vi.stubGlobal('fetch', vi.fn(() => new Promise<Response>((resolve) => { answer = resolve })))
+    renderWithProviders(<Probe />, { me: 'fetch' })
+    expect(who()).toHaveTextContent('bob')
+    answer(jsonResponse({ ...BOB, maxYellows: 3 }))
+    await waitFor(() => expect(JSON.parse(localStorage.getItem('chronos.me') ?? 'null')).toMatchObject({ maxYellows: 3 }))
+  })
+
+  it('waits for the server when there is no saved me', () => {
+    vi.stubGlobal('fetch', vi.fn(() => new Promise<Response>(() => undefined)))
+    renderWithProviders(<Probe />, { me: 'fetch' })
+    expect(who()).toHaveTextContent('checking')
+  })
+
   it('signs out on a 401 even with a saved me', async () => {
     save(BOB)
     stubApi((r) => (r.url === '/api/auth/me' ? problemResponse(401, 'UNAUTHENTICATED') : undefined))
