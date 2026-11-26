@@ -57,7 +57,7 @@ export function TaskRow({ task, today, inLater = false, aside, onChange, onDelet
           {editing ? (
             <input autoFocus aria-label="Edit task" value={draft} maxLength={200} onChange={(e) => setDraft(e.target.value)}
               onBlur={commit} onKeyDown={onKey}
-              className="w-full border-0 border-b border-ink bg-transparent p-0 text-[17px] text-ink focus:outline-none" />
+              className="w-full border-0 border-b border-ink bg-transparent p-0 text-[17px] text-ink focus:outline-none!" />
           ) : (
             <button type="button" aria-label={`Edit ${task.text}`} onClick={() => { setDraft(task.text); setEditing(true) }}
               className={`w-full text-left text-[17px] break-words ${done ? 'text-faint line-through decoration-faint' : 'text-ink'}`}>

@@ -60,7 +60,7 @@ export function TasksPage() {
               <TaskRow key={task.id} task={task} today={today} inLater onChange={put} onDelete={remove}
                 aside={
                   <button type="button" aria-label={`Do ${task.text} today`} onClick={() => put({ ...task, scheduledOn: today })}
-                    className={`${textButton} flex-none`}>Do today</button>
+                    className={`${textButton} -mt-2 flex-none`}>Do today</button>
                 } />
             ))}
           </ul>

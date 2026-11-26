@@ -10,7 +10,7 @@ export function AddTask({ onAdd }: { onAdd(text: string, later: boolean): void }
     on ? 'border-ink bg-ink text-paper' : 'border-rule-2 text-ink'}`
 
   return (
-    <form className="border-b border-rule-2" onSubmit={(e) => {
+    <form className="border-b border-rule-2 focus-within:border-ink" onSubmit={(e) => {
       e.preventDefault()
       const value = text.trim()
       if (value === '') return
@@ -23,7 +23,7 @@ export function AddTask({ onAdd }: { onAdd(text: string, later: boolean): void }
         <input ref={input} aria-label="Add a task" placeholder="Add a task" value={text} maxLength={200} enterKeyHint="done"
           onChange={(e) => setText(e.target.value)} onFocus={() => setFocused(true)}
           onBlur={(e) => { if (!e.currentTarget.form?.contains(e.relatedTarget)) setFocused(false) }}
-          className="min-w-0 flex-1 border-0 bg-transparent py-3 text-[17px] text-ink placeholder:text-muted focus:outline-none" />
+          className="min-w-0 flex-1 border-0 bg-transparent py-3 text-[17px] text-ink placeholder:text-muted focus:outline-none!" />
       </div>
       {(focused || text !== '') && (
         <div className="flex gap-2 pb-3 pl-8">
