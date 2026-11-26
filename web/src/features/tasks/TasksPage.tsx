@@ -71,7 +71,7 @@ export function TasksPage() {
           )}
         </section>
       )}
-      {deleted && <UndoBar text="Task deleted" onUndo={() => { put(deleted); setDeleted(null) }} onDone={clearDeleted} />}
+      {deleted && <UndoBar key={deleted.id} text="Task deleted" onUndo={() => { put(deleted); setDeleted(null) }} onDone={clearDeleted} />}
     </section>
   )
 }
