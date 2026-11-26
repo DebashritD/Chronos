@@ -174,4 +174,11 @@ describe('HabitsPage', () => {
     await screen.findByRole('listitem', { name: 'Read' })
     expect(screen.queryByRole('button', { name: 'New habit' })).not.toBeInTheDocument()
   })
+
+  it('links back to Me', () => {
+    api()
+    renderWithProviders(<HabitsPage />, { route: '/habits' })
+
+    expect(screen.getByRole('link', { name: 'Me' })).toHaveAttribute('href', '/settings')
+  })
 })

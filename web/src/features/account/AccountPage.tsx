@@ -1,5 +1,7 @@
 import { useIsMutating, useQueryClient } from '@tanstack/react-query'
+import { Plus } from 'lucide-react'
 import { useState, type FormEvent } from 'react'
+import { Link } from 'react-router'
 import { Stepper } from '../../app/Stepper'
 import { api } from '../../api/client'
 import { messageFor } from '../../api/errors'
@@ -7,6 +9,8 @@ import type { Me } from '../../api/types'
 import { useOnline } from '../../lib/useOnline'
 import { eyebrow, inkButton, outlineButton, section, underlineInput } from '../../lib/ui'
 import { browserTimezone, useSession } from '../auth/session'
+import { useHabits } from '../habits/api'
+import { NewHabitSheet } from '../habits/NewHabitSheet'
 import { isQueuedChange } from '../tasks/queue'
 
 type Feedback = { kind: 'ok' | 'error'; text: string } | null
@@ -41,6 +45,9 @@ export function AccountPage() {
   const [currentPassword, setCurrentPassword] = useState('')
   const [newPassword, setNewPassword] = useState('')
   const [pwFeedback, setPwFeedback] = useState<Feedback>(null)
+  const current = useHabits()
+  const archived = useHabits('ARCHIVED')
+  const [creating, setCreating] = useState(false)
 
   async function saveTimezone(event: FormEvent<HTMLFormElement>): Promise<void> {
     event.preventDefault()
@@ -93,6 +100,21 @@ export function AccountPage() {
           <p className="mt-1.5 truncate font-mono text-[12px] text-muted">{me?.timezone} · day ends 00:00</p>
         </div>
       </div>
+      <section className={section} aria-labelledby="habits-heading">
+        <div className="flex items-baseline justify-between">
+          <h2 id="habits-heading" className={eyebrow}>Habits</h2>
+          {current.data && (
+            <span className="font-mono text-[12px] text-muted">
+              {current.data.length} active{archived.data?.length ? ` · ${archived.data.length} archived` : ''}
+            </span>
+          )}
+        </div>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <button type="button" onClick={() => setCreating(true)} className={inkButton}><Plus size={18} strokeWidth={2.5} aria-hidden="true" />New habit</button>
+          <Link to="/habits" className={outlineButton}>Manage habits</Link>
+        </div>
+      </section>
+      {creating && <NewHabitSheet onClose={() => setCreating(false)} />}
       <form className={section} onSubmit={(event) => void saveTimezone(event)}>
         <h2 className={eyebrow}>Timezone</h2>
         <label htmlFor="timezone" className="sr-only">Timezone</label>

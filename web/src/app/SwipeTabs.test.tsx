@@ -24,6 +24,7 @@ function renderTabs(route = '/') {
         <Routes>
           <Route element={<SwipeTabs />}>
             <Route path="/" element={<p>Today page</p>} />
+            <Route path="/tasks" element={<p>Tasks page</p>} />
             <Route path="/progress" element={<p>Progress page <input aria-label="Note" /></p>} />
             <Route path="/habits" element={<p>Habits page</p>} />
             <Route path="/settings" element={<p>Account page</p>} />
@@ -32,7 +33,7 @@ function renderTabs(route = '/') {
         </Routes>
         <LocationDisplay />
         <Link to="/">Go Today</Link>
-        <Link to="/habits">Go Habits</Link>
+        <Link to="/tasks">Go Tasks</Link>
       </MemoryRouter>
     </QueryClientProvider>,
   )
@@ -54,56 +55,56 @@ afterEach(() => {
 })
 
 describe('tab swipe', () => {
-  test('a left swipe on Today goes to Progress', async () => {
+  test('a left swipe on Today goes to Tasks', async () => {
     renderTabs('/')
     drag(screen.getByText('Today page'), [300, 400], [100, 400])
-    await waitFor(() => expect(location()).toHaveTextContent('/progress'))
-    expect(screen.getByText('Progress page')).toBeInTheDocument()
+    await waitFor(() => expect(location()).toHaveTextContent('/tasks'))
+    expect(screen.getByText('Tasks page')).toBeInTheDocument()
     expect(window.scrollTo).toHaveBeenCalledWith(0, 0)
   })
 
   test('tapping a tab also starts the new tab at the top', () => {
     renderTabs('/')
     vi.mocked(window.scrollTo).mockClear()
-    fireEvent.click(screen.getByRole('link', { name: 'Go Habits' }))
-    expect(location()).toHaveTextContent('/habits')
+    fireEvent.click(screen.getByRole('link', { name: 'Go Tasks' }))
+    expect(location()).toHaveTextContent('/tasks')
     expect(window.scrollTo).toHaveBeenCalledWith(0, 0)
   })
 
   test('a fast short flick also switches', async () => {
     renderTabs('/')
     drag(screen.getByText('Today page'), [300, 400], [240, 400], 50)
-    await waitFor(() => expect(location()).toHaveTextContent('/progress'))
+    await waitFor(() => expect(location()).toHaveTextContent('/tasks'))
   })
 
-  test('a right swipe on Progress goes back to Today', async () => {
-    renderTabs('/progress')
-    drag(screen.getByText('Progress page'), [100, 400], [300, 400])
+  test('a right swipe on Tasks goes back to Today', async () => {
+    renderTabs('/tasks')
+    drag(screen.getByText('Tasks page'), [100, 400], [300, 400])
     await waitFor(() => expect(location()).toHaveTextContent(/^\/$/))
   })
 
   test('the neighbour is gone after a committed swipe and a return', async () => {
     renderTabs('/')
     drag(screen.getByText('Today page'), [300, 400], [100, 400])
-    await waitFor(() => expect(location()).toHaveTextContent('/progress'))
+    await waitFor(() => expect(location()).toHaveTextContent('/tasks'))
     fireEvent.click(screen.getByText('Go Today'))
     await waitFor(() => expect(location()).toHaveTextContent(/^\/$/))
-    expect(screen.queryByText('Neighbour /progress')).not.toBeInTheDocument()
+    expect(screen.queryByText('Neighbour /tasks')).not.toBeInTheDocument()
   })
 
   test('a tab tap during the settle wins over the swipe', async () => {
     renderTabs('/')
     drag(screen.getByText('Today page'), [300, 400], [100, 400])
-    fireEvent.click(screen.getByText('Go Habits'))
+    fireEvent.click(screen.getByText('Go Tasks'))
     await pause(SETTLE_MS + 50)
-    expect(location()).toHaveTextContent('/habits')
-    expect(screen.getByText('Habits page')).toBeInTheDocument()
+    expect(location()).toHaveTextContent('/tasks')
+    expect(screen.getByText('Tasks page')).toBeInTheDocument()
   })
 
   test('shows the neighbour while dragging', () => {
     renderTabs('/')
     drag(screen.getByText('Today page'), [300, 400], [200, 400])
-    expect(screen.getByText('Neighbour /progress')).toBeInTheDocument()
+    expect(screen.getByText('Neighbour /tasks')).toBeInTheDocument()
   })
 
   test.each([
@@ -154,20 +155,20 @@ describe('tab swipe', () => {
     expect(screen.getByLabelText('Note')).toHaveValue('half done')
   })
 
-  test('non-tab routes render without swipe', async () => {
-    renderTabs('/nope')
-    drag(screen.getByText('Missing page'), [300, 400], [100, 400])
+  test.each([['/nope', 'Missing page'], ['/habits', 'Habits page']])('non-tab route %s renders without swipe', async (route, text) => {
+    renderTabs(route)
+    drag(screen.getByText(text), [300, 400], [100, 400])
     await pause(SETTLE_MS + 50)
-    expect(location()).toHaveTextContent('/nope')
+    expect(location()).toHaveTextContent(route)
   })
 
   test('with reduced motion, a committed swipe switches tabs at once with no fade', () => {
     stubMedia({ reduced: true })
     renderTabs('/')
     drag(screen.getByText('Today page'), [300, 400], [100, 400])
-    expect(screen.queryByText('Neighbour /progress')).not.toBeInTheDocument()
-    expect(location()).toHaveTextContent('/progress')
-    expect(screen.getByText('Progress page').closest('[style]')).toBeNull()
+    expect(screen.queryByText('Neighbour /tasks')).not.toBeInTheDocument()
+    expect(location()).toHaveTextContent('/tasks')
+    expect(screen.getByText('Tasks page').closest('[style]')).toBeNull()
   })
 })
 

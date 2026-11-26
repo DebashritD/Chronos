@@ -12,12 +12,26 @@ import { CellPicker } from '../checkin/CellPicker'
 import { useHabits } from '../habits/api'
 import { WeekTiles } from '../progress/WeekTiles'
 import { useStreaks, useWeek } from '../stats/api'
+import { useTasks } from '../tasks/api'
+import { openTodayCount, useTaskToday } from '../tasks/taskDates'
 import { StreakList } from '../stats/StreakList'
 import { HabitCard } from './HabitCard'
 import { localTodayWeek } from './localTodayWeek'
 import { todayItems, type TodayItem } from './todayItems'
 import { TodaySummary } from './TodaySummaryView'
 import { todaySummary } from './todaySummary'
+
+function TasksLine() {
+  const tasks = useTasks()
+  const count = openTodayCount(tasks.data, useTaskToday())
+  if (count === 0) return null
+  return (
+    <Link to="/tasks" className="mt-3 flex min-h-11 items-center justify-between border-b border-rule-2 text-[15px] text-ink">
+      <span><b className="font-semibold">{count} {count === 1 ? 'task' : 'tasks'}</b> left today</span>
+      <span className="font-mono text-[13px] font-medium">Tasks →</span>
+    </Link>
+  )
+}
 
 /** Home: today's habits from the current week view, plus (desktop) the week grid and streaks. */
 export function TodayPage() {
@@ -85,6 +99,7 @@ export function TodayPage() {
             )}
           </div>
         </header>
+        <TasksLine />
         <SyncStatus className="mt-1" />
         {data.habits.length === 0 ? (
           <EmptyState title="Start your first chain"

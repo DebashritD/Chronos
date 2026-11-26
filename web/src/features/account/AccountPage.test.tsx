@@ -1,6 +1,7 @@
 import { MutationObserver, onlineManager } from '@tanstack/react-query'
 import { act, screen, within } from '@testing-library/react'
 import { afterEach, describe, expect, it } from 'vitest'
+import type { Habit } from '../../api/types'
 import { browserTimezone } from '../auth/session'
 import type { CheckInVars } from '../checkin/patchWeek'
 import { CHECK_IN_KEY } from '../checkin/queue'
@@ -90,7 +91,7 @@ describe('AccountPage', () => {
     await user.click(screen.getByRole('button', { name: 'Save timezone' }))
 
     expect(await screen.findByText('Timezone saved')).toHaveAttribute('role', 'status')
-    expect(requests(fetchMock)).toEqual([
+    expect(requests(fetchMock).filter((r) => r.method !== 'GET')).toEqual([
       { method: 'PUT', url: '/api/auth/me', body: { timezone: browserTimezone() } },
     ])
   })
@@ -107,7 +108,7 @@ describe('AccountPage', () => {
 
     expect(await screen.findByText('Password changed')).toHaveAttribute('role', 'status')
     expect(screen.getByLabelText('Current password')).toHaveValue('')
-    expect(requests(fetchMock)[0].body).toEqual({ currentPassword: 'old-password', newPassword: 'new-password' })
+    expect(requests(fetchMock).find((r) => r.method === 'PUT')?.body).toEqual({ currentPassword: 'old-password', newPassword: 'new-password' })
   })
 
   it('shows a wrong current password', async () => {
@@ -168,5 +169,32 @@ describe('AccountPage', () => {
 
     expect(await screen.findByTestId('location-display')).toHaveTextContent('/login')
     expect(requests(fetchMock)).toContainEqual({ method: 'POST', url: '/api/auth/logout', body: undefined })
+  })
+
+  describe('Habits', () => {
+    const habit = (id: number, status: Habit['status']): Habit => ({ id, name: `Habit ${id}`, minText: '1', targetText: '2',
+      frequency: 'DAILY', startDate: '2026-11-01', status, yellowCap: true })
+    const habitsApi = () => stubApi(({ url }) => {
+      if (url === '/api/habits') return jsonResponse([habit(1, 'ACTIVE'), habit(2, 'PAUSED')])
+      if (url === '/api/habits?status=ARCHIVED') return jsonResponse([habit(3, 'ARCHIVED')])
+      return undefined
+    })
+
+    it('counts active and archived habits', async () => {
+      habitsApi()
+      renderWithProviders(<AccountPage />, { route: '/settings' })
+
+      const section = screen.getByRole('region', { name: 'Habits' })
+      expect(await within(section).findByText('2 active · 1 archived')).toBeInTheDocument()
+    })
+
+    it('opens the New habit sheet and links to Manage habits', async () => {
+      habitsApi()
+      const { user } = renderWithProviders(<AccountPage />, { route: '/settings' })
+
+      expect(screen.getByRole('link', { name: 'Manage habits' })).toHaveAttribute('href', '/habits')
+      await user.click(screen.getByRole('button', { name: 'New habit' }))
+      expect(screen.getByRole('dialog', { name: 'New habit' })).toBeInTheDocument()
+    })
   })
 })

@@ -1,11 +1,11 @@
-import { Archive, ArchiveRestore, Pause, Pencil, Play, Plus } from 'lucide-react'
+import { Archive, ArchiveRestore, ChevronLeft, Pause, Pencil, Play, Plus } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 import { createPortal } from 'react-dom'
+import { Link } from 'react-router'
 import { messageFor } from '../../api/errors'
 import type { Habit } from '../../api/types'
 import { frequencyLabel } from '../../lib/cells'
 import { formatDayMonth } from '../../lib/dates'
-import { BottomSheet } from '../../app/BottomSheet'
 import { EmptyState } from '../../app/EmptyState'
 import { Mark } from '../../app/Mark'
 import { useIsNeighbour } from '../../app/neighbour'
@@ -13,8 +13,9 @@ import { inkButton, eyebrow, iconButton, pageTitle } from '../../lib/ui'
 import { MOBILE_QUERY, useMediaQuery } from '../../lib/useMediaQuery'
 import { useSession } from '../auth/session'
 import { useStreaks } from '../stats/api'
-import { useCreateHabit, useHabitAction, useHabits, useUpdateHabit, type HabitAction } from './api'
+import { useHabitAction, useHabits, useUpdateHabit, type HabitAction } from './api'
 import { HabitForm } from './HabitForm'
+import { NewHabitSheet } from './NewHabitSheet'
 
 const mutedIconButton = iconButton.replace('text-ink', 'text-muted')
 
@@ -39,7 +40,6 @@ export function HabitsPage() {
   const { me } = useSession()
   const current = useHabits()
   const archived = useHabits('ARCHIVED')
-  const createHabit = useCreateHabit()
   const updateHabit = useUpdateHabit()
   const habitAction = useHabitAction()
   const streaks = useStreaks()
@@ -132,22 +132,15 @@ export function HabitsPage() {
     <section className="max-w-3xl pb-20 md:pb-0">
       <div className="flex items-end justify-between border-b border-rule-2 pb-4">
         <div>
-          <p className={eyebrow}>Your pad</p>
+          <Link to="/settings" className="-ml-1 inline-flex min-h-11 items-center gap-1 text-[14px] font-semibold text-muted"><ChevronLeft size={18} aria-hidden="true" />Me</Link>
+          <p className={eyebrow}>Manage</p>
           <h1 className={pageTitle}>Habits</h1>
         </div>
         {!mobile && newHabitButton}
       </div>
       {/* On a phone the button floats on the body: a swiping track's transform would otherwise carry it along. */}
       {mobile && !neighbour && createPortal(newHabitButton, document.body)}
-      {creating && (
-        <BottomSheet title="New habit" onClose={() => setCreating(false)}>
-          <HabitForm bare submitLabel="Create habit" onCancel={() => setCreating(false)}
-            onSubmit={async (values) => {
-              await createHabit.mutateAsync(values)
-              setCreating(false)
-            }} />
-        </BottomSheet>
-      )}
+      {creating && <NewHabitSheet onClose={() => setCreating(false)} />}
       {error && <p role="alert" className="mb-3 text-sm text-cell-red">{error}</p>}
       {current.isPending && <p className="text-muted">Loading…</p>}
       {current.data?.length === 0 && (

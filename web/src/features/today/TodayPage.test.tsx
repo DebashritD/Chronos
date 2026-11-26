@@ -1,7 +1,7 @@
 import { onlineManager } from '@tanstack/react-query'
 import { act, screen, waitFor, within } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
-import type { CurrentPeriod, Habit, Streak, WeekCell, WeekView } from '../../api/types'
+import type { CurrentPeriod, Habit, Streak, Task, WeekCell, WeekView } from '../../api/types'
 import { jsonResponse, problemResponse, requests, stubApi, type ApiRequest } from '../../test/http'
 import { subscribeSyncToast } from '../../lib/syncToast'
 import { renderWithProviders } from '../../test/utils'
@@ -82,6 +82,7 @@ function api(overrides: (r: ApiRequest) => Response | undefined = () => undefine
     if (custom) return custom
     if (r.url.startsWith('/api/stats/week')) return jsonResponse(data)
     if (r.url === '/api/stats/streaks') return jsonResponse(streaks)
+    if (r.url === '/api/tasks') return jsonResponse([])
     return undefined
   })
 }
@@ -541,5 +542,25 @@ describe('TodayPage', () => {
     const read = screen.getByRole('article', { name: 'Read' })
     expect(within(read).getByRole('button', { name: 'Target' })).toHaveAttribute('aria-pressed', 'false')
     expect(chip(read)).toBeNull()
+  })
+
+  it('links to Tasks with the count of open tasks for today', async () => {
+    const tasks: Task[] = [
+      { id: 'a', text: 'Call the plumber', scheduledOn: '2026-11-18', doneOn: null, createdAt: '2026-11-18T05:00:00Z' },
+      { id: 'b', text: 'Sort old photos', scheduledOn: null, doneOn: null, createdAt: '2026-11-12T05:00:00Z' },
+    ]
+    api((r) => (r.url === '/api/tasks' ? jsonResponse(tasks) : undefined))
+    renderWithProviders(<TodayPage />)
+
+    expect(await screen.findByRole('link', { name: /1 task left today/ })).toHaveAttribute('href', '/tasks')
+  })
+
+  it('has no tasks line with no open tasks', async () => {
+    const fetchMock = api()
+    renderWithProviders(<TodayPage />)
+
+    expect(await screen.findByRole('heading', { level: 1, name: 'Today' })).toBeInTheDocument()
+    await waitFor(() => expect(requests(fetchMock)).toContainEqual(expect.objectContaining({ url: '/api/tasks' })))
+    expect(screen.queryByText(/left today/)).not.toBeInTheDocument()
   })
 })

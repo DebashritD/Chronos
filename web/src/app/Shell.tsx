@@ -1,7 +1,7 @@
-import { NavLink } from 'react-router'
+import { Link, useLocation } from 'react-router'
 import { Logo } from './Logo'
 import { SwipeTabs } from './SwipeTabs'
-import { TABS } from './tabs'
+import { isTabActive, TABS } from './tabs'
 import { WakingNotice } from './WakingNotice'
 import { SyncToast } from './SyncToast'
 
@@ -16,15 +16,20 @@ function topTabClass({ isActive }: { isActive: boolean }): string {
  * and on phones a text tab bar at the bottom. Logout lives on Me.
  */
 export function Shell() {
+  const { pathname } = useLocation()
   return (
     <div className="min-h-screen bg-paper-2 text-ink">
       <header className="binding sticky top-0 z-10 pt-[env(safe-area-inset-top)] md:bg-none">
         <div className="mx-auto flex h-9 max-w-[1080px] items-center px-6 md:h-14 md:px-10">
           <span className="hidden text-paper md:block"><Logo /></span>
           <nav aria-label="Primary" className="ml-auto hidden h-full gap-8 md:flex">
-            {TABS.map(({ to, label, end }) => (
-              <NavLink key={to} to={to} end={end} className={topTabClass}>{label}</NavLink>
-            ))}
+            {TABS.map((tab) => {
+              const active = isTabActive(tab, pathname)
+              return (
+                <Link key={tab.to} to={tab.to} aria-current={active ? 'page' : undefined}
+                  className={topTabClass({ isActive: active })}>{tab.label}</Link>
+              )
+            })}
           </nav>
         </div>
       </header>
@@ -35,15 +40,17 @@ export function Shell() {
       <SyncToast />
       <nav aria-label="Tabs"
         className="fixed inset-x-0 bottom-0 z-10 flex h-[calc(3.75rem+env(safe-area-inset-bottom))] border-t border-rule-2 bg-paper-2 pb-[env(safe-area-inset-bottom)] md:hidden">
-        {TABS.map(({ to, label, end }) => (
-          <NavLink key={to} to={to} end={end} className="flex flex-1 items-center justify-center">
-            {({ isActive }) => (
-              <span className={`border-b-2 pb-1 text-[13px] font-semibold ${isActive ? 'border-accent text-ink' : 'border-transparent text-muted'}`}>
-                {label}
+        {TABS.map((tab) => {
+          const active = isTabActive(tab, pathname)
+          return (
+            <Link key={tab.to} to={tab.to} aria-current={active ? 'page' : undefined}
+              className="flex flex-1 items-center justify-center">
+              <span className={`border-b-2 pb-1 text-[13px] font-semibold ${active ? 'border-accent text-ink' : 'border-transparent text-muted'}`}>
+                {tab.label}
               </span>
-            )}
-          </NavLink>
-        ))}
+            </Link>
+          )
+        })}
       </nav>
     </div>
   )

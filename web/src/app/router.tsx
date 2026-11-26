@@ -6,6 +6,7 @@ import { useSession } from '../features/auth/session'
 import { SignupPage } from '../features/auth/SignupPage'
 import { HabitsPage } from '../features/habits/HabitsPage'
 import { ProgressPage } from '../features/progress/ProgressPage'
+import { TasksPage } from '../features/tasks/TasksPage'
 import { TodayPage } from '../features/today/TodayPage'
 import { NotFound } from './NotFound'
 import { Shell } from './Shell'
@@ -32,6 +33,7 @@ export function AppRouter() {
       <Route path="/signup" element={<GuestOnly><SignupPage /></GuestOnly>} />
       <Route element={<RequireAuth><Shell /></RequireAuth>}>
         <Route path="/" element={<TodayPage />} />
+        <Route path="/tasks" element={<TasksPage />} />
         <Route path="/habits" element={<HabitsPage />} />
         <Route path="/progress" element={<ProgressPage />} />
         <Route path="/settings" element={<AccountPage />} />
