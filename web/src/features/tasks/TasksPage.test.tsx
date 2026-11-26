@@ -112,6 +112,24 @@ describe('TasksPage', () => {
     await waitFor(() => expect(writes(f).map((r) => r.method)).toEqual(['DELETE', 'PUT']))
   })
 
+  it('a cancelled swipe springs back and changes nothing', async () => {
+    const f = api()
+    renderWithProviders(<TasksPage />, { route: '/tasks' })
+    const row = await screen.findByRole('listitem', { name: 'Call the plumber' })
+    vi.spyOn(row, 'getBoundingClientRect').mockReturnValue({ width: 400 } as DOMRect)
+    fireEvent.touchStart(row, { touches: [{ clientX: 350, clientY: 300 }] })
+    fireEvent.touchMove(row, { touches: [{ clientX: 340, clientY: 300 }] })
+    fireEvent.touchMove(row, { touches: [{ clientX: 50, clientY: 300 }] })
+    const content = row.querySelector<HTMLElement>('[style]')!
+    expect(content.style.transform).toBe('translateX(-300px)')
+    fireEvent.touchCancel(row)
+    expect(content.style.transform).toBe('translateX(0px)')
+    fireEvent.touchEnd(row, { changedTouches: [{ clientX: 50, clientY: 300 }] })
+    await new Promise((r) => setTimeout(r, 50))
+    expect(writes(f)).toEqual([])
+    expect(row).toBeInTheDocument()
+  })
+
   it('swipes a little to move to Later', async () => {
     const f = api()
     renderWithProviders(<TasksPage />, { route: '/tasks' })

@@ -44,6 +44,10 @@ export function useRowSwipe(inLater: boolean, onCommit: (outcome: Exclude<SwipeO
         setDrag({ dx: 0, width: 0 })
         if (outcome !== 'none') onCommit(outcome)
       },
+      onTouchCancel() {
+        start.current = null
+        setDrag({ dx: 0, width: 0 })
+      },
     },
   }
 }
